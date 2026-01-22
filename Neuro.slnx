@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Neuro.Api/Neuro.Api.csproj" />
+    <Project Path="src/Neuro.Document/Neuro.Document.csproj" />
   </Folder>
 </Solution>
