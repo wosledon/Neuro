@@ -2,5 +2,6 @@
   <Folder Name="/src/">
     <Project Path="src/Neuro.Api/Neuro.Api.csproj" />
     <Project Path="src/Neuro.Document/Neuro.Document.csproj" />
+    <Project Path="src/Neuro.Vector/Neuro.Vector.csproj" />
   </Folder>
 </Solution>
