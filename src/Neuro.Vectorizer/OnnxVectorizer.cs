@@ -30,48 +30,162 @@ public class OnnxVectorizer : IVectorizer, System.IDisposable
         if (inputIds == null) throw new System.ArgumentNullException(nameof(inputIds));
         if (inputIds.Length == 0) return System.Array.Empty<float>();
 
-        // Build inputs for common BERT-like model
+        // 构建常见 BERT 类模型的输入（根据模型的输入元素类型创建张量）
         var seqLen = inputIds.Length;
         var batch = 1;
 
-        // ONNX runtime uses long for token ids in many exported models
-        var inputIdsTensor = new DenseTensor<long>(new[] { batch, seqLen });
-        var attentionMask = new DenseTensor<long>(new[] { batch, seqLen });
-        var tokenTypeIds = new DenseTensor<long>(new[] { batch, seqLen });
-
-        for (int i = 0; i < seqLen; i++)
-        {
-            inputIdsTensor[0, i] = inputIds[i];
-            attentionMask[0, i] = inputIds[i] == 0 ? 0L : 1L; // treat 0 as padding by convention
-            tokenTypeIds[0, i] = 0L;
-        }
-
+        // 根据模型输入的声明类型（long/int/float）构建相应张量，避免类型不匹配
         var inputs = new List<NamedOnnxValue>();
 
-        // Try to map inputs by common names if present; otherwise add by standard names
-        var inputNames = _session.InputMetadata.Keys.Select(k => k.ToLowerInvariant()).ToList();
+        // 将输入元数据按小写名称索引以便快速查找（保留原始输入名以供 CreateFromTensor 使用）
+        var inputMeta = _session.InputMetadata.ToDictionary(kv => kv.Key.ToLowerInvariant(), kv => (Key: kv.Key, Meta: kv.Value));
 
-        if (inputNames.Contains("input_ids")) inputs.Add(NamedOnnxValue.CreateFromTensor("input_ids", inputIdsTensor));
-        if (inputNames.Contains("attention_mask")) inputs.Add(NamedOnnxValue.CreateFromTensor("attention_mask", attentionMask));
-        if (inputNames.Contains("token_type_ids")) inputs.Add(NamedOnnxValue.CreateFromTensor("token_type_ids", tokenTypeIds));
+        // 本地函数：判断元素类型是否匹配指定的 CLR 类型
+        bool IsType(System.Type t, System.Type candidate) => t == candidate;
 
-        // Fallbacks: some models name differently
+        // input_ids
+        if (inputMeta.TryGetValue("input_ids", out var idsMeta))
+        {
+            var meta = idsMeta.Meta;
+            var et = meta.ElementType;
+            var dims = meta.Dimensions?.ToArray();
+            var desired = seqLen;
+            if (dims != null && dims.Length >= 2 && dims[1] > 0) desired = dims[1];
+
+            if (IsType(et, typeof(long)))
+            {
+                var tLong = new DenseTensor<long>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) tLong[0, i] = i < seqLen ? inputIds[i] : 0L;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(idsMeta.Key, tLong));
+            }
+            else if (IsType(et, typeof(int)))
+            {
+                var tInt = new DenseTensor<int>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) tInt[0, i] = i < seqLen ? inputIds[i] : 0;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(idsMeta.Key, tInt));
+            }
+            else if (IsType(et, typeof(float)))
+            {
+                var tFloat = new DenseTensor<float>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) tFloat[0, i] = i < seqLen ? inputIds[i] : 0f;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(idsMeta.Key, tFloat));
+            }
+            else
+            {
+                throw new System.NotSupportedException($"不支持的输入元素类型 {et}，输入名：{idsMeta.Key}");
+            }
+        }
+
+        // attention_mask
+        if (inputMeta.TryGetValue("attention_mask", out var attMeta))
+        {
+            var meta = attMeta.Meta;
+            var et = meta.ElementType;
+            var dims = meta.Dimensions?.ToArray();
+            var desired = seqLen;
+            if (dims != null && dims.Length >= 2 && dims[1] > 0) desired = dims[1];
+
+            if (IsType(et, typeof(long)))
+            {
+                var aLong = new DenseTensor<long>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) aLong[0, i] = (i < seqLen && inputIds[i] != 0) ? 1L : 0L;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(attMeta.Key, aLong));
+            }
+            else if (IsType(et, typeof(int)))
+            {
+                var aInt = new DenseTensor<int>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) aInt[0, i] = (i < seqLen && inputIds[i] != 0) ? 1 : 0;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(attMeta.Key, aInt));
+            }
+            else if (IsType(et, typeof(float)))
+            {
+                var aFloat = new DenseTensor<float>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) aFloat[0, i] = (i < seqLen && inputIds[i] != 0) ? 1f : 0f;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(attMeta.Key, aFloat));
+            }
+            else
+            {
+                throw new System.NotSupportedException($"不支持的输入元素类型 {et}，输入名：{attMeta.Key}");
+            }
+        }
+
+        // token_type_ids（通常为 0）
+        if (inputMeta.TryGetValue("token_type_ids", out var tokMeta))
+        {
+            var meta = tokMeta.Meta;
+            var et = meta.ElementType;
+            var dims = meta.Dimensions?.ToArray();
+            var desired = seqLen;
+            if (dims != null && dims.Length >= 2 && dims[1] > 0) desired = dims[1];
+
+            if (IsType(et, typeof(long)))
+            {
+                var ttLong = new DenseTensor<long>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) ttLong[0, i] = 0L;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(tokMeta.Key, ttLong));
+            }
+            else if (IsType(et, typeof(int)))
+            {
+                var ttInt = new DenseTensor<int>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) ttInt[0, i] = 0;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(tokMeta.Key, ttInt));
+            }
+            else if (IsType(et, typeof(float)))
+            {
+                var ttFloat = new DenseTensor<float>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) ttFloat[0, i] = 0f;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(tokMeta.Key, ttFloat));
+            }
+            else
+            {
+                throw new System.NotSupportedException($"不支持的输入元素类型 {et}，输入名：{tokMeta.Key}");
+            }
+        }
+
+        // 回退：如果没有任何输入被添加，则将第一个模型输入映射为 input_ids（基于其声明类型创建张量）
         if (!inputs.Any())
         {
-            // pick the first input and use input_ids there
-            var first = _session.InputMetadata.Keys.First();
-            inputs.Add(NamedOnnxValue.CreateFromTensor(first, inputIdsTensor));
+            var first = _session.InputMetadata.First();
+            var key = first.Key;
+            var meta = first.Value;
+            var et = meta.ElementType;
+            var dims = meta.Dimensions?.ToArray();
+            var desired = seqLen;
+            if (dims != null && dims.Length >= 2 && dims[1] > 0) desired = dims[1];
+
+            if (IsType(et, typeof(long)))
+            {
+                var fLong = new DenseTensor<long>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) fLong[0, i] = i < seqLen ? inputIds[i] : 0L;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(key, fLong));
+            }
+            else if (IsType(et, typeof(int)))
+            {
+                var fInt = new DenseTensor<int>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) fInt[0, i] = i < seqLen ? inputIds[i] : 0;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(key, fInt));
+            }
+            else if (IsType(et, typeof(float)))
+            {
+                var fFloat = new DenseTensor<float>(new[] { batch, desired });
+                for (int i = 0; i < desired; i++) fFloat[0, i] = i < seqLen ? inputIds[i] : 0f;
+                inputs.Add(NamedOnnxValue.CreateFromTensor(key, fFloat));
+            }
+            else
+            {
+                throw new System.NotSupportedException($"不支持的输入元素类型 {et}，输入名：{key}");
+            }
         }
 
         using var results = _session.Run(inputs);
 
-        // Prefer pooled output if exists
+        // 优先使用 pooled 输出（如果存在）
         var outputValues = results.ToArray();
 
-        // Map outputs by name to lower-case for detection
+        // 将输出按名称映射为小写以便检测
         var outputs = outputValues.ToDictionary(r => r.Name.ToLowerInvariant(), r => r);
 
-        // Candidate names
+        // 候选名称
         string? pooledName = outputs.Keys.FirstOrDefault(k => k.Contains("pooler") || k.Contains("pooled") || k.Contains("cls"));
         string? lastHiddenName = outputs.Keys.FirstOrDefault(k => k.Contains("last_hidden") || k.Contains("sequence_output") || k.Contains("hidden_states") || k.Contains("output"));
 
@@ -99,7 +213,7 @@ public class OnnxVectorizer : IVectorizer, System.IDisposable
             }
         }
 
-        // fallback to last hidden state and mean-pool over sequence dimension
+        // 回退：使用最后一层隐藏状态并在序列维度上做均值池化
         if (lastHiddenName != null)
         {
             var last = outputs[lastHiddenName].AsTensor<float>();
@@ -123,7 +237,7 @@ public class OnnxVectorizer : IVectorizer, System.IDisposable
             }
         }
 
-        // If nothing matched, try to take the first float tensor result and flatten
+        // 如果都没有匹配，尝试取第一个 float 张量输出并展平
         var anyFloat = outputValues.FirstOrDefault(r => r.Value is Tensor<float>);
         if (anyFloat != null)
         {

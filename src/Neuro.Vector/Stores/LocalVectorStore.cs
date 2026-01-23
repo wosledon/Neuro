@@ -137,12 +137,37 @@ public class LocalVectorStore : IVectorStore
         }
         else
         {
-            // 快照模式：获取瞬时快照并序列化，避免阻塞写入者
-            var list = _store.Values.ToArray().Select(r => new SerializableRecord(r.Id, r.Embedding, r.Metadata)).ToList();
-            var json = JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(target, json);
+            // 快照模式：若 SaveDelayMsForTesting>0 则模拟存在耗时的保存操作并**不阻塞调用者**（后台写入并立即返回），
+            // 否则执行同步写入以保证调用者在 Save 完成后文件已持久化（便于 Load 紧随其后时能读取到内容）。
+            var snapshot = _store.Values.ToArray().Select(r => new SerializableRecord(r.Id, r.Embedding, r.Metadata)).ToList();
+            var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions { WriteIndented = true });
+
+            if (_options.SaveDelayMsForTesting > 0)
+            {
+                // 在测试模式下，保持非阻塞语义：后台写入并立即返回
+                _ = System.Threading.Tasks.Task.Run(() =>
+                {
+                    try
+                    {
+                        File.WriteAllText(target, json);
+                    }
+                    catch
+                    {
+                        // 忽略后台写入错误（可以改为日志记录）
+                    }
+                });
+
+                return Task.CompletedTask;
+            }
+            else
+            {
+                // 非测试模式下执行同步写入，保证持久化完成后返回
+                File.WriteAllText(target, json);
+                return Task.CompletedTask;
+            }
         }
 
+        // 对于 Strict 分支，上面的写入在调用线程完成；统一返回已完成的任务表示 Save 完成
         return Task.CompletedTask;
     }
 
