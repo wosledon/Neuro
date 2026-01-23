@@ -41,4 +41,9 @@ public static class VectorStoreFactory
         if (_providers.TryGetValue(provider, out var factory)) return factory(serviceProvider, options);
         throw new NotSupportedException($"不支持提供者 '{provider}'。请使用 VectorStoreFactory.RegisterProvider 注册提供者。");
     }
+
+    /// <summary>
+    /// 便捷方法：创建内置的本地向量存储实现。
+    /// </summary>
+    public static IVectorStore CreateLocal(IDictionary<string, object?>? options = null, IServiceProvider? serviceProvider = null) => Create("local", options, serviceProvider);
 }

@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Text.Json;
 using Neuro.Vector;
+using Neuro.Vector.Stores;
 using Xunit;
 
 namespace Neuro.Vector.Tests;

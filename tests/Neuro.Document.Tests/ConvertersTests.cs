@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Xunit;
@@ -35,7 +36,7 @@ public class ConvertersTests
         using (var wordDoc = WordprocessingDocument.Create(ms, WordprocessingDocumentType.Document, true))
         {
             var main = wordDoc.AddMainDocumentPart();
-            main.Document = new Document();
+            main.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
             var body = main.Document.AppendChild(new Body());
 
             // Heading

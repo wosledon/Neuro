@@ -6,15 +6,15 @@ namespace Neuro.Vector;
 
 public static class VectorStoreExtensions
 {
-    public static IHostApplicationBuilder AddVectorStore(this IHostApplicationBuilder builder, Action<VectorStoreOption>? configure = null)
+    public static IHostApplicationBuilder AddVectorStore(this IHostApplicationBuilder builder, Action<VectorStoreOptions>? configure = null)
     {
         builder.Services.AddVectorStore(configure);
         return builder;
     }
 
-    public static IServiceCollection AddVectorStore(this IServiceCollection services, Action<VectorStoreOption>? configure = null)
+    public static IServiceCollection AddVectorStore(this IServiceCollection services, Action<VectorStoreOptions>? configure = null)
     {
-        var options = new VectorStoreOption();
+        var options = new VectorStoreOptions();
         configure?.Invoke(options);
         services.AddSingleton(options);
 
@@ -44,7 +44,7 @@ public static class VectorStoreExtensions
     }
 }
 
-public class VectorStoreOption : IOptions<VectorStoreOption>
+public class VectorStoreOptions : IOptions<VectorStoreOptions>
 {
     /// <summary>
     /// 在 VectorStoreFactory 中注册的提供者名称（例如："local"、"lockfree" 或外部提供者名称）。
@@ -62,5 +62,5 @@ public class VectorStoreOption : IOptions<VectorStoreOption>
     /// </summary>
     public Func<IServiceProvider, IVectorStore>? ProviderFactory { get; set; }
 
-    public VectorStoreOption Value => this;
+    public VectorStoreOptions Value => this;
 }

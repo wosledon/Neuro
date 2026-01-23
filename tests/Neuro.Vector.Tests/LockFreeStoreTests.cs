@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Neuro.Vector;
+using Neuro.Vector.Stores;
 using Xunit;
 
 namespace Neuro.Vector.Tests;

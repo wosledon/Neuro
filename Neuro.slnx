@@ -2,6 +2,13 @@
   <Folder Name="/src/">
     <Project Path="src/Neuro.Api/Neuro.Api.csproj" />
     <Project Path="src/Neuro.Document/Neuro.Document.csproj" />
+    <Project Path="src/Neuro.Tokenizer/Neuro.Tokenizer.csproj" />
     <Project Path="src/Neuro.Vector/Neuro.Vector.csproj" />
+    <Project Path="src/Neuro.Vectorizer/Neuro.Vectorizer.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Neuro.Document.Tests/Neuro.Document.Tests.csproj" />
+    <Project Path="tests/Neuro.Tokenizer.Tests/Neuro.Tokenizer.Tests.csproj" />
+    <Project Path="tests/Neuro.Vector.Tests/Neuro.Vector.Tests.csproj" />
   </Folder>
 </Solution>
