@@ -84,23 +84,26 @@ public class VectorStoreTests
 
         var tmp = Path.GetTempFileName();
 
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-
         var saveTask = Task.Run(() => store.SaveAsync(tmp));
 
         // give saveTask a small head start
         await Task.Delay(10);
 
+        // Measure upsert time separately to avoid test flakiness caused by scheduling delays
+        var upsertSw = System.Diagnostics.Stopwatch.StartNew();
         var upsertTask = Task.Run(async () =>
         {
             await store.UpsertAsync(new[] { new VectorRecord("y", new float[] { 0f, 1f }) });
         });
 
-        await Task.WhenAll(saveTask, upsertTask);
-        sw.Stop();
+        await upsertTask;
+        upsertSw.Stop();
 
-        // In snapshot mode upsert should not be blocked by save; ensure elapsed is small
-        Assert.True(sw.ElapsedMilliseconds < 150, $"Expected non-blocking snapshot behavior, elapsed={sw.ElapsedMilliseconds}");
+        // In snapshot mode upsert should not be blocked by save; ensure upsert elapsed is small
+        Assert.True(upsertSw.ElapsedMilliseconds < 150, $"Expected non-blocking snapshot behavior (upsert), elapsed={upsertSw.ElapsedMilliseconds}");
+
+        // wait for save to finish before verifying persistence
+        await saveTask;
 
         var store2 = VectorStoreFactory.CreateLocal();
         await store.SaveAsync(tmp);
