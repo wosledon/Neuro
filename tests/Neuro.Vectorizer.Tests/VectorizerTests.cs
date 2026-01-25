@@ -11,7 +11,7 @@ public class VectorizerTests
     public async Task Embed_Returns_NonEmpty_WhenModelPresent()
     {
         // Try to locate model file in common places
-        string? modelPath = LocateModel();
+        string modelPath = LocateModel();
         if (modelPath == null)
         {
             // Skip test if model missing
@@ -27,7 +27,7 @@ public class VectorizerTests
         Assert.True(emb.Length > 0);
     }
 
-    private static string? LocateModel()
+    private static string LocateModel()
     {
         // 1. local relative
         var candidates = new[] {
