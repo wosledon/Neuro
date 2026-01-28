@@ -2,7 +2,7 @@ using System;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace Neuro.Storage
+namespace Neuro.Storage.Indexing
 {
     public class FileIndexingQueue : IFileIndexingQueue, IDisposable
     {

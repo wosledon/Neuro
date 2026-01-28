@@ -1,7 +1,7 @@
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace Neuro.Storage
+namespace Neuro.Storage.Indexing
 {
     public interface IFileIndexingQueue
     {

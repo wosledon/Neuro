@@ -1,4 +1,4 @@
-namespace Neuro.Storage
+namespace Neuro.Storage.Indexing
 {
     public class IndexingOptions
     {

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
 using Neuro.Storage.Enums;
 
-namespace Neuro.Storage;
+namespace Neuro.Storage.Options;
 
 public class FileStorageOptions : IOptions<FileStorageOptions>
 {

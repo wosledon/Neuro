@@ -1,6 +1,6 @@
 ﻿using Neuro.Storage.Enums;
 
-namespace Neuro.Storage;
+namespace Neuro.Storage.Abstractions;
 
 /// <summary>
 /// 文件存储接口

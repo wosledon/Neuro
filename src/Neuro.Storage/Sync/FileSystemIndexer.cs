@@ -7,8 +7,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Neuro.Storage.Models;
+using Neuro.Storage.Abstractions;
+using Neuro.Storage.Options;
 
-namespace Neuro.Storage
+namespace Neuro.Storage.Sync
 {
     public class FileSystemIndexer : BackgroundService
     {

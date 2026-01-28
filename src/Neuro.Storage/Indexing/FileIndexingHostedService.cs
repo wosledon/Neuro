@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Neuro.Storage
+namespace Neuro.Storage.Indexing
 {
     public class FileIndexingHostedService : BackgroundService
     {

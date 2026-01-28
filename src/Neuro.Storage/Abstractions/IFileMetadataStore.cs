@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Neuro.Storage.Models;
 
-namespace Neuro.Storage
+namespace Neuro.Storage.Abstractions
 {
     /// <summary>
     /// 文件元数据存储接口（用于存储文件的索引与元信息）。

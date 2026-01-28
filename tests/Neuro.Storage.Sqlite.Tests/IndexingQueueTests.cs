@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Neuro.Storage;
+using Neuro.Storage.Indexing;
+using Neuro.Storage.Abstractions;
 using Xunit;
 
 namespace Neuro.Storage.Sqlite.Tests

@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Neuro.Storage;
 using Neuro.Storage.Enums;
+using Neuro.Storage.Options;
+using Neuro.Storage.Abstractions;
 using Neuro.Storage.Providers;
 using Xunit;
 

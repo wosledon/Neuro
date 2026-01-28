@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Neuro.Storage.Indexing;
 
 namespace Neuro.Storage.Sqlite
 {

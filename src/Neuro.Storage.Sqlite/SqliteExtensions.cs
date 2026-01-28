@@ -2,6 +2,8 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Neuro.Storage.Indexing;
+using Neuro.Storage.Abstractions;
 
 namespace Neuro.Storage.Sqlite
 {

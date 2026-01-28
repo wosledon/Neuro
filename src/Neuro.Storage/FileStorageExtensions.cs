@@ -1,6 +1,10 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Neuro.Storage.Providers;
+using Neuro.Storage.Indexing;
+using Neuro.Storage.Options;
+using Neuro.Storage.Abstractions;
+using Neuro.Storage.Sync;
 
 namespace Neuro.Storage;
 

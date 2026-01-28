@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Neuro.Storage;
+using Neuro.Storage.Abstractions;
 using Neuro.Storage.Models;
 using Neuro.Storage.Sqlite.Entities;
 

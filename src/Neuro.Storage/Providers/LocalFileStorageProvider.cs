@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Neuro.Storage.Enums;
+using Neuro.Storage.Indexing;
+using Neuro.Storage.Abstractions;
+using Neuro.Storage.Options;
 
 namespace Neuro.Storage.Providers;
 

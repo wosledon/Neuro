@@ -9,6 +9,8 @@ using Microsoft.Extensions.Options;
 using Neuro.Storage;
 using Neuro.Storage.Enums;
 using Neuro.Storage.Providers;
+using Neuro.Storage.Abstractions;
+using Neuro.Storage.Options;
 using Xunit;
 
 namespace Neuro.Storage.Sqlite.Tests
