@@ -1,9 +1,14 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Neuro.Abstractions/Neuro.Abstractions.csproj" />
     <Project Path="src/Neuro.Api/Neuro.Api.csproj" />
     <Project Path="src/Neuro.Document/Neuro.Document.csproj" />
+    <Project Path="src/Neuro.EntityFrameworkCore.NpgSql/Neuro.EntityFrameworkCore.NpgSql.csproj" />
+    <Project Path="src/Neuro.EntityFrameworkCore.Sqlite/Neuro.EntityFrameworkCore.Sqlite.csproj" />
+    <Project Path="src/Neuro.EntityFrameworkCore/Neuro.EntityFrameworkCore.csproj" />
     <Project Path="src/Neuro.RAG/Neuro.RAG.csproj" />
     <Project Path="src/Neuro.Storage/Neuro.Storage.csproj" />
+    <Project Path="src/Neuro.Shared/Neuro.Shared.csproj" />
     <Project Path="src/Neuro.Storage.Sqlite/Neuro.Storage.Sqlite.csproj" />
     <Project Path="src/Neuro.Tokenizer/Neuro.Tokenizer.csproj" />
     <Project Path="src/Neuro.Vector/Neuro.Vector.csproj" />
