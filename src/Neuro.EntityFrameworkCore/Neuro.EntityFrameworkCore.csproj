@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neuro.Abstractions\Neuro.Abstractions.csproj" />
+    <ProjectReference Include="..\Neuro.Shared\Neuro.Shared.csproj" />
   </ItemGroup>
 
 </Project>
