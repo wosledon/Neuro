@@ -47,4 +47,15 @@ public class NeuroResult
             Total = 0
         };
     }
+
+    public static NeuroResult Failure(string message, int code)
+    {
+        return new NeuroResult
+        {
+            Code = (HttpStatusCode)code,
+            Message = message,
+            Data = null,
+            Total = 0
+        };
+    }
 }
