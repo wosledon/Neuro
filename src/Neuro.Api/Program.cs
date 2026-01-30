@@ -1,6 +1,10 @@
 using Neuro.Abstractions.Services;
 using Neuro.Api.Middlewares;
 using Neuro.Api.Services;
+using Neuro.EntityFrameworkCore;
+using Neuro.EntityFrameworkCore.Extensions;
+using Neuro.EntityFrameworkCore.Sqlite;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,12 +18,21 @@ builder.Services.AddOpenApi();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+builder.AddSqlite<NeuroDbContext>("Data Source=neuro.db", o =>
+{
+
+});
+
 var app = builder.Build();
+
+app.AutoInitDatabase<NeuroDbContext>(false);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    app.MapScalarApiReference();
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();

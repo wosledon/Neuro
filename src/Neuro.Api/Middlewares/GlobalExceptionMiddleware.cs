@@ -1,4 +1,5 @@
 using System;
+using Neuro.Shared;
 
 namespace Neuro.Api.Middlewares;
 
@@ -21,10 +22,12 @@ public class GlobalExceptionMiddleware
             context.Response.StatusCode = 500;
             context.Response.ContentType = "application/json";
 
-            var response = new
+            var response = NeuroResult.Failure("Internal Server Error", 500);
+
+            response.Data = new
             {
-                Message = "An unexpected error occurred.",
-                Details = ex.Message
+                Exception = ex.Message,
+                StackTrace = ex.StackTrace
             };
 
             var json = System.Text.Json.JsonSerializer.Serialize(response);
