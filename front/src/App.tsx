@@ -5,10 +5,12 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 
+import { SunIcon, MoonIcon } from '@heroicons/react/24/solid'
+
 function ThemeToggle({darkMode, setDarkMode}:{darkMode:boolean; setDarkMode:(v:boolean)=>void}){
   return (
-    <button onClick={()=>setDarkMode(!darkMode)} className="px-2 py-1 rounded bg-transparent">
-      {darkMode ? '🌙' : '☀️'}
+    <button onClick={()=>setDarkMode(!darkMode)} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 theme-icon">
+      {darkMode ? <MoonIcon className="w-5 h-5"/> : <SunIcon className="w-5 h-5"/>}
     </button>
   )
 }

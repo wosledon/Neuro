@@ -31,7 +31,16 @@
 - 组件接受 className 以便组合样式，内部使用 clsx 合并
 - 所有交互（按钮、输入、列表）都要考虑可访问性（aria-*）和键盘操作
 - 颜色与主题：支持暗色模式（利用 Tailwind 的 dark 模式）并确保对比度满足 WCAG AA
-- 视觉风格：使用圆角卡片（rounded-2xl）作为主要容器，卡片内使用柔和阴影（shadow-lg）和渐变强调色（accent: from-sky-400 to-indigo-500）形成统一酷炫风格。页面组件应尽量复用 .card 类和 .accent 工具类。
+- 视觉风格：使用圆角卡片（rounded-2xl）作为主要容器，卡片内使用柔和阴影（shadow-lg）和渐变强调色（accent: from-sky-400 to-indigo-500）形成统一酷炫风格。
+- 图标库：统一使用 Heroicons（@heroicons/react），在 package.json 中添加依赖并在组件中使用（例如 ThemeToggle 使用 Sun/Moon 图标）。页面组件应尽量复用 .card 类和 .accent 工具类。
+- 动画与交互动效：统一使用 Tailwind 的过渡/变换工具与少量自定义 CSS 动画。建议规范：
+  - 页面切换：使用淡入/淡出或滑动过渡（transition-opacity, transform）
+  - 按钮：点击时使用 scale(0.95) 的按压动效
+  - 主题切换：图标添加旋转/缩放过渡，并以 300-500ms 的时长完成
+  - 卡片：hover 时提升阴影（shadow-lg -> shadow-2xl）并轻微上移（-translate-y-1）
+  - 动效禁用：为用户提供减少动效（prefers-reduced-motion）检测，若检测到应关闭或简化动画
+  - 性能：只对合成图层进行动画，避免触发布局回流（使用 transform 和 opacity 优先）
+
 
 统一组件参考页（Component Playground）
 - 必须存在一个由 Storybook 或自建页面组成的组件参考页（路径建议：/src/pages/components 或 .storybook）
