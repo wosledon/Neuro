@@ -32,7 +32,7 @@ export default function App(){
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3"><img src="/assets/logo.png" alt="logo" className="w-8 h-8"/><span className="text-2xl font-semibold">Neuro Front</span></div>
           <nav className="flex items-center gap-2">
-            <ThemeToggle darkMode={false} setDarkMode={()=>{}} />
+            
             <button className={"px-3 py-1 rounded " + (route==='home' ? 'bg-blue-600 text-white' : 'bg-transparent')} onClick={()=>setRoute('home')}>Home</button>
             <button className={"px-3 py-1 rounded " + (route==='explorer' ? 'bg-blue-600 text-white' : 'bg-transparent')} onClick={()=>setRoute('explorer')}>API Explorer</button>
             <button className={"px-3 py-1 rounded " + (route==='components' ? 'bg-blue-600 text-white' : 'bg-transparent')} onClick={()=>setRoute('components')}>Components</button>

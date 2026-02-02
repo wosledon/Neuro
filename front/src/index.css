@@ -25,7 +25,7 @@ button:active {
 
 /* Theme toggle animation */
 .theme-icon {
-  @apply transition-transform duration-400 ease-in-out transform-gpu;
+  @apply transition-transform duration-300 ease-in-out transform-gpu;
 }
 .dark .theme-icon {
   transform: rotate(20deg) scale(1.05);
