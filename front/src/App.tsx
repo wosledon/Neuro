@@ -1,22 +1,41 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ApiExplorer from './pages/ApiExplorer'
 import ComponentsPage from './pages/ComponentsPage'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 
+function ThemeToggle({darkMode, setDarkMode}:{darkMode:boolean; setDarkMode:(v:boolean)=>void}){
+  return (
+    <button onClick={()=>setDarkMode(!darkMode)} className="px-2 py-1 rounded bg-transparent">
+      {darkMode ? '🌙' : '☀️'}
+    </button>
+  )
+}
+
 export default function App(){
   const [route, setRoute] = useState<'explorer'|'components'|'home'|'login'>('home')
+  const [darkMode, setDarkMode] = useState<boolean>(()=>{
+    try{ return localStorage.getItem('theme') === 'dark' }catch{ return false }
+  })
+  useEffect(()=>{
+    const root = document.documentElement
+    if(darkMode) root.classList.add('dark')
+    else root.classList.remove('dark')
+    try{ localStorage.setItem('theme', darkMode ? 'dark' : 'light') }catch{}
+  },[darkMode])
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <header className="p-4 border-b dark:border-gray-700">
         <div className="container mx-auto flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Neuro Front</h1>
           <nav className="flex items-center gap-2">
+            <ThemeToggle darkMode={false} setDarkMode={()=>{}} />
             <button className={"px-3 py-1 rounded " + (route==='home' ? 'bg-blue-600 text-white' : 'bg-transparent')} onClick={()=>setRoute('home')}>Home</button>
             <button className={"px-3 py-1 rounded " + (route==='explorer' ? 'bg-blue-600 text-white' : 'bg-transparent')} onClick={()=>setRoute('explorer')}>API Explorer</button>
             <button className={"px-3 py-1 rounded " + (route==='components' ? 'bg-blue-600 text-white' : 'bg-transparent')} onClick={()=>setRoute('components')}>Components</button>
             <button className={"px-3 py-1 rounded " + (route==='login' ? 'bg-blue-600 text-white' : 'bg-transparent')} onClick={()=>setRoute('login')}>Login</button>
+            <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
           </nav>
         </div>
       </header>

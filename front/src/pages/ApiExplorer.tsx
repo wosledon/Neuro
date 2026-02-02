@@ -28,7 +28,7 @@ export default function ApiExplorer(){
 
   return (
     <div className="grid grid-cols-3 gap-4">
-      <aside className="col-span-1 p-2 bg-white dark:bg-gray-800 rounded shadow">
+      <aside className="col-span-1 p-2 card">
         <h2 className="text-lg font-medium">{swagger.info?.title || 'API'} {swagger.info?.version && <span className="text-sm text-gray-500">v{swagger.info.version}</span>}</h2>
         <ul className="mt-4 space-y-2 max-h-[70vh] overflow-auto">
           {paths.map(([path, methods])=> (
@@ -43,7 +43,7 @@ export default function ApiExplorer(){
           ))}
         </ul>
       </aside>
-      <section className="col-span-2 p-4 bg-white dark:bg-gray-800 rounded shadow">
+      <section className="col-span-2 p-4 card">
         {selected ? (
           <OperationDetail path={selected.path} method={selected.method} operation={swagger.paths?.[selected.path]?.[selected.method]} />
         ) : (

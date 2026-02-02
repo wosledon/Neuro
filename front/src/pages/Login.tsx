@@ -12,7 +12,7 @@ export default function Login(){
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded shadow">
+    <div className="max-w-md mx-auto card p-6">
       <h2 className="text-xl font-semibold">登录</h2>
       <form className="mt-4 space-y-3" onSubmit={submit}>
         <div>

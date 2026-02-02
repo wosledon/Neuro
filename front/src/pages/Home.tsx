@@ -5,7 +5,7 @@ import { Button } from '../components'
 export default function Home(){
   return (
     <div className="space-y-8">
-      <section className="flex items-center gap-6 bg-white dark:bg-gray-800 p-8 rounded shadow">
+      <section className="flex items-center gap-6 card">
         <img src={logo} alt="Neuro" className="w-24 h-24" />
         <div>
           <h2 className="text-3xl font-bold">Neuro — AI Knowledge & Docs</h2>
@@ -28,7 +28,7 @@ export default function Home(){
 
 function Feature({title, desc}:{title:string; desc:string}){
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded shadow">
+    <div className="card">
       <h4 className="font-medium">{title}</h4>
       <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{desc}</p>
     </div>
