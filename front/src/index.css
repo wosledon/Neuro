@@ -4,3 +4,13 @@
 
 html, body, #root { height: 100%; }
 .container { max-width: 1024px; }
+
+/* Global card style */
+.card {
+  @apply rounded-2xl p-6 shadow-lg bg-white dark:bg-gray-800;
+}
+
+/* Cool accent */
+.accent {
+  @apply bg-gradient-to-r from-sky-400 to-indigo-500 text-white;
+}

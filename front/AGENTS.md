@@ -31,6 +31,7 @@
 - 组件接受 className 以便组合样式，内部使用 clsx 合并
 - 所有交互（按钮、输入、列表）都要考虑可访问性（aria-*）和键盘操作
 - 颜色与主题：支持暗色模式（利用 Tailwind 的 dark 模式）并确保对比度满足 WCAG AA
+- 视觉风格：使用圆角卡片（rounded-2xl）作为主要容器，卡片内使用柔和阴影（shadow-lg）和渐变强调色（accent: from-sky-400 to-indigo-500）形成统一酷炫风格。页面组件应尽量复用 .card 类和 .accent 工具类。
 
 统一组件参考页（Component Playground）
 - 必须存在一个由 Storybook 或自建页面组成的组件参考页（路径建议：/src/pages/components 或 .storybook）
@@ -105,5 +106,14 @@ AI Agent 行为约束（用于在前端集成 AI 助手时）
 
 例外与本地约定
 - 对于快速原型允许放宽部分规范（例如可跳过 story 或测试），但必须在 PR 描述中说明并计划后续补齐
+
+资产与 Logo 指南
+- 位置：所有静态资产放在 front/public/assets/ 下，例如 logo.svg、favicon.png
+- Logo 文件：建议提供 SVG 和 PNG 两种格式，SVG 用于页面与 Storybook，PNG 用于其他平台兼容
+- Logo 样式：保持简洁、扁平（无渐变或复杂阴影），优先使用单色或双色色块，保证在 32x32、64x64、120x120 下清晰
+- 命名与版本：使用 assets/logo.svg 与 assets/logo@2x.png 命名规范，若更新 logo，请在 AGENTS.md 中记录版本与设计说明
+- 使用：页面头部、Storybook、文档站点使用同一套 logo，具体路径 public/assets/logo.svg
+
+后续：该 logo 已放置为示例（front/public/assets/logo.svg），后续视觉稿可以替换该文件以更新产品形象
 
 -- EOF
