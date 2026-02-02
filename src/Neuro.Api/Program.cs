@@ -25,6 +25,16 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 // Auth services
 builder.Services.AddScoped<IJwtService, JwtService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 
 // JWT Authentication
 var jwt = builder.Configuration.GetSection("Jwt");
@@ -79,6 +89,7 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // app.UseHttpsRedirection();
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

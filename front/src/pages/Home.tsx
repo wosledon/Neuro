@@ -40,7 +40,7 @@ export default function Home(){
       <section className="grid md:grid-cols-3 gap-4">
         <div className="card p-6">
           <h3 className="font-semibold">写文档（AutoDoc）</h3>
-          <p className="text-sm text-gray-500 mt-2">从 Swagger、代码注释与知识库中自动生成结构化文档，支持示例请求/响应与多格式导出（Markdown/HTML）。</p>
+          <p className="text-sm text-gray-500 mt-2">从代码注释与知识库中自动生成结构化文档，支持示例请求/响应与多格式导出（Markdown/HTML）。</p>
         </div>
         <div className="card p-6">
           <h3 className="font-semibold">知识库（Vector KB）</h3>
@@ -56,7 +56,7 @@ export default function Home(){
         </div>
         <div className="card p-6">
           <h3 className="font-semibold">文档生成</h3>
-          <p className="text-sm text-gray-500 mt-2">从 Swagger、注释与知识库生成结构化文档和示例。</p>
+          <p className="text-sm text-gray-500 mt-2">从代码注释与知识库生成结构化文档和示例。</p>
         </div>
         <div className="card p-6">
           <h3 className="font-semibold">组件化前端</h3>
@@ -66,7 +66,7 @@ export default function Home(){
 
       <section className="card p-6">
         <h3 className="text-lg font-semibold">一键导出与集成</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">连接后端 OpenAPI、代码仓库与知识源，快速导出文档并同步到 docs 目录或发布为静态站点。</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">连接后端服务、代码仓库与知识源，快速导出文档并同步到 docs 目录或发布为静态站点（开发时可选用 OpenAPI 作为结构化来源）。</p>
         <div className="mt-4 flex gap-3">
           <Button variant="primary">导出文档</Button>
           <Button variant="secondary">同步知识库</Button>
