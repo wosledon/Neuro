@@ -9,7 +9,7 @@
     "test": "vitest",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
-    "gen:api": "npx @openapitools/openapi-generator-cli generate -i ./swagger.json -g typescript-axios -o ./src/services/api",
+    "gen:api": "npx @openapitools/openapi-generator-cli generate -i http://localhost:5146/openapi/v1.json -g typescript-axios -o ./src/services/api",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
