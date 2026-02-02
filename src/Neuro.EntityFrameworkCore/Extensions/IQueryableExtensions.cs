@@ -9,6 +9,9 @@ public static class IQueryableExtensions
 {
     public static async Task<PagedList<T>> ToPagedListAsync<T>(this IQueryable<T> source, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
+        pageIndex = Math.Max(pageIndex - 1, 0);
+        pageSize = Math.Max(pageSize, 1);
+
         var count = await source.CountAsync(cancellationToken);
         var items = await source.Skip(pageIndex * pageSize).Take(pageSize).ToListAsync(cancellationToken);
         return new PagedList<T>(items, count, pageIndex, pageSize);

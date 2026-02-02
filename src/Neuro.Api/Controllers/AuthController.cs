@@ -21,7 +21,7 @@ public class AuthController : ApiControllerBase
 
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] Dtos.RegisterRequest request)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Account);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Password);
