@@ -8,6 +8,7 @@ html, body, #root { height: 100%; }
 /* Global card style */
 .card {
   @apply rounded-2xl p-6 shadow-lg bg-white dark:bg-gray-800 transition-shadow duration-300 ease-in-out;
+  border-radius: 18px;
 }
 
 /* Cool accent */
