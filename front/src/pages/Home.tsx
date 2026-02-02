@@ -1,5 +1,5 @@
 import React from 'react'
-import logo from '../assets/logo.png'
+const logo = '/assets/logo.png'
 import { Button } from '../components'
 
 export default function Home(){
