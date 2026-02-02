@@ -49,7 +49,7 @@ export default function Home(){
 
       <section className="card p-6">
         <h3 className="text-lg font-semibold">准备就绪</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">后端已启动，使用 OpenAPI 驱动的 API Explorer 与自动化文档生成工具来导出文档。</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">后端已启动，使用 OpenAPI 驱动的自动化文档生成工具来导出文档。</p>
         <div className="mt-4">
           <Button variant="primary">导出文档</Button>
         </div>
