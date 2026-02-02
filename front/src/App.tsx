@@ -8,7 +8,7 @@ import { SunIcon, MoonIcon } from '@heroicons/react/24/solid'
 
 function ThemeToggle({darkMode, setDarkMode}:{darkMode:boolean; setDarkMode:(v:boolean)=>void}){
   return (
-    <button onClick={()=>setDarkMode(!darkMode)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 theme-icon focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-sky-400">
+    <button onClick={(e)=>{ setDarkMode(!darkMode); (e.currentTarget as HTMLButtonElement).blur(); }} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 theme-icon focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-sky-400">
       {darkMode ? <MoonIcon className="w-5 h-5"/> : <SunIcon className="w-5 h-5"/>}
     </button>
   )
