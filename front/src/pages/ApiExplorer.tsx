@@ -11,7 +11,7 @@ export default function ApiExplorer(){
   const [selected, setSelected] = useState<{ path: string; method: string } | null>(null)
 
   useEffect(()=>{
-    const url = '/swagger/v1/swagger.json'
+    const url = 'http://localhost:5146/openapi/v1.json'
     fetch(url).then(async res => {
       if(!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`)
       const j = await res.json()
