@@ -42,7 +42,12 @@ export default function App(){
         </div>
       </header>
       <main className="container mx-auto p-4">
+        <div className="relative">
+          <div key={route} className="transition-opacity duration-400 ease-in-out" style={{opacity:1}}>
+
         {route === 'explorer' ? <ApiExplorer /> : route === 'components' ? <ComponentsPage /> : route === 'home' ? <Home /> : <Login /> }
+          </div>
+        </div>
       </main>
     </div>
   )
