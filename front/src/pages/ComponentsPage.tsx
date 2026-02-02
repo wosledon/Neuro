@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button } from '../components'
+import { Button, Card, Input, Avatar } from '../components'
 import Badge from '../components/Badge'
 
 export default function ComponentsPage(){
@@ -7,7 +7,7 @@ export default function ComponentsPage(){
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold">Component Playground</h2>
 
-      <section className="p-4 bg-white dark:bg-gray-800 rounded shadow">
+      <section className="card">
         <h3 className="font-medium">Buttons</h3>
         <div className="mt-3 flex items-center gap-3 flex-wrap">
           <Button variant="primary">Primary</Button>
@@ -16,17 +16,32 @@ export default function ComponentsPage(){
           <Button variant="primary" size="sm">Small</Button>
           <Button variant="primary" size="lg">Large</Button>
         </div>
-        <pre className="mt-3 p-2 bg-gray-50 dark:bg-gray-900 text-xs rounded">{`<Button variant="primary">Primary</Button>`}</pre>
       </section>
 
-      <section className="p-4 bg-white dark:bg-gray-800 rounded shadow">
+      <section className="card">
+        <h3 className="font-medium">Form controls</h3>
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label className="text-sm">示例输入</label>
+            <Input placeholder="输入文本..." />
+          </div>
+          <div>
+            <label className="text-sm">带头像的按钮</label>
+            <div className="mt-2 flex items-center gap-2">
+              <Avatar src="/assets/logo.png" alt="logo" />
+              <Button>使用头像</Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="card">
         <h3 className="font-medium">Badges</h3>
         <div className="mt-3 flex items-center gap-2">
           <Badge>Default</Badge>
           <Badge tone="success">Success</Badge>
           <Badge tone="danger">Danger</Badge>
         </div>
-        <pre className="mt-3 p-2 bg-gray-50 dark:bg-gray-900 text-xs rounded">{`<Badge tone="success">Success</Badge>`}</pre>
       </section>
 
     </div>
