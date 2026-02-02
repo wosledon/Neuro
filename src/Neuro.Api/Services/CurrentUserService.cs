@@ -36,5 +36,7 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 
+    public bool IsSuper => User?.FindFirst("is_super")?.Value == "True";
+
     public bool IsAuthenticated => User?.Identity?.IsAuthenticated == true;
 }

@@ -40,3 +40,13 @@ public enum AIProviderEnum
     [Description("本地模型 Embedding")]
     LocalModelEmbedding = 15,
 }
+
+/// <summary>
+/// 凭据类型：密码、SSH 密钥或个人访问令牌
+/// </summary>
+public enum GitCredentialTypeEnum
+{
+    Password = 0,
+    SshKey = 1,
+    PersonalAccessToken = 2
+}

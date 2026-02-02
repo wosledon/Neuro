@@ -16,6 +16,7 @@
     <Project Path="src/Neuro.Vectorizer/Neuro.Vectorizer.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Neuro.Api.Tests/Neuro.Api.Tests.csproj" />
     <Project Path="tests/Neuro.Document.Tests/Neuro.Document.Tests.csproj" />
     <Project Path="tests/Neuro.RAG.Tests/Neuro.RAG.Tests.csproj" />
     <Project Path="tests/Neuro.Tokenizer.Tests/Neuro.Tokenizer.Tests.csproj" />
