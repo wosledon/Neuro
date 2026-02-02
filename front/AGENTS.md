@@ -47,7 +47,7 @@ API 与后端交互
 - 生成客户端后，手写一层服务封装（src/services/*）用于处理错误、重试、分页与鉴权
 - 前端严格使用生成的接口类型，不允许在组件中手写 any 类型来绕过类型检查
 - 所有网络请求必须通过封装的 fetch/axios 实例，以便统一处理 token、请求拦截与响应拦截
-- API 文档：将 swagger.json 放在 front/public 或项目根并作为生成与版本来源，同时在 CI 中加入自动校验脚本以防 swagger 与后端不一致
+- API 文档：将 swagger.json 放在 front/public 或项目根并作为生成与版本来源，同时在 CI 中加入自动校验脚本以防 swagger 与后端不一致, swagger.json文档地址http://localhost:5146/openapi/v1.json
 
 AI Agent 行为约束（用于在前端集成 AI 助手时）
 - 目标导向：AI 助手应以帮助用户完成任务为目标（例如：生成文档、搜索知识点、生成代码片段），并在必要时向用户确认关键假设
