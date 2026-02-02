@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import ApiExplorer from './pages/ApiExplorer'
 import ComponentsPage from './pages/ComponentsPage'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -16,7 +15,7 @@ function ThemeToggle({darkMode, setDarkMode}:{darkMode:boolean; setDarkMode:(v:b
 }
 
 export default function App(){
-  const [route, setRoute] = useState<'explorer'|'components'|'home'|'login'>('home')
+  const [route, setRoute] = useState<'components'|'home'|'login'>('home')
   const [darkMode, setDarkMode] = useState<boolean>(()=>{
     try{ return localStorage.getItem('theme') === 'dark' }catch{ return false }
   })
@@ -45,7 +44,7 @@ export default function App(){
         <div className="relative">
           <div key={route} className="transition-opacity duration-400 ease-in-out" style={{opacity:1}}>
 
-        {route === 'explorer' ? <ApiExplorer /> : route === 'components' ? <ComponentsPage /> : route === 'home' ? <Home /> : <Login /> }
+        {route === 'components' ? <ComponentsPage /> : route === 'home' ? <Home /> : <Login /> }
           </div>
         </div>
       </main>
