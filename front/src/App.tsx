@@ -28,7 +28,7 @@ export default function App(){
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <header className="p-4 border-b dark:border-gray-700">
         <div className="container mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Neuro Front</h1>
+          <div className="flex items-center gap-3"><img src="/assets/logo.png" alt="logo" className="w-8 h-8"/><span className="text-2xl font-semibold">Neuro Front</span></div>
           <nav className="flex items-center gap-2">
             <ThemeToggle darkMode={false} setDarkMode={()=>{}} />
             <button className={"px-3 py-1 rounded " + (route==='home' ? 'bg-blue-600 text-white' : 'bg-transparent')} onClick={()=>setRoute('home')}>Home</button>
