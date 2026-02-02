@@ -16,6 +16,8 @@ function ThemeToggle({darkMode, setDarkMode}:{darkMode:boolean; setDarkMode:(v:b
 
 export default function App(){
   const [route, setRoute] = useState<'components'|'home'|'login'>('home')
+  // when on login route, render login as standalone full page
+  const isFullScreen = route === 'login'
   const [darkMode, setDarkMode] = useState<boolean>(()=>{
     try{ return localStorage.getItem('theme') === 'dark' }catch{ return false }
   })
@@ -39,14 +41,20 @@ export default function App(){
           </nav>
         </div>
       </header>
-      <main className="container mx-auto p-4">
-        <div className="relative">
-          <div key={route} className="transition-opacity duration-400 ease-in-out" style={{opacity:1}}>
-
-        {route === 'components' ? <ComponentsPage /> : route === 'home' ? <Home /> : <Login /> }
-          </div>
+      {isFullScreen ? (
+        <div className="min-h-screen">
+          <Login />
         </div>
-      </main>
+      ) : (
+        <main className="container mx-auto p-4">
+          <div className="relative">
+            <div key={route} className="transition-opacity duration-300 ease-in-out page-enter page-enter-active">
+
+          {route === 'components' ? <ComponentsPage /> : <Home /> }
+            </div>
+          </div>
+        </main>
+      )}
     </div>
   )
 }
