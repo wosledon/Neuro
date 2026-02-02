@@ -33,13 +33,14 @@
 - 颜色与主题：支持暗色模式（利用 Tailwind 的 dark 模式）并确保对比度满足 WCAG AA
 - 视觉风格：使用圆角卡片（rounded-2xl）作为主要容器，卡片内使用柔和阴影（shadow-lg）和渐变强调色（accent: from-sky-400 to-indigo-500）形成统一酷炫风格。
 - 图标库：统一使用 Heroicons（@heroicons/react），在 package.json 中添加依赖并在组件中使用（例如 ThemeToggle 使用 Sun/Moon 图标）。页面组件应尽量复用 .card 类和 .accent 工具类。
-- 动画与交互动效：统一使用 Tailwind 的过渡/变换工具与少量自定义 CSS 动画。建议规范：
-  - 页面切换：使用淡入/淡出或滑动过渡（transition-opacity, transform）
-  - 按钮：点击时使用 scale(0.95) 的按压动效
-  - 主题切换：图标添加旋转/缩放过渡，并以 300-500ms 的时长完成
-  - 卡片：hover 时提升阴影（shadow-lg -> shadow-2xl）并轻微上移（-translate-y-1）
-  - 动效禁用：为用户提供减少动效（prefers-reduced-motion）检测，若检测到应关闭或简化动画
+- 动画与交互动效：统一使用 Tailwind 的过渡/变换工具与少量自定义 CSS 动画，风格上追求流畅与低调的动效以提升高级感。建议规范：
+  - 页面切换：使用淡入/向上滑动过渡（transition-opacity + transform），时长 300ms
+  - 按钮：点击时使用 scale(0.95) 的按压动效，hover 时轻微提升（-translate-y-0.5）
+  - 主题切换：图标添加旋转/缩放过渡，并以 300-400ms 的时长完成
+  - 卡片：hover 时提升阴影（shadow-lg -> shadow-2xl）并轻微上移（-translate-y-1）并使用 subtle glow（暗色模式下降低亮度）
+  - 动效禁用：支持 prefers-reduced-motion，若检测到应关闭或简化动画
   - 性能：只对合成图层进行动画，避免触发布局回流（使用 transform 和 opacity 优先）
+  - 交互反馈：关键操作（导出文档、同步知识库）需要 toast/通知与加载状态展示
 
 
 统一组件参考页（Component Playground）
