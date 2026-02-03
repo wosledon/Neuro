@@ -133,6 +133,6 @@ AI Agent 行为约束（用于在前端集成 AI 助手时）
 - 命名与版本：使用 assets/logo.svg 与 assets/logo@2x.png 命名规范，若更新 logo，请在 AGENTS.md 中记录版本与设计说明
 - 使用：页面头部、Storybook、文档站点使用同一套 logo，具体路径 public/assets/logo.svg
 
-后续：该 logo 已放置为示例（front/public/assets/logo.svg），后续视觉稿可以替换该文件以更新产品形象
+后续：该 logo 已放置为示例（front/public/assets/logo.png），后续视觉稿可以替换该文件以更新产品形象
 
 -- EOF
