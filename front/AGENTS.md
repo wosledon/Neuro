@@ -31,16 +31,24 @@
 - 组件接受 className 以便组合样式，内部使用 clsx 合并
 - 所有交互（按钮、输入、列表）都要考虑可访问性（aria-*）和键盘操作
 - 颜色与主题：支持暗色模式（利用 Tailwind 的 dark 模式）并确保对比度满足 WCAG AA
-- 视觉风格：使用圆角卡片（rounded-2xl）作为主要容器，卡片内使用柔和阴影（shadow-lg）和渐变强调色（accent: from-sky-400 to-indigo-500）形成统一酷炫风格。
+- 视觉风格：采用“现代简约 + 卡片化 + Material Design”风格。使用圆角卡片（rounded-lg，border-radius: 12px），轻微的材料阴影（默认 shadow-sm，hover 时提升到 shadow-lg），配色以 Indigo/Blue 渐变为主色调（accent: from-indigo-500 to-blue-400），同时保证简洁、数据优先的视觉层次。
+- 布局与容器：使用 .container 作为页面水平约束（max-width: 1280px），并以 .page-content 控制垂直间距（padding top/bottom 2.5rem）。主页和登录页采用更宽的卡片容器（max-w-4xl 或 max-w-5xl）来提供现代化视觉感；主页顶部不应重复 Header（避免双头布局）。
+- 设计 Tokens（基础色板、间距、圆角、阴影）：已在 src/styles/tokens.ts 中定义，请使用其中的 colors、spacing 与 radii 以保证一致性。
+  - colors.primary: 主色（#6366F1）
+  - colors.primaryDark: 深色主色（#4F46E5）
+  - accent: 渐变从 colors.primary 到 #60A5FA
+  - spacing/md: 16（主要内边距）
+  - radii.md: 12（卡片圆角）
 - 图标库：统一使用 Heroicons（@heroicons/react），在 package.json 中添加依赖并在组件中使用（例如 ThemeToggle 使用 Sun/Moon 图标）。页面组件应尽量复用 .card 类和 .accent 工具类。
-- 动画与交互动效：统一使用 Tailwind 的过渡/变换工具与少量自定义 CSS 动画，风格上追求流畅与低调的动效以提升高级感。建议规范：
-  - 页面切换：使用淡入/向上滑动过渡（transition-opacity + transform），时长 300ms
-  - 按钮：点击时使用 scale(0.95) 的按压动效，hover 时轻微提升（-translate-y-0.5）
-  - 主题切换：图标添加旋转/缩放过渡，并以 300-400ms 的时长完成；主题切换控件应只放置在全局 header（保持单一入口），切换后应在事件处理器中调用 button.blur() 或使用 :focus-visible 来避免持久的聚焦边框，同时保证键盘可访问性
-  - 卡片：hover 时提升阴影（shadow-lg -> shadow-2xl）并轻微上移（-translate-y-1）并使用 subtle glow（暗色模式下降低亮度）
+- Toast & 通知：已在 components/ 内新增 Toast 与 ToastProvider，使用 useToast() 在组件内调用（示例：const { show } = useToast(); show('保存成功', 'success')）。Toasts 使用 Material 风格的实色背景和轻微阴影，自动 3s 隐藏。
+- 动画与交互动效：统一使用 Tailwind 的过渡/变换工具与少量自定义 CSS 动画，遵循 Material 的动效原则（快速、自然、轻微），具体规范：
+  - 页面切换：使用淡入/向上滑动过渡（transition-opacity + transform），时长 300ms；在更复杂场景建议使用 Framer Motion
+  - 按钮：点击时使用轻微位移与缩放按压动效（transform: translateY(1px) scale(0.98)），hover 时提升阴影（shadow-sm -> shadow-md）
+  - 主题切换：图标添加旋转/缩放过渡，并以 200-300ms 的时长完成；主题切换控件应只放置在全局 header（保持单一入口），切换后应在事件处理器中调用 button.blur() 或使用 :focus-visible 来避免持久的聚焦边框，同时保证键盘可访问性
+  - 卡片：hover 时提升阴影（shadow-sm -> shadow-lg）并轻微上移（transform: translateY(-4px)），使用 subtle elevation 表现层次
   - 动效禁用：支持 prefers-reduced-motion，若检测到应关闭或简化动画
   - 性能：只对合成图层进行动画，避免触发布局回流（使用 transform 和 opacity 优先）
-  - 交互反馈：关键操作（导出文档、同步知识库）需要 toast/通知与加载状态展示
+  - 交互反馈：关键操作（导出文档、同步知识库）需要 toast/通知与加载状态展示，建议使用 headlessui 或自建 Toast 组件
   - 交互反馈：关键操作（导出文档、同步知识库）需要 toast/通知与加载状态展示
 
 

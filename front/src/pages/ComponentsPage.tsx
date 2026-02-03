@@ -1,6 +1,5 @@
 import React from 'react'
-import { Button, Card, Input, Avatar } from '../components'
-import Badge from '../components/Badge'
+import { Button, Card, Input, Avatar, Badge } from '../components'
 
 export default function ComponentsPage(){
   return (
@@ -22,11 +21,11 @@ export default function ComponentsPage(){
         <h3 className="font-medium">Form controls</h3>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="text-sm">示例输入</label>
+            <label className="text-sm text-gray-700 dark:text-gray-300">示例输入</label>
             <Input placeholder="输入文本..." />
           </div>
           <div>
-            <label className="text-sm">带头像的按钮</label>
+            <label className="text-sm text-gray-700 dark:text-gray-300">带头像的按钮</label>
             <div className="mt-2 flex items-center gap-2">
               <Avatar src="/assets/logo.png" alt="logo" />
               <Button>使用头像</Button>
