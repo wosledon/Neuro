@@ -13,7 +13,7 @@ public class PermissionController : ApiControllerBase
     public PermissionController(IUnitOfWork db) { _db = db; }
 
     [HttpGet]
-    public async Task<IActionResult> List([FromBody] PermissionListRequest request)
+    public async Task<IActionResult> List([FromQuery] PermissionListRequest request)
     {
         request ??= new PermissionListRequest();
         var q = _db.Q<Permission>().AsNoTracking()

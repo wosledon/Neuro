@@ -24,6 +24,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // Auth services
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
 
 builder.Services.AddCors(options =>
 {

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Neuro.EntityFrameworkCore.Extensions;
 using Neuro.Api.Entity;
+using Neuro.Api.Services;
 using Neuro.EntityFrameworkCore.Services;
 using Neuro.Shared.Dtos;
 
@@ -16,7 +17,7 @@ public class UserController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> List([FromBody] UserListRequest request)
+    public async Task<IActionResult> List([FromQuery] UserListRequest request)
     {
         request ??= new UserListRequest();
 
@@ -84,6 +85,7 @@ public class UserController : ApiControllerBase
             if (!string.IsNullOrWhiteSpace(user.Avatar)) exist.Avatar = user.Avatar;
             if (!string.IsNullOrWhiteSpace(user.Description)) exist.Description = user.Description;
             if (user.IsSuper.HasValue) exist.IsSuper = user.IsSuper.Value;
+            if (user.TenantId.HasValue) exist.TenantId = user.TenantId.Value;
 
             if (!string.IsNullOrWhiteSpace(user.Password))
             {
@@ -165,5 +167,67 @@ public class UserController : ApiControllerBase
         }
 
         return Success(user);
+    }
+
+    /// <summary>
+    /// 获取指定用户的权限列表
+    /// </summary>
+    [HttpGet("{id:guid}/permissions")]
+    public async Task<IActionResult> GetUserPermissions(Guid id, [FromServices] IPermissionService permissionService)
+    {
+        var user = await _db.Q<User>().FirstOrDefaultAsync(u => u.Id == id);
+        if (user is null) return Failure("用户不存在。", 404);
+
+        var permissions = await permissionService.GetUserPermissionsAsync(id);
+        return Success(permissions);
+    }
+
+    /// <summary>
+    /// 获取指定用户的菜单树
+    /// </summary>
+    [HttpGet("{id:guid}/menus")]
+    public async Task<IActionResult> GetUserMenus(Guid id, [FromServices] IPermissionService permissionService)
+    {
+        var user = await _db.Q<User>().FirstOrDefaultAsync(u => u.Id == id);
+        if (user is null) return Failure("用户不存在。", 404);
+
+        var menus = await permissionService.GetUserMenusAsync(id);
+        return Success(menus);
+    }
+
+    /// <summary>
+    /// 获取指定用户的角色列表
+    /// </summary>
+    [HttpGet("{id:guid}/roles")]
+    public async Task<IActionResult> GetUserRoles(Guid id)
+    {
+        var user = await _db.Q<User>().FirstOrDefaultAsync(u => u.Id == id);
+        if (user is null) return Failure("用户不存在。", 404);
+
+        var roles = await _db.Q<UserRole>()
+            .Where(ur => ur.UserId == id)
+            .Join(_db.Q<Role>(), ur => ur.RoleId, r => r.Id, (ur, r) => r)
+            .Select(r => new { r.Id, r.Name, r.Code })
+            .ToListAsync();
+
+        return Success(roles);
+    }
+
+    /// <summary>
+    /// 获取指定用户的团队列表
+    /// </summary>
+    [HttpGet("{id:guid}/teams")]
+    public async Task<IActionResult> GetUserTeams(Guid id)
+    {
+        var user = await _db.Q<User>().FirstOrDefaultAsync(u => u.Id == id);
+        if (user is null) return Failure("用户不存在。", 404);
+
+        var teams = await _db.Q<UserTeam>()
+            .Where(ut => ut.UserId == id)
+            .Join(_db.Q<Team>(), ut => ut.TeamId, t => t.Id, (ut, t) => t)
+            .Select(t => new { t.Id, t.Name, t.Code })
+            .ToListAsync();
+
+        return Success(teams);
     }
 }

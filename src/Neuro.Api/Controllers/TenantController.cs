@@ -13,7 +13,7 @@ public class TenantController : ApiControllerBase
     public TenantController(IUnitOfWork db) { _db = db; }
 
     [HttpGet]
-    public async Task<IActionResult> List([FromBody] TenantListRequest request)
+    public async Task<IActionResult> List([FromQuery] TenantListRequest request)
     {
         request ??= new TenantListRequest();
         var q = _db.Q<Tenant>().AsNoTracking()

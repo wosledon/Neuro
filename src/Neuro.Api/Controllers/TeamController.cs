@@ -13,7 +13,7 @@ public class TeamController : ApiControllerBase
     public TeamController(IUnitOfWork db) { _db = db; }
 
     [HttpGet]
-    public async Task<IActionResult> List([FromBody] TeamListRequest request)
+    public async Task<IActionResult> List([FromQuery] TeamListRequest request)
     {
         request ??= new TeamListRequest();
         var q = _db.Q<Team>().AsNoTracking()
@@ -27,7 +27,9 @@ public class TeamController : ApiControllerBase
             Code = t.Code,
             Description = t.Description,
             IsEnabled = t.IsEnabled,
+            IsPin = t.IsPin,
             ParentId = t.ParentId,
+            TreePath = t.TreePath,
             Sort = t.Sort
         }).ToPagedListAsync(request.Page, request.PageSize);
 
@@ -39,7 +41,7 @@ public class TeamController : ApiControllerBase
     {
         var t = await _db.Q<Team>().FirstOrDefaultAsync(x => x.Id == id);
         if (t is null) return Failure("Team not found.", 404);
-        var dto = new TeamDetail { Id = t.Id, Name = t.Name, Code = t.Code, Description = t.Description, IsEnabled = t.IsEnabled, ParentId = t.ParentId, Sort = t.Sort };
+        var dto = new TeamDetail { Id = t.Id, Name = t.Name, Code = t.Code, Description = t.Description, IsEnabled = t.IsEnabled, IsPin = t.IsPin, ParentId = t.ParentId, TreePath = t.TreePath, Sort = t.Sort };
         return Success(dto);
     }
 
@@ -55,7 +57,9 @@ public class TeamController : ApiControllerBase
             if (!string.IsNullOrWhiteSpace(req.Code)) ent.Code = req.Code;
             if (!string.IsNullOrWhiteSpace(req.Description)) ent.Description = req.Description;
             if (req.IsEnabled.HasValue) ent.IsEnabled = req.IsEnabled.Value;
+            if (req.IsPin.HasValue) ent.IsPin = req.IsPin.Value;
             if (req.ParentId.HasValue) ent.ParentId = req.ParentId;
+            if (!string.IsNullOrWhiteSpace(req.TreePath)) ent.TreePath = req.TreePath;
             if (req.Sort.HasValue) ent.Sort = req.Sort.Value;
 
             await _db.UpdateAsync(ent);
@@ -64,7 +68,7 @@ public class TeamController : ApiControllerBase
         }
 
         if (string.IsNullOrWhiteSpace(req.Name)) return Failure("Name required.");
-        var nt = new Team { Name = req.Name!, Code = req.Code ?? string.Empty, Description = req.Description ?? string.Empty, IsEnabled = req.IsEnabled ?? true, ParentId = req.ParentId, Sort = req.Sort ?? 0 };
+        var nt = new Team { Name = req.Name!, Code = req.Code ?? string.Empty, Description = req.Description ?? string.Empty, IsEnabled = req.IsEnabled ?? true, IsPin = req.IsPin ?? false, ParentId = req.ParentId, TreePath = req.TreePath ?? string.Empty, Sort = req.Sort ?? 0 };
         await _db.AddAsync(nt);
         await _db.SaveChangesAsync();
         return Success(new UpsertResponse { Id = nt.Id });
@@ -77,5 +81,41 @@ public class TeamController : ApiControllerBase
         await _db.RemoveByIdsAsync<Team>(ids.Ids);
         await _db.SaveChangesAsync();
         return Success();
+    }
+
+    /// <summary>
+    /// 获取团队的成员列表
+    /// </summary>
+    [HttpGet("{id:guid}/users")]
+    public async Task<IActionResult> GetTeamUsers(Guid id)
+    {
+        var team = await _db.Q<Team>().FirstOrDefaultAsync(t => t.Id == id);
+        if (team is null) return Failure("团队不存在。", 404);
+
+        var users = await _db.Q<UserTeam>()
+            .Where(ut => ut.TeamId == id)
+            .Join(_db.Q<User>(), ut => ut.UserId, u => u.Id, (ut, u) => u)
+            .Select(u => new { u.Id, u.Account, u.Name })
+            .ToListAsync();
+
+        return Success(users);
+    }
+
+    /// <summary>
+    /// 获取团队的项目列表
+    /// </summary>
+    [HttpGet("{id:guid}/projects")]
+    public async Task<IActionResult> GetTeamProjects(Guid id)
+    {
+        var team = await _db.Q<Team>().FirstOrDefaultAsync(t => t.Id == id);
+        if (team is null) return Failure("团队不存在。", 404);
+
+        var projects = await _db.Q<TeamProject>()
+            .Where(tp => tp.TeamId == id)
+            .Join(_db.Q<Project>(), tp => tp.ProjectId, p => p.Id, (tp, p) => p)
+            .Select(p => new { p.Id, p.Name, p.Code, p.Type })
+            .ToListAsync();
+
+        return Success(projects);
     }
 }

@@ -4,6 +4,7 @@ using Neuro.Api.Entity;
 using Neuro.EntityFrameworkCore.Extensions;
 using Neuro.EntityFrameworkCore.Services;
 using Neuro.Shared.Dtos;
+using Neuro.Shared.Enums;
 
 namespace Neuro.Api.Controllers;
 
@@ -13,7 +14,7 @@ public class ProjectController : ApiControllerBase
     public ProjectController(IUnitOfWork db) { _db = db; }
 
     [HttpGet]
-    public async Task<IActionResult> List([FromBody] ProjectListRequest request)
+    public async Task<IActionResult> List([FromQuery] ProjectListRequest request)
     {
         request ??= new ProjectListRequest();
         var q = _db.Q<Project>().AsNoTracking()
@@ -25,10 +26,15 @@ public class ProjectController : ApiControllerBase
             Id = p.Id,
             Name = p.Name,
             Code = p.Code,
+            Type = p.Type,
             Description = p.Description,
             IsEnabled = p.IsEnabled,
             IsPin = p.IsPin,
             ParentId = p.ParentId,
+            TreePath = p.TreePath,
+            RepositoryUrl = p.RepositoryUrl,
+            HomepageUrl = p.HomepageUrl,
+            DocsUrl = p.DocsUrl,
             Sort = p.Sort
         }).ToPagedListAsync(request.Page, request.PageSize);
 
@@ -45,10 +51,15 @@ public class ProjectController : ApiControllerBase
             Id = p.Id,
             Name = p.Name,
             Code = p.Code,
+            Type = p.Type,
             Description = p.Description,
             IsEnabled = p.IsEnabled,
             IsPin = p.IsPin,
             ParentId = p.ParentId,
+            TreePath = p.TreePath,
+            RepositoryUrl = p.RepositoryUrl,
+            HomepageUrl = p.HomepageUrl,
+            DocsUrl = p.DocsUrl,
             Sort = p.Sort
         });
     }
@@ -63,10 +74,15 @@ public class ProjectController : ApiControllerBase
             if (ent is null) return Failure("Project not found.", 404);
             if (!string.IsNullOrWhiteSpace(req.Name)) ent.Name = req.Name;
             if (!string.IsNullOrWhiteSpace(req.Code)) ent.Code = req.Code;
+            if (req.Type.HasValue) ent.Type = req.Type.Value;
             if (!string.IsNullOrWhiteSpace(req.Description)) ent.Description = req.Description;
             if (req.IsEnabled.HasValue) ent.IsEnabled = req.IsEnabled.Value;
             if (req.IsPin.HasValue) ent.IsPin = req.IsPin.Value;
             if (req.ParentId.HasValue) ent.ParentId = req.ParentId;
+            if (!string.IsNullOrWhiteSpace(req.TreePath)) ent.TreePath = req.TreePath;
+            if (!string.IsNullOrWhiteSpace(req.RepositoryUrl)) ent.RepositoryUrl = req.RepositoryUrl;
+            if (!string.IsNullOrWhiteSpace(req.HomepageUrl)) ent.HomepageUrl = req.HomepageUrl;
+            if (!string.IsNullOrWhiteSpace(req.DocsUrl)) ent.DocsUrl = req.DocsUrl;
             if (req.Sort.HasValue) ent.Sort = req.Sort.Value;
 
             await _db.UpdateAsync(ent);
@@ -80,10 +96,15 @@ public class ProjectController : ApiControllerBase
         {
             Name = req.Name!,
             Code = req.Code ?? string.Empty,
+            Type = req.Type ?? ProjectTypeEnum.Document,
             Description = req.Description ?? string.Empty,
             IsEnabled = req.IsEnabled ?? true,
             IsPin = req.IsPin ?? false,
             ParentId = req.ParentId,
+            TreePath = req.TreePath ?? string.Empty,
+            RepositoryUrl = req.RepositoryUrl ?? string.Empty,
+            HomepageUrl = req.HomepageUrl ?? string.Empty,
+            DocsUrl = req.DocsUrl ?? string.Empty,
             Sort = req.Sort ?? 0
         };
 

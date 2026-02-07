@@ -22,4 +22,6 @@ public class UserUpsertRequest
     public string? Description { get; set; }
 
     public bool? IsSuper { get; set; }
+
+    public Guid? TenantId { get; set; }
 }

@@ -13,7 +13,7 @@ public class MenuController : ApiControllerBase
     public MenuController(IUnitOfWork db) { _db = db; }
 
     [HttpGet]
-    public async Task<IActionResult> List([FromBody] MenuListRequest request)
+    public async Task<IActionResult> List([FromQuery] MenuListRequest request)
     {
         request ??= new MenuListRequest();
         var q = _db.Q<Menu>().AsNoTracking()

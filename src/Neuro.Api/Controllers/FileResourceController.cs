@@ -13,7 +13,7 @@ public class FileResourceController : ApiControllerBase
     public FileResourceController(IUnitOfWork db) { _db = db; }
 
     [HttpGet]
-    public async Task<IActionResult> List([FromBody] FileResourceListRequest request)
+    public async Task<IActionResult> List([FromQuery] FileResourceListRequest request)
     {
         request ??= new FileResourceListRequest();
         var q = _db.Q<FileResource>().AsNoTracking()

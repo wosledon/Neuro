@@ -150,4 +150,40 @@ public class AuthController : ApiControllerBase
             user.IsSuper
         });
     }
+
+    /// <summary>
+    /// 获取当前登录用户的权限列表
+    /// </summary>
+    [HttpGet("permissions")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> MyPermissions([FromServices] IPermissionService permissionService)
+    {
+        var permissions = await permissionService.GetUserPermissionsAsync(UserId);
+        return Success(permissions);
+    }
+
+    /// <summary>
+    /// 获取当前登录用户的菜单树
+    /// </summary>
+    [HttpGet("menus")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> MyMenus([FromServices] IPermissionService permissionService)
+    {
+        var menus = await permissionService.GetUserMenusAsync(UserId);
+        return Success(menus);
+    }
+
+    /// <summary>
+    /// 检查当前用户是否拥有指定权限
+    /// </summary>
+    [HttpGet("check-permission")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> CheckPermission([FromQuery] string code, [FromServices] IPermissionService permissionService)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return Failure("权限代码不能为空。");
+
+        var hasPermission = await permissionService.HasPermissionAsync(UserId, code);
+        return Success(new { HasPermission = hasPermission });
+    }
 }
