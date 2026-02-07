@@ -6,6 +6,9 @@ All URIs are relative to *http://localhost:5146*
 |------------- | ------------- | -------------|
 |[**apiRoleDeleteDelete**](#apiroledeletedelete) | **DELETE** /api/Role/Delete | |
 |[**apiRoleGetGet**](#apirolegetget) | **GET** /api/Role/Get | |
+|[**apiRoleGetRoleMenusIdMenusGet**](#apirolegetrolemenusidmenusget) | **GET** /api/Role/GetRoleMenus/{id}/menus | |
+|[**apiRoleGetRolePermissionsIdPermissionsGet**](#apirolegetrolepermissionsidpermissionsget) | **GET** /api/Role/GetRolePermissions/{id}/permissions | |
+|[**apiRoleGetRoleUsersIdUsersGet**](#apirolegetroleusersidusersget) | **GET** /api/Role/GetRoleUsers/{id}/users | |
 |[**apiRoleListGet**](#apirolelistget) | **GET** /api/Role/List | |
 |[**apiRoleUpsertPost**](#apiroleupsertpost) | **POST** /api/Role/Upsert | |
 
@@ -110,8 +113,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiRoleListGet**
-> apiRoleListGet(roleListRequest)
+# **apiRoleGetRoleMenusIdMenusGet**
+> apiRoleGetRoleMenusIdMenusGet()
 
 
 ### Example
@@ -119,17 +122,16 @@ No authorization required
 ```typescript
 import {
     RoleApi,
-    Configuration,
-    RoleListRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new RoleApi(configuration);
 
-let roleListRequest: RoleListRequest; //
+let id: string; // (default to undefined)
 
-const { status, data } = await apiInstance.apiRoleListGet(
-    roleListRequest
+const { status, data } = await apiInstance.apiRoleGetRoleMenusIdMenusGet(
+    id
 );
 ```
 
@@ -137,7 +139,7 @@ const { status, data } = await apiInstance.apiRoleListGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **roleListRequest** | **RoleListRequest**|  | |
+| **id** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
@@ -150,7 +152,165 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, text/json, application/*+json
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiRoleGetRolePermissionsIdPermissionsGet**
+> apiRoleGetRolePermissionsIdPermissionsGet()
+
+
+### Example
+
+```typescript
+import {
+    RoleApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new RoleApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.apiRoleGetRolePermissionsIdPermissionsGet(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiRoleGetRoleUsersIdUsersGet**
+> apiRoleGetRoleUsersIdUsersGet()
+
+
+### Example
+
+```typescript
+import {
+    RoleApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new RoleApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.apiRoleGetRoleUsersIdUsersGet(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiRoleListGet**
+> apiRoleListGet()
+
+
+### Example
+
+```typescript
+import {
+    RoleApi,
+    Configuration,
+    ApiDocumentListGetPageParameter,
+    ApiDocumentListGetPageParameter
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new RoleApi(configuration);
+
+let keyword: string; // (optional) (default to undefined)
+let page: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
+let pageSize: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
+
+const { status, data } = await apiInstance.apiRoleListGet(
+    keyword,
+    page,
+    pageSize
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **keyword** | [**string**] |  | (optional) defaults to undefined|
+| **page** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
+| **pageSize** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: Not defined
 
 

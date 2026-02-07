@@ -10,7 +10,9 @@ Name | Type | Description | Notes
 **code** | **string** |  | [optional] [default to undefined]
 **description** | **string** |  | [optional] [default to undefined]
 **isEnabled** | **boolean** |  | [optional] [default to undefined]
+**isPin** | **boolean** |  | [optional] [default to undefined]
 **parentId** | **string** |  | [optional] [default to undefined]
+**treePath** | **string** |  | [optional] [default to undefined]
 **sort** | [**DocumentUpsertRequestSort**](DocumentUpsertRequestSort.md) |  | [optional] [default to undefined]
 
 ## Example
@@ -24,7 +26,9 @@ const instance: TeamUpsertRequest = {
     code,
     description,
     isEnabled,
+    isPin,
     parentId,
+    treePath,
     sort,
 };
 ```

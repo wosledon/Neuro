@@ -111,7 +111,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **apiProjectListGet**
-> apiProjectListGet(projectListRequest)
+> apiProjectListGet()
 
 
 ### Example
@@ -120,16 +120,21 @@ No authorization required
 import {
     ProjectApi,
     Configuration,
-    ProjectListRequest
+    ApiDocumentListGetPageParameter,
+    ApiDocumentListGetPageParameter
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProjectApi(configuration);
 
-let projectListRequest: ProjectListRequest; //
+let keyword: string; // (optional) (default to undefined)
+let page: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
+let pageSize: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
 
 const { status, data } = await apiInstance.apiProjectListGet(
-    projectListRequest
+    keyword,
+    page,
+    pageSize
 );
 ```
 
@@ -137,7 +142,9 @@ const { status, data } = await apiInstance.apiProjectListGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **projectListRequest** | **ProjectListRequest**|  | |
+| **keyword** | [**string**] |  | (optional) defaults to undefined|
+| **page** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
+| **pageSize** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
 
 
 ### Return type
@@ -150,7 +157,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, text/json, application/*+json
+ - **Content-Type**: Not defined
  - **Accept**: Not defined
 
 

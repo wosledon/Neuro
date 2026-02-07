@@ -6,6 +6,8 @@ All URIs are relative to *http://localhost:5146*
 |------------- | ------------- | -------------|
 |[**apiTeamDeleteDelete**](#apiteamdeletedelete) | **DELETE** /api/Team/Delete | |
 |[**apiTeamGetGet**](#apiteamgetget) | **GET** /api/Team/Get | |
+|[**apiTeamGetTeamProjectsIdProjectsGet**](#apiteamgetteamprojectsidprojectsget) | **GET** /api/Team/GetTeamProjects/{id}/projects | |
+|[**apiTeamGetTeamUsersIdUsersGet**](#apiteamgetteamusersidusersget) | **GET** /api/Team/GetTeamUsers/{id}/users | |
 |[**apiTeamListGet**](#apiteamlistget) | **GET** /api/Team/List | |
 |[**apiTeamUpsertPost**](#apiteamupsertpost) | **POST** /api/Team/Upsert | |
 
@@ -110,8 +112,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiTeamListGet**
-> apiTeamListGet(teamListRequest)
+# **apiTeamGetTeamProjectsIdProjectsGet**
+> apiTeamGetTeamProjectsIdProjectsGet()
 
 
 ### Example
@@ -119,17 +121,16 @@ No authorization required
 ```typescript
 import {
     TeamApi,
-    Configuration,
-    TeamListRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new TeamApi(configuration);
 
-let teamListRequest: TeamListRequest; //
+let id: string; // (default to undefined)
 
-const { status, data } = await apiInstance.apiTeamListGet(
-    teamListRequest
+const { status, data } = await apiInstance.apiTeamGetTeamProjectsIdProjectsGet(
+    id
 );
 ```
 
@@ -137,7 +138,7 @@ const { status, data } = await apiInstance.apiTeamListGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **teamListRequest** | **TeamListRequest**|  | |
+| **id** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
@@ -150,7 +151,115 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, text/json, application/*+json
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiTeamGetTeamUsersIdUsersGet**
+> apiTeamGetTeamUsersIdUsersGet()
+
+
+### Example
+
+```typescript
+import {
+    TeamApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new TeamApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.apiTeamGetTeamUsersIdUsersGet(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiTeamListGet**
+> apiTeamListGet()
+
+
+### Example
+
+```typescript
+import {
+    TeamApi,
+    Configuration,
+    ApiDocumentListGetPageParameter,
+    ApiDocumentListGetPageParameter
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new TeamApi(configuration);
+
+let keyword: string; // (optional) (default to undefined)
+let page: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
+let pageSize: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
+
+const { status, data } = await apiInstance.apiTeamListGet(
+    keyword,
+    page,
+    pageSize
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **keyword** | [**string**] |  | (optional) defaults to undefined|
+| **page** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
+| **pageSize** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: Not defined
 
 

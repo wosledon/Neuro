@@ -1,33 +1,83 @@
-# TenantApi
+# TeamDocumentApi
 
 All URIs are relative to *http://localhost:5146*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**apiTenantDeleteDelete**](#apitenantdeletedelete) | **DELETE** /api/Tenant/Delete | |
-|[**apiTenantGetGet**](#apitenantgetget) | **GET** /api/Tenant/Get | |
-|[**apiTenantListGet**](#apitenantlistget) | **GET** /api/Tenant/List | |
-|[**apiTenantUpsertPost**](#apitenantupsertpost) | **POST** /api/Tenant/Upsert | |
+|[**apiTeamDocumentAssignPost**](#apiteamdocumentassignpost) | **POST** /api/TeamDocument/Assign | |
+|[**apiTeamDocumentDeleteDelete**](#apiteamdocumentdeletedelete) | **DELETE** /api/TeamDocument/Delete | |
+|[**apiTeamDocumentListGet**](#apiteamdocumentlistget) | **GET** /api/TeamDocument/List | |
 
-# **apiTenantDeleteDelete**
-> apiTenantDeleteDelete(batchDeleteRequest)
+# **apiTeamDocumentAssignPost**
+> apiTeamDocumentAssignPost(teamDocumentAssignRequest)
 
 
 ### Example
 
 ```typescript
 import {
-    TenantApi,
+    TeamDocumentApi,
+    Configuration,
+    TeamDocumentAssignRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new TeamDocumentApi(configuration);
+
+let teamDocumentAssignRequest: TeamDocumentAssignRequest; //
+
+const { status, data } = await apiInstance.apiTeamDocumentAssignPost(
+    teamDocumentAssignRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **teamDocumentAssignRequest** | **TeamDocumentAssignRequest**|  | |
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json, text/json, application/*+json
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiTeamDocumentDeleteDelete**
+> apiTeamDocumentDeleteDelete(batchDeleteRequest)
+
+
+### Example
+
+```typescript
+import {
+    TeamDocumentApi,
     Configuration,
     BatchDeleteRequest
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new TenantApi(configuration);
+const apiInstance = new TeamDocumentApi(configuration);
 
 let batchDeleteRequest: BatchDeleteRequest; //
 
-const { status, data } = await apiInstance.apiTenantDeleteDelete(
+const { status, data } = await apiInstance.apiTeamDocumentDeleteDelete(
     batchDeleteRequest
 );
 ```
@@ -60,79 +110,31 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiTenantGetGet**
-> apiTenantGetGet()
+# **apiTeamDocumentListGet**
+> apiTeamDocumentListGet()
 
 
 ### Example
 
 ```typescript
 import {
-    TenantApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new TenantApi(configuration);
-
-let id: string; // (optional) (default to undefined)
-
-const { status, data } = await apiInstance.apiTenantGetGet(
-    id
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] |  | (optional) defaults to undefined|
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiTenantListGet**
-> apiTenantListGet()
-
-
-### Example
-
-```typescript
-import {
-    TenantApi,
+    TeamDocumentApi,
     Configuration,
     ApiDocumentListGetPageParameter,
     ApiDocumentListGetPageParameter
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new TenantApi(configuration);
+const apiInstance = new TeamDocumentApi(configuration);
 
-let keyword: string; // (optional) (default to undefined)
+let teamId: string; // (optional) (default to undefined)
+let documentId: string; // (optional) (default to undefined)
 let page: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
 let pageSize: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
 
-const { status, data } = await apiInstance.apiTenantListGet(
-    keyword,
+const { status, data } = await apiInstance.apiTeamDocumentListGet(
+    teamId,
+    documentId,
     page,
     pageSize
 );
@@ -142,7 +144,8 @@ const { status, data } = await apiInstance.apiTenantListGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **keyword** | [**string**] |  | (optional) defaults to undefined|
+| **teamId** | [**string**] |  | (optional) defaults to undefined|
+| **documentId** | [**string**] |  | (optional) defaults to undefined|
 | **page** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
 | **pageSize** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
 
@@ -158,57 +161,6 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiTenantUpsertPost**
-> apiTenantUpsertPost(tenantUpsertRequest)
-
-
-### Example
-
-```typescript
-import {
-    TenantApi,
-    Configuration,
-    TenantUpsertRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new TenantApi(configuration);
-
-let tenantUpsertRequest: TenantUpsertRequest; //
-
-const { status, data } = await apiInstance.apiTenantUpsertPost(
-    tenantUpsertRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **tenantUpsertRequest** | **TenantUpsertRequest**|  | |
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json, text/json, application/*+json
  - **Accept**: Not defined
 
 

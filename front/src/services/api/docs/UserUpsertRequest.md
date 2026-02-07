@@ -14,6 +14,7 @@ Name | Type | Description | Notes
 **avatar** | **string** |  | [optional] [default to undefined]
 **description** | **string** |  | [optional] [default to undefined]
 **isSuper** | **boolean** |  | [optional] [default to undefined]
+**tenantId** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -30,6 +31,7 @@ const instance: UserUpsertRequest = {
     avatar,
     description,
     isSuper,
+    tenantId,
 };
 ```
 

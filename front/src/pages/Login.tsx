@@ -1,8 +1,11 @@
 import React, { useState } from 'react'
 import { Button } from '../components'
+import { useAuth } from '../contexts/AuthContext'
+import { useToast } from '../components/ToastProvider'
 
 type Props = {
   onBack: () => void
+  onLogin?: () => void
 }
 
 const tokenStyles = [
@@ -11,13 +14,30 @@ const tokenStyles = [
   { label: 'Neuro Grid', color: 'from-amber-400/80 to-orange-500/60' }
 ]
 
-export default function Login({ onBack }: Props){
-  const [email, setEmail] = useState('')
+export default function Login({ onBack, onLogin }: Props){
+  const [account, setAccount] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const { login } = useAuth()
+  const { showToast } = useToast()
 
-  function submit(e:React.FormEvent){
+  async function submit(e: React.FormEvent){
     e.preventDefault()
-    alert(`登录: ${email}`)
+    if (!account || !password) {
+      showToast('请输入账号和密码', 'error')
+      return
+    }
+    
+    setIsLoading(true)
+    try {
+      await login(account, password)
+      showToast('登录成功', 'success')
+      onLogin?.()
+    } catch (error: any) {
+      showToast(error.response?.data?.message || '登录失败', 'error')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -63,14 +83,14 @@ export default function Login({ onBack }: Props){
           </div>
           <form className="mt-6 space-y-5" onSubmit={submit}>
               <div className="space-y-1 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
-                <label>邮箱</label>
+                <label>账号</label>
                 <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                value={account}
+                onChange={e => setAccount(e.target.value)}
                   className="w-full rounded-3xl border border-slate-300/50 bg-white/70 px-4 py-3 text-sm text-slate-900 shadow-inner focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200 tracking-normal"
-                placeholder="name@neuro.ai"
+                placeholder="请输入账号"
               />
             </div>
               <div className="space-y-1 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
@@ -91,7 +111,14 @@ export default function Login({ onBack }: Props){
               </label>
               <a href="#" className="text-cyan-600 transition hover:text-cyan-700">忘记密码?</a>
             </div>
-            <Button type="submit" variant="primary" className="w-full rounded-3xl py-3 text-sm font-semibold uppercase tracking-[0.25em]">立即登录</Button>
+            <Button 
+              type="submit" 
+              variant="primary" 
+              className="w-full rounded-3xl py-3 text-sm font-semibold uppercase tracking-[0.25em]"
+              disabled={isLoading}
+            >
+              {isLoading ? '登录中...' : '立即登录'}
+            </Button>
           </form>
           <p className="mt-5 text-center text-[0.65rem] uppercase tracking-[0.6em] text-slate-500">
             还没有账号？ <a className="text-cyan-600 hover:text-cyan-700">申请试用</a>
