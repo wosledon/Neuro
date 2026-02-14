@@ -14,6 +14,8 @@ public class Project : EntityBase
 
     public bool IsEnabled { get; set; } = true;
 
+    public ProjectStatusEnum Status { get; set; } = ProjectStatusEnum.Active;
+
     public bool IsPin { get; set; } = false;
 
     public Guid? ParentId { get; set; }

@@ -18,4 +18,6 @@ public class Team : EntityBase
     public string TreePath { get; set; } = string.Empty;
 
     public int Sort { get; set; } = 0;
+
+    public Guid? LeaderId { get; set; }
 }

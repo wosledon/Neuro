@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection; // 需要用于 BuildServiceProvider/GetRequiredService
+using Microsoft.Extensions.DependencyInjection;
 using Neuro.Abstractions.Entity;
 
 namespace Neuro.EntityFrameworkCore.Extensions
@@ -39,35 +39,42 @@ namespace Neuro.EntityFrameworkCore.Extensions
                         modelBuilder.Entity(type);
                     }
 
+                    // Build combined query filter for soft-delete and tenant if both apply.
+                    Expression? combinedBody = null;
+                    ParameterExpression? parameter = null;
+
                     if (addSoftDeleteFilter && typeof(ISoftDeleteEntity).IsAssignableFrom(type))
                     {
-                        var parameter = Expression.Parameter(type, "e");
+                        parameter ??= Expression.Parameter(type, "e");
                         var efPropertyMethod = typeof(EF).GetMethod(nameof(EF.Property), BindingFlags.Public | BindingFlags.Static)?.MakeGenericMethod(typeof(bool));
                         if (efPropertyMethod != null)
                         {
                             var isDeletedProperty = Expression.Call(efPropertyMethod, parameter, Expression.Constant(nameof(ISoftDeleteEntity.IsDeleted)));
-                            var body = Expression.Not(isDeletedProperty);
-                            var lambda = Expression.Lambda(body, parameter);
-                            modelBuilder.Entity(type).HasQueryFilter(lambda);
+                            var notDeleted = Expression.Not(isDeletedProperty);
+                            combinedBody = combinedBody is null ? notDeleted : Expression.AndAlso(combinedBody, notDeleted);
                         }
                     }
 
                     if (addTenantFilter && context != null && typeof(ITenantEntity).IsAssignableFrom(type))
                     {
-                        // 构建表达式：e => EF.Property<Guid?>(e, "TenantId") == ((NeuroDbContext)context).CurrentTenantId
-                        var parameter = Expression.Parameter(type, "e");
+                        parameter ??= Expression.Parameter(type, "e");
                         var efPropertyMethod = typeof(EF).GetMethod(nameof(EF.Property), BindingFlags.Public | BindingFlags.Static)?.MakeGenericMethod(typeof(Guid?));
-                        if (efPropertyMethod == null) continue;
+                        if (efPropertyMethod != null)
+                        {
+                            var tenantProperty = Expression.Call(efPropertyMethod, parameter, Expression.Constant(nameof(ITenantEntity.TenantId)));
 
-                        var tenantProperty = Expression.Call(efPropertyMethod, parameter, Expression.Constant(nameof(ITenantEntity.TenantId)));
+                            // Use a property access on the context instance so EF Core can evaluate per-DbContext instance.
+                            var contextConst = Expression.Constant(context);
+                            var currentTenantProp = Expression.Property(contextConst, nameof(NeuroDbContext.CurrentTenantId));
 
-                        // 访问 context.CurrentTenantId
-                        var contextConst = Expression.Constant(context);
-                        var currentTenantProp = Expression.Property(contextConst, nameof(NeuroDbContext.CurrentTenantId));
+                            var tenantEquals = Expression.Equal(tenantProperty, currentTenantProp);
+                            combinedBody = combinedBody is null ? tenantEquals : Expression.AndAlso(combinedBody, tenantEquals);
+                        }
+                    }
 
-                        var body = Expression.Equal(tenantProperty, currentTenantProp);
-                        var lambda = Expression.Lambda(body, parameter);
-
+                    if (combinedBody != null && parameter != null)
+                    {
+                        var lambda = Expression.Lambda(combinedBody, parameter);
                         modelBuilder.Entity(type).HasQueryFilter(lambda);
                     }
                 }

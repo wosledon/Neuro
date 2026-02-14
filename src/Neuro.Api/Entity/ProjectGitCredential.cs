@@ -1,6 +1,8 @@
+using Neuro.Abstractions.Entity;
+
 namespace Neuro.Api.Entity;
 
-public class ProjectGitCredential
+public class ProjectGitCredential : EntityBase
 {
     /// <summary>
     /// 关联的项目 ID

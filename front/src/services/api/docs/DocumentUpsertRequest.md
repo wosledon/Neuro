@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 **content** | **string** |  | [optional] [default to undefined]
 **parentId** | **string** |  | [optional] [default to undefined]
 **treePath** | **string** |  | [optional] [default to undefined]
-**sort** | [**DocumentUpsertRequestSort**](DocumentUpsertRequestSort.md) |  | [optional] [default to undefined]
+**sort** | [**AISupportUpsertRequestMaxTokens**](AISupportUpsertRequestMaxTokens.md) |  | [optional] [default to undefined]
 
 ## Example
 

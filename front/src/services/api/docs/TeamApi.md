@@ -4,12 +4,64 @@ All URIs are relative to *http://localhost:5146*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
+|[**apiTeamAssignUsersAssignUsersPost**](#apiteamassignusersassignuserspost) | **POST** /api/Team/AssignUsers/assign-users | |
 |[**apiTeamDeleteDelete**](#apiteamdeletedelete) | **DELETE** /api/Team/Delete | |
 |[**apiTeamGetGet**](#apiteamgetget) | **GET** /api/Team/Get | |
 |[**apiTeamGetTeamProjectsIdProjectsGet**](#apiteamgetteamprojectsidprojectsget) | **GET** /api/Team/GetTeamProjects/{id}/projects | |
 |[**apiTeamGetTeamUsersIdUsersGet**](#apiteamgetteamusersidusersget) | **GET** /api/Team/GetTeamUsers/{id}/users | |
 |[**apiTeamListGet**](#apiteamlistget) | **GET** /api/Team/List | |
 |[**apiTeamUpsertPost**](#apiteamupsertpost) | **POST** /api/Team/Upsert | |
+
+# **apiTeamAssignUsersAssignUsersPost**
+> apiTeamAssignUsersAssignUsersPost(teamUserAssignRequest)
+
+
+### Example
+
+```typescript
+import {
+    TeamApi,
+    Configuration,
+    TeamUserAssignRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new TeamApi(configuration);
+
+let teamUserAssignRequest: TeamUserAssignRequest; //
+
+const { status, data } = await apiInstance.apiTeamAssignUsersAssignUsersPost(
+    teamUserAssignRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **teamUserAssignRequest** | **TeamUserAssignRequest**|  | |
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json, text/json, application/*+json
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **apiTeamDeleteDelete**
 > apiTeamDeleteDelete(batchDeleteRequest)
@@ -222,16 +274,16 @@ No authorization required
 import {
     TeamApi,
     Configuration,
-    ApiDocumentListGetPageParameter,
-    ApiDocumentListGetPageParameter
+    ApiAISupportListGetPageParameter,
+    ApiAISupportListGetPageParameter
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new TeamApi(configuration);
 
 let keyword: string; // (optional) (default to undefined)
-let page: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
-let pageSize: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
+let page: ApiAISupportListGetPageParameter; // (optional) (default to undefined)
+let pageSize: ApiAISupportListGetPageParameter; // (optional) (default to undefined)
 
 const { status, data } = await apiInstance.apiTeamListGet(
     keyword,
@@ -245,8 +297,8 @@ const { status, data } = await apiInstance.apiTeamListGet(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **keyword** | [**string**] |  | (optional) defaults to undefined|
-| **page** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
-| **pageSize** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
+| **page** | [**ApiAISupportListGetPageParameter**] |  | (optional) defaults to undefined|
+| **pageSize** | [**ApiAISupportListGetPageParameter**] |  | (optional) defaults to undefined|
 
 
 ### Return type

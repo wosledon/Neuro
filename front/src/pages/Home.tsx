@@ -1,171 +1,131 @@
 import React from 'react'
-import { Button, Card } from '../components'
+import { useRouter } from '../router'
+import { Button } from '../components'
+import { 
+  SparklesIcon, 
+  DocumentTextIcon, 
+  UsersIcon, 
+  ShieldCheckIcon,
+  ArrowRightIcon
+} from '@heroicons/react/24/solid'
 
-const stats = [
-  { label: '知识文档条目', value: '1.3M+' },
-  { label: '智能问答命中率', value: '98%' },
-  { label: '文档生成分钟/页', value: '< 2' }
-]
+export default function Home() {
+  const { navigate } = useRouter()
 
-const features = [
-  {
-    title: 'AutoDoc 智能写作',
-    summary: '从代码、README 与设计文档自动抽取结构化段落、示例请求与响应，并生成 Markdown/HTML/Confluence 模板。',
-    tag: 'DocOps'
-  },
-  {
-    title: '向量知识库',
-    summary: '支持多源同步（仓库、PR、Notion、PDF），向量化存储 + 元数据标签，快速定位任意概念。',
-    tag: 'Vector KB'
-  },
-  {
-    title: 'RAG 驱动问答',
-    summary: '结合神经语义搜索与 LLM 生成，提供带来源的答案、解释链路与对话记忆。',
-    tag: 'Assist'
-  },
-  {
-    title: '多模态分析',
-    summary: '读取 Onnx 向量化器、PDF、HTML、截图，统一建模与对比，呈现趋势与知识裂变。',
-    tag: 'Insights'
-  }
-]
+  const features = [
+    {
+      icon: <SparklesIcon className="w-6 h-6" />,
+      title: 'AI 驱动',
+      description: '基于 RAG 技术的智能问答系统'
+    },
+    {
+      icon: <DocumentTextIcon className="w-6 h-6" />,
+      title: '文档管理',
+      description: '支持多种格式的文档转换与管理'
+    },
+    {
+      icon: <UsersIcon className="w-6 h-6" />,
+      title: '团队协作',
+      description: '灵活的团队与权限管理'
+    },
+    {
+      icon: <ShieldCheckIcon className="w-6 h-6" />,
+      title: '安全可靠',
+      description: '企业级的数据安全保障'
+    }
+  ]
 
-const pillars = [
-  { title: '自动化流水线', body: 'CI/CD 触发同步 + swagger 文档更新后自动生成 API 概览页与变更史。' },
-  { title: '可解释输出', body: '输出带来源的文档和答案，自动附上引用段落、文件路径与责任人。' },
-  { title: '团队协作', body: '内建审批链、版本历史与评论，保障文档由研发到产品流转顺畅。' }
-]
-
-export default function Home(){
   return (
-    <div className="space-y-12">
-      <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-600 via-sky-600 to-cyan-500 text-white shadow-2xl">
-        <div className="pointer-events-none absolute inset-y-0 right-[-6rem] hidden md:block">
-          <div className="h-60 w-60 rounded-full bg-white/10 blur-3xl" />
+    <div className="min-h-screen bg-gradient-to-br from-surface-950 via-primary-950 to-surface-950 text-white">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary-500/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/4" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent-500/20 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
         </div>
-        <div className="container mx-auto px-6 py-12 md:px-10 md:py-16">
-          <div className="grid gap-10 lg:grid-cols-2 items-center">
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 text-sm uppercase tracking-[0.4em] text-indigo-100/80">
-                <span className="h-0.5 flex-1 bg-white/60" />Neuro Studio<em>2026</em>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
-                AI 驱动的知识库与文档中心，帮团队将每一段代码变成可检索、可解释、可交付的知识资产。
-              </h1>
-              <p className="text-lg text-indigo-100/90 max-w-2xl">
-                从 swagger.json、代码注释与设计稿中提取语义，自动构建文档、知识卡片与 RAG 场景，让研发、产品、文档团队在一个平台内完成知识共享与落地。
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Button variant="primary" className="px-6 py-3 shadow-xl">立即体验</Button>
-                <Button variant="secondary" className="px-6 py-3">观看演示</Button>
-              </div>
-              <div className="mt-6 flex flex-wrap gap-10">
-                {stats.map(stat => (
-                  <div key={stat.label}>
-                    <div className="text-3xl font-bold">{stat.value}</div>
-                    <p className="text-sm text-indigo-100/80">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="mt-10 lg:mt-0 rounded-[28px] bg-white/10 p-8 shadow-[0_30px_60px_rgba(15,23,42,0.4)] ring-1 ring-white/40 border border-white/30 backdrop-blur">
-              <p className="text-xs uppercase text-white/70">实时洞察</p>
-              <div className="mt-6 space-y-6">
-                <div className="rounded-2xl bg-white/20 p-4">
-                  <div className="text-sm text-white/90">文档完成度</div>
-                  <div className="text-2xl font-bold">92%</div>
-                  <div className="text-xs text-white/60">比上周提升 18%</div>
-                </div>
-                <div className="rounded-2xl bg-white/20 p-4">
-                  <div className="text-sm text-white/90">RAG 命中率</div>
-                  <div className="text-2xl font-bold">95%</div>
-                  <div className="text-xs text-white/60">500ms 内完成检索</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="container mx-auto max-w-6xl space-y-8 px-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="text-3xl font-bold">功能亮点</h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
-              以 RAG 做底座，集成 AutoDoc、Vector KB 与文档自动化，降本、提速并保证所有知识有据可查。
+        {/* Content */}
+        <div className="relative z-10 container-main py-20 lg:py-32">
+          <div className="max-w-3xl mx-auto text-center">
+            {/* Logo */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm mb-8">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-bold">
+                N
+              </div>
+              <span className="text-sm font-medium">Neuro Studio</span>
+            </div>
+
+            <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
+              让知识与 AI
+              <span className="block bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">
+                真正流动
+              </span>
+            </h1>
+
+            <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+              Neuro 将您的文档、API、PR 讨论与向量数据库连成一张网，
+              提供沉浸式的导航与实时洞察。
             </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button 
+                size="lg" 
+                onClick={() => navigate('login')}
+                rightIcon={<ArrowRightIcon className="w-5 h-5" />}
+                className="w-full sm:w-auto"
+              >
+                开始使用
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="lg"
+                onClick={() => navigate('components')}
+                className="w-full sm:w-auto"
+              >
+                查看组件
+              </Button>
+            </div>
           </div>
-          <Button variant="ghost" className="text-indigo-600 dark:text-indigo-400">
-            查看产品地图 →
-          </Button>
         </div>
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {features.map(feature => (
-            <Card key={feature.title} className="transform transition hover:-translate-y-1">
-              <div className="text-xs font-semibold tracking-normal uppercase text-indigo-500">{feature.tag}</div>
-              <h3 className="mt-3 text-xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-                {feature.title}
-              </h3>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{feature.summary}</p>
-            </Card>
+      </div>
+
+      {/* Features Section */}
+      <div className="relative z-10 container-main py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold mb-4">核心功能</h2>
+          <p className="text-slate-400">打造智能化知识管理体验</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              className="group p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-300"
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 flex items-center justify-center text-primary-400 mb-4 group-hover:scale-110 transition-transform">
+                {feature.icon}
+              </div>
+              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+              <p className="text-sm text-slate-400">{feature.description}</p>
+            </div>
           ))}
         </div>
-      </section>
+      </div>
 
-      <section className="container mx-auto max-w-6xl grid gap-6 lg:grid-cols-[2fr_1fr] items-stretch">
-        <div className="space-y-6 rounded-[28px] border border-indigo-100/50 bg-white/70 p-8 shadow-xl backdrop-blur dark:bg-gray-900/70 dark:border-gray-800">
-          <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm uppercase text-indigo-500">Workflow</p>
-              <h3 className="text-2xl font-bold">如何在 Neuro 中落地知识</h3>
-            </div>
-            <div className="text-sm text-gray-500 dark:text-gray-300">自动同步 + AI 尽职</div>
-          </div>
-          <div className="grid gap-4">
-            {pillars.map((pillar, index) => (
-              <div key={pillar.title} className="rounded-2xl bg-gray-50 p-5 dark:bg-gray-800 border border-transparent hover:border-indigo-200 transition">
-                <div className="text-sm text-indigo-500">Step {index + 1}</div>
-                <h4 className="text-lg font-semibold">{pillar.title}</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">{pillar.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-          <div className="rounded-[28px] border border-indigo-100/60 bg-gradient-to-b from-indigo-50 to-white p-8 shadow-xl">
-          <div className="text-sm uppercase text-gray-400">客户故事</div>
-          <p className="mt-4 text-2xl font-semibold text-gray-900">“Neuro 帮助我们将 150+ 页的 API 文档压缩为 3 分钟可读的提案，并将知识索引到内部助理。”</p>
-          <div className="mt-6 text-sm text-gray-600">- 前端治理团队 @银河科技</div>
-          <div className="mt-8 space-y-3">
-            <div className="flex items-center gap-3 text-sm text-gray-600">
-              <span className="h-2 w-2 rounded-full bg-green-400" />
-              <span>实时同步 Swagger → 知识卡</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-gray-600">
-              <span className="h-2 w-2 rounded-full bg-indigo-500" />
-              <span>自动生成训练集与 QnA</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-gray-600">
-              <span className="h-2 w-2 rounded-full bg-yellow-400" />
-              <span>单击即可导出 Markdown/HTML</span>
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/10 py-8">
+        <div className="container-main">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-400">
+            <p>© 2024 Neuro Studio. All rights reserved.</p>
+            <div className="flex items-center gap-6">
+              <a href="#" className="hover:text-white transition-colors">隐私政策</a>
+              <a href="#" className="hover:text-white transition-colors">使用条款</a>
+              <a href="#" className="hover:text-white transition-colors">联系我们</a>
             </div>
           </div>
         </div>
-      </section>
-
-      <section className="container mx-auto max-w-6xl rounded-[32px] border border-gray-200/70 bg-white/60 px-8 py-10 sm:px-10 lg:px-12 shadow-2xl backdrop-blur dark:bg-gray-900/40 dark:border-gray-800">
-        <div className="flex flex-col-reverse gap-8 lg:flex-row lg:items-center lg:gap-12">
-          <div className="flex-1 space-y-4">
-            <p className="text-sm uppercase text-indigo-500">Neuro 赋能</p>
-            <h3 className="text-3xl font-bold tracking-tight">将知识 instill 到每个产品上线流程中</h3>
-            <p className="max-w-2xl text-gray-600 dark:text-gray-300">
-              用 AI 完成核心文档、知识检索与 RAG 问答，确保信息不再散落在 Slack/Confluence/代码中。Neuro 可无缝集成 OpenAPI 与多源数据，以可复用组件展示给你的团队。
-            </p>
-          </div>
-          <div className="flex justify-center lg:justify-end">
-            <Button variant="primary" className="px-6 py-3 min-w-[180px] shadow-xl">预约体验顾问</Button>
-          </div>
-        </div>
-      </section>
+      </footer>
     </div>
   )
 }

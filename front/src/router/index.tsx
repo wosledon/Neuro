@@ -3,21 +3,40 @@ import { useAuth } from '../contexts/AuthContext'
 
 // 页面组件
 import Login from '../pages/Login'
+import Chat from '../pages/Chat'
 import Dashboard from '../pages/Dashboard'
 import UserManagement from '../pages/admin/UserManagement'
 import RoleManagement from '../pages/admin/RoleManagement'
+import PermissionManagement from '../pages/admin/PermissionManagement'
+import MenuManagement from '../pages/admin/MenuManagement'
 import TeamManagement from '../pages/admin/TeamManagement'
 import ProjectManagement from '../pages/admin/ProjectManagement'
 import DocumentManagement from '../pages/admin/DocumentManagement'
+import Notebook from '../pages/Notebook'
+import FileResourceManagement from '../pages/admin/FileResourceManagement'
+import TenantManagement from '../pages/admin/TenantManagement'
+import AISupportManagement from '../pages/admin/AISupportManagement'
+import GitCredentialManagement from '../pages/admin/GitCredentialManagement'
+import ComponentsPage from '../pages/ComponentsPage'
+import NotFound from '../pages/NotFound'
+import { LoadingSpinner } from '../components'
 
 export type Route = 
+  | 'home'
   | 'login'
   | 'dashboard'
   | 'users'
   | 'roles'
+  | 'permissions'
+  | 'menus'
   | 'teams'
   | 'projects'
   | 'documents'
+  | 'notebook'
+  | 'file-resources'
+  | 'tenants'
+  | 'ai-supports'
+  | 'git-credentials'
   | 'components'
 
 interface RouterContextType {
@@ -30,7 +49,7 @@ const RouterContext = React.createContext<RouterContextType | undefined>(undefin
 export function RouterProvider({ children }: { children: React.ReactNode }) {
   const [route, setRoute] = React.useState<Route>(() => {
     const saved = localStorage.getItem('current_route')
-    return (saved as Route) || 'dashboard'
+    return (saved as Route) || 'home'
   })
   
   const navigate = React.useCallback((newRoute: Route) => {
@@ -66,8 +85,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-surface-50 dark:bg-surface-950">
+        <LoadingSpinner size="lg" text="验证身份..." />
       </div>
     )
   }
@@ -79,20 +98,56 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// 公开路由守卫 - 已登录用户访问登录页时重定向
+function PublicRoute({ children, redirectTo = 'home' }: { children: React.ReactNode; redirectTo?: Route }) {
+  const { isAuthenticated, isLoading } = useAuth()
+  const { navigate } = useRouter()
+
+  React.useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate(redirectTo)
+    }
+  }, [isAuthenticated, isLoading, navigate, redirectTo])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-surface-50 dark:bg-surface-950">
+        <LoadingSpinner size="lg" text="加载中..." />
+      </div>
+    )
+  }
+
+  if (isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-surface-50 dark:bg-surface-950">
+        <LoadingSpinner size="lg" text="正在跳转..." />
+      </div>
+    )
+  }
+
+  return <>{children}</>
+}
+
 // 路由渲染组件
 export function RouteRenderer() {
   const { route, navigate } = useRouter()
-  const { isAuthenticated } = useAuth()
-
-  // 已登录用户访问登录页，重定向到 dashboard
-  if (route === 'login' && isAuthenticated) {
-    navigate('dashboard')
-    return null
-  }
 
   switch (route) {
+    case 'home':
+      return (
+        <ProtectedRoute>
+          <Chat />
+        </ProtectedRoute>
+      )
     case 'login':
-      return <Login onBack={() => navigate('dashboard')} onLogin={() => navigate('dashboard')} />
+      return (
+        <PublicRoute>
+          <Login 
+            onBack={() => navigate('home')} 
+            onLogin={() => navigate('home')} 
+          />
+        </PublicRoute>
+      )
     case 'dashboard':
       return (
         <ProtectedRoute>
@@ -109,6 +164,18 @@ export function RouteRenderer() {
       return (
         <ProtectedRoute>
           <RoleManagement />
+        </ProtectedRoute>
+      )
+    case 'permissions':
+      return (
+        <ProtectedRoute>
+          <PermissionManagement />
+        </ProtectedRoute>
+      )
+    case 'menus':
+      return (
+        <ProtectedRoute>
+          <MenuManagement />
         </ProtectedRoute>
       )
     case 'teams':
@@ -129,11 +196,39 @@ export function RouteRenderer() {
           <DocumentManagement />
         </ProtectedRoute>
       )
-    default:
+    case 'file-resources':
       return (
         <ProtectedRoute>
-          <Dashboard />
+          <FileResourceManagement />
         </ProtectedRoute>
       )
+    case 'tenants':
+      return (
+        <ProtectedRoute>
+          <TenantManagement />
+        </ProtectedRoute>
+      )
+    case 'ai-supports':
+      return (
+        <ProtectedRoute>
+          <AISupportManagement />
+        </ProtectedRoute>
+      )
+    case 'git-credentials':
+      return (
+        <ProtectedRoute>
+          <GitCredentialManagement />
+        </ProtectedRoute>
+      )
+    case 'components':
+      return <ComponentsPage />
+    case 'notebook':
+      return (
+        <ProtectedRoute>
+          <Notebook />
+        </ProtectedRoute>
+      )
+    default:
+      return <NotFound />
   }
 }

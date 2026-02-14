@@ -20,7 +20,7 @@ public class AuthController : ApiControllerBase
     }
 
 
-    [HttpPost("register")]
+    [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Account);
@@ -43,7 +43,7 @@ public class AuthController : ApiControllerBase
         return Success();
     }
 
-    [HttpPost("login")]
+    [HttpPost]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Account);
@@ -77,7 +77,7 @@ public class AuthController : ApiControllerBase
         });
     }
 
-    [HttpPost("refresh")]
+    [HttpPost]
     public async Task<IActionResult> Refresh([FromBody] LoginResponse request)
     {
         if (string.IsNullOrEmpty(request.RefreshToken)) return Failure("Missing refresh token.");
@@ -115,7 +115,7 @@ public class AuthController : ApiControllerBase
         });
     }
 
-    [HttpPost("logout")]
+    [HttpPost]
     public async Task<IActionResult> Logout([FromBody] LoginResponse request)
     {
         if (string.IsNullOrEmpty(request.RefreshToken)) return Failure("Missing refresh token.");
@@ -132,11 +132,11 @@ public class AuthController : ApiControllerBase
         return Success();
     }
 
-    [HttpGet("me")]
+    [HttpGet]
     [Microsoft.AspNetCore.Authorization.Authorize]
     public async Task<IActionResult> Me()
     {
-        var userId = Guid.Parse(User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
+        var userId = Guid.Parse(User?.FindFirst("user_id")?.Value ?? Guid.Empty.ToString());
         var user = await _db.Q<User>().FirstOrDefaultAsync(u => u.Id == userId);
         if (user is null) return Failure("User not found.");
 
@@ -154,9 +154,9 @@ public class AuthController : ApiControllerBase
     /// <summary>
     /// 获取当前登录用户的权限列表
     /// </summary>
-    [HttpGet("permissions")]
+    [HttpGet]
     [Microsoft.AspNetCore.Authorization.Authorize]
-    public async Task<IActionResult> MyPermissions([FromServices] IPermissionService permissionService)
+    public async Task<IActionResult> Permissions([FromServices] IPermissionService permissionService)
     {
         var permissions = await permissionService.GetUserPermissionsAsync(UserId);
         return Success(permissions);
@@ -165,9 +165,9 @@ public class AuthController : ApiControllerBase
     /// <summary>
     /// 获取当前登录用户的菜单树
     /// </summary>
-    [HttpGet("menus")]
+    [HttpGet]
     [Microsoft.AspNetCore.Authorization.Authorize]
-    public async Task<IActionResult> MyMenus([FromServices] IPermissionService permissionService)
+    public async Task<IActionResult> Menus([FromServices] IPermissionService permissionService)
     {
         var menus = await permissionService.GetUserMenusAsync(UserId);
         return Success(menus);
@@ -176,7 +176,7 @@ public class AuthController : ApiControllerBase
     /// <summary>
     /// 检查当前用户是否拥有指定权限
     /// </summary>
-    [HttpGet("check-permission")]
+    [HttpGet]
     [Microsoft.AspNetCore.Authorization.Authorize]
     public async Task<IActionResult> CheckPermission([FromQuery] string code, [FromServices] IPermissionService permissionService)
     {

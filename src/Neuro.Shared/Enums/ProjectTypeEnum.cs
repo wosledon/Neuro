@@ -50,3 +50,16 @@ public enum GitCredentialTypeEnum
     SshKey = 1,
     PersonalAccessToken = 2
 }
+
+/// <summary>
+/// 项目状态：进行中、暂停、已归档
+/// </summary>
+public enum ProjectStatusEnum
+{
+    [Description("进行中")]
+    Active = 0,
+    [Description("暂停")]
+    Inactive = 1,
+    [Description("已归档")]
+    Archived = 2
+}

@@ -46,11 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUserInfo = useCallback(async () => {
     try {
+      console.log('Refreshing user info...')
       const [userData, perms, menuData] = await Promise.all([
         getCurrentUser(),
         getMyPermissions(),
         getMyMenus(),
       ])
+      console.log('User data received:', userData)
       setUser(userData as User)
       setPermissions(perms)
       setMenus(menuData as Menu[])
@@ -59,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null)
       setPermissions([])
       setMenus([])
+      throw error
     }
   }, [])
 
@@ -72,10 +75,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refreshUserInfo])
 
   const login = async (account: string, password: string) => {
-    const result: LoginResult = await authLogin(account, password)
-    localStorage.setItem('access_token', result.accessToken)
-    localStorage.setItem('refresh_token', result.refreshToken)
-    await refreshUserInfo()
+    try {
+      console.log('Logging in...')
+      const result: LoginResult = await authLogin(account, password)
+      console.log('Login successful, tokens received')
+      localStorage.setItem('access_token', result.accessToken)
+      localStorage.setItem('refresh_token', result.refreshToken)
+      await refreshUserInfo()
+      console.log('User info refreshed after login')
+    } catch (error) {
+      console.error('Login failed:', error)
+      throw error
+    }
   }
 
   const logout = async () => {

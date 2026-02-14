@@ -23,10 +23,48 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
-export interface ApiDocumentListGetPageParameter {
+export interface AISupportUpsertRequest {
+    'id'?: string | null;
+    'name'?: string | null;
+    'provider'?: number | null;
+    'apiKey'?: string | null;
+    'endpoint'?: string | null;
+    'description'?: string | null;
+    'isEnabled'?: boolean | null;
+    'isPin'?: boolean | null;
+    'modelName'?: string | null;
+    'maxTokens'?: AISupportUpsertRequestMaxTokens | null;
+    'temperature'?: AISupportUpsertRequestTemperature | null;
+    'topP'?: AISupportUpsertRequestTemperature | null;
+    'frequencyPenalty'?: AISupportUpsertRequestTemperature | null;
+    'presencePenalty'?: AISupportUpsertRequestTemperature | null;
+    'customParameters'?: string | null;
+    'sort'?: AISupportUpsertRequestMaxTokens | null;
+}
+export interface AISupportUpsertRequestMaxTokens {
+}
+export interface AISupportUpsertRequestTemperature {
+}
+export interface ApiAISupportListGetPageParameter {
 }
 export interface BatchDeleteRequest {
     'ids': Array<string>;
+}
+export interface DocumentAttachmentUpdateRequest {
+    'id'?: string;
+    'fileName'?: string | null;
+    'isInline'?: boolean | null;
+    'sort'?: AISupportUpsertRequestMaxTokens | null;
+}
+export interface DocumentBatchMoveRequest {
+    'documentIds'?: Array<string>;
+    'newParentId'?: string | null;
+    'startSort'?: AISupportUpsertRequestMaxTokens | null;
+}
+export interface DocumentMoveRequest {
+    'id'?: string;
+    'newParentId'?: string | null;
+    'newSort'?: AISupportUpsertRequestMaxTokens | null;
 }
 export interface DocumentUpsertRequest {
     'id'?: string | null;
@@ -35,9 +73,7 @@ export interface DocumentUpsertRequest {
     'content'?: string | null;
     'parentId'?: string | null;
     'treePath'?: string | null;
-    'sort'?: DocumentUpsertRequestSort | null;
-}
-export interface DocumentUpsertRequestSort {
+    'sort'?: AISupportUpsertRequestMaxTokens | null;
 }
 export interface FileResourceUpsertRequest {
     'id'?: string | null;
@@ -45,6 +81,17 @@ export interface FileResourceUpsertRequest {
     'location'?: string | null;
     'description'?: string | null;
     'isEnabled'?: boolean | null;
+}
+export interface GitCredentialUpsertRequest {
+    'id'?: string | null;
+    'gitAccountId'?: string | null;
+    'type'?: number | null;
+    'name'?: string | null;
+    'encryptedSecret'?: string | null;
+    'publicKey'?: string | null;
+    'passphraseEncrypted'?: string | null;
+    'isActive'?: boolean | null;
+    'notes'?: string | null;
 }
 export interface LoginRequest {
     'account': string;
@@ -62,7 +109,7 @@ export interface MenuUpsertRequest {
     'parentId'?: string | null;
     'url'?: string | null;
     'icon'?: string | null;
-    'sort'?: DocumentUpsertRequestSort | null;
+    'sort'?: AISupportUpsertRequestMaxTokens | null;
 }
 export interface PermissionUpsertRequest {
     'id'?: string | null;
@@ -73,6 +120,14 @@ export interface PermissionUpsertRequest {
     'action'?: string | null;
     'method'?: string | null;
 }
+export interface ProjectAISupportAssignRequest {
+    'projectId'?: string;
+    'aiSupportIds'?: Array<string>;
+}
+export interface ProjectGitCredentialAssignRequest {
+    'projectId'?: string;
+    'gitCredentialIds'?: Array<string>;
+}
 export interface ProjectUpsertRequest {
     'id'?: string | null;
     'name'?: string | null;
@@ -80,13 +135,14 @@ export interface ProjectUpsertRequest {
     'type'?: number | null;
     'description'?: string | null;
     'isEnabled'?: boolean | null;
+    'status'?: number | null;
     'isPin'?: boolean | null;
     'parentId'?: string | null;
     'treePath'?: string | null;
     'repositoryUrl'?: string | null;
     'homepageUrl'?: string | null;
     'docsUrl'?: string | null;
-    'sort'?: DocumentUpsertRequestSort | null;
+    'sort'?: AISupportUpsertRequestMaxTokens | null;
 }
 export interface RegisterRequest {
     'account': string;
@@ -133,7 +189,12 @@ export interface TeamUpsertRequest {
     'isPin'?: boolean | null;
     'parentId'?: string | null;
     'treePath'?: string | null;
-    'sort'?: DocumentUpsertRequestSort | null;
+    'sort'?: AISupportUpsertRequestMaxTokens | null;
+    'leaderId'?: string | null;
+}
+export interface TeamUserAssignRequest {
+    'teamId'?: string;
+    'userIds'?: Array<string>;
 }
 export interface TenantUpsertRequest {
     'id'?: string | null;
@@ -147,6 +208,10 @@ export interface TenantUpsertRequest {
 export interface UserDocumentAssignRequest {
     'userId'?: string;
     'documentIds'?: Array<string>;
+}
+export interface UserGitCredentialAssignRequest {
+    'userId'?: string;
+    'gitCredentialIds'?: Array<string>;
 }
 export interface UserRoleAssignRequest {
     'userId'?: string;
@@ -168,6 +233,311 @@ export interface UserUpsertRequest {
     'isSuper'?: boolean | null;
     'tenantId'?: string | null;
 }
+
+/**
+ * AISupportApi - axios parameter creator
+ */
+export const AISupportApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiAISupportDeleteDelete: async (batchDeleteRequest: BatchDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'batchDeleteRequest' is not null or undefined
+            assertParamExists('apiAISupportDeleteDelete', 'batchDeleteRequest', batchDeleteRequest)
+            const localVarPath = `/api/AISupport/Delete`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(batchDeleteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiAISupportGetGet: async (id?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/AISupport/Get`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (id !== undefined) {
+                localVarQueryParameter['id'] = id;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiAISupportListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/AISupport/List`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (keyword !== undefined) {
+                localVarQueryParameter['Keyword'] = keyword;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['Page'] = page;
+            }
+
+            if (pageSize !== undefined) {
+                localVarQueryParameter['PageSize'] = pageSize;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {AISupportUpsertRequest} aISupportUpsertRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiAISupportUpsertPost: async (aISupportUpsertRequest: AISupportUpsertRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'aISupportUpsertRequest' is not null or undefined
+            assertParamExists('apiAISupportUpsertPost', 'aISupportUpsertRequest', aISupportUpsertRequest)
+            const localVarPath = `/api/AISupport/Upsert`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(aISupportUpsertRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AISupportApi - functional programming interface
+ */
+export const AISupportApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AISupportApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiAISupportDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAISupportDeleteDelete(batchDeleteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AISupportApi.apiAISupportDeleteDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiAISupportGetGet(id?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAISupportGetGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AISupportApi.apiAISupportGetGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiAISupportListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAISupportListGet(keyword, page, pageSize, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AISupportApi.apiAISupportListGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {AISupportUpsertRequest} aISupportUpsertRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiAISupportUpsertPost(aISupportUpsertRequest: AISupportUpsertRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAISupportUpsertPost(aISupportUpsertRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AISupportApi.apiAISupportUpsertPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AISupportApi - factory interface
+ */
+export const AISupportApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AISupportApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiAISupportDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAISupportDeleteDelete(batchDeleteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiAISupportGetGet(id?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAISupportGetGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiAISupportListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAISupportListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {AISupportUpsertRequest} aISupportUpsertRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiAISupportUpsertPost(aISupportUpsertRequest: AISupportUpsertRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAISupportUpsertPost(aISupportUpsertRequest, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AISupportApi - object-oriented interface
+ */
+export class AISupportApi extends BaseAPI {
+    /**
+     * 
+     * @param {BatchDeleteRequest} batchDeleteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiAISupportDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig) {
+        return AISupportApiFp(this.configuration).apiAISupportDeleteDelete(batchDeleteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [id] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiAISupportGetGet(id?: string, options?: RawAxiosRequestConfig) {
+        return AISupportApiFp(this.configuration).apiAISupportGetGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [keyword] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiAISupportListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
+        return AISupportApiFp(this.configuration).apiAISupportListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {AISupportUpsertRequest} aISupportUpsertRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiAISupportUpsertPost(aISupportUpsertRequest: AISupportUpsertRequest, options?: RawAxiosRequestConfig) {
+        return AISupportApiFp(this.configuration).apiAISupportUpsertPost(aISupportUpsertRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
 
 /**
  * AdminApi - axios parameter creator
@@ -381,8 +751,8 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthCheckPermissionCheckPermissionGet: async (code?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/Auth/CheckPermission/check-permission`;
+        apiAuthCheckPermissionGet: async (code?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Auth/CheckPermission`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -414,10 +784,10 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthLoginLoginPost: async (loginRequest: LoginRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiAuthLoginPost: async (loginRequest: LoginRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'loginRequest' is not null or undefined
-            assertParamExists('apiAuthLoginLoginPost', 'loginRequest', loginRequest)
-            const localVarPath = `/api/Auth/Login/login`;
+            assertParamExists('apiAuthLoginPost', 'loginRequest', loginRequest)
+            const localVarPath = `/api/Auth/Login`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -447,10 +817,10 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthLogoutLogoutPost: async (loginResponse: LoginResponse, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiAuthLogoutPost: async (loginResponse: LoginResponse, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'loginResponse' is not null or undefined
-            assertParamExists('apiAuthLogoutLogoutPost', 'loginResponse', loginResponse)
-            const localVarPath = `/api/Auth/Logout/logout`;
+            assertParamExists('apiAuthLogoutPost', 'loginResponse', loginResponse)
+            const localVarPath = `/api/Auth/Logout`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -479,8 +849,8 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthMeMeGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/Auth/Me/me`;
+        apiAuthMeGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Auth/Me`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -507,8 +877,8 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthMyMenusMenusGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/Auth/MyMenus/menus`;
+        apiAuthMenusGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Auth/Menus`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -535,8 +905,8 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthMyPermissionsPermissionsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/Auth/MyPermissions/permissions`;
+        apiAuthPermissionsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Auth/Permissions`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -564,10 +934,10 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthRefreshRefreshPost: async (loginResponse: LoginResponse, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiAuthRefreshPost: async (loginResponse: LoginResponse, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'loginResponse' is not null or undefined
-            assertParamExists('apiAuthRefreshRefreshPost', 'loginResponse', loginResponse)
-            const localVarPath = `/api/Auth/Refresh/refresh`;
+            assertParamExists('apiAuthRefreshPost', 'loginResponse', loginResponse)
+            const localVarPath = `/api/Auth/Refresh`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -597,10 +967,10 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthRegisterRegisterPost: async (registerRequest: RegisterRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiAuthRegisterPost: async (registerRequest: RegisterRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'registerRequest' is not null or undefined
-            assertParamExists('apiAuthRegisterRegisterPost', 'registerRequest', registerRequest)
-            const localVarPath = `/api/Auth/Register/register`;
+            assertParamExists('apiAuthRegisterPost', 'registerRequest', registerRequest)
+            const localVarPath = `/api/Auth/Register`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -639,10 +1009,10 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiAuthCheckPermissionCheckPermissionGet(code?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthCheckPermissionCheckPermissionGet(code, options);
+        async apiAuthCheckPermissionGet(code?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthCheckPermissionGet(code, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthCheckPermissionCheckPermissionGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthCheckPermissionGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -651,10 +1021,10 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiAuthLoginLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthLoginLoginPost(loginRequest, options);
+        async apiAuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthLoginPost(loginRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthLoginLoginPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthLoginPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -663,10 +1033,10 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiAuthLogoutLogoutPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthLogoutLogoutPost(loginResponse, options);
+        async apiAuthLogoutPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthLogoutPost(loginResponse, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthLogoutLogoutPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthLogoutPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -674,10 +1044,10 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiAuthMeMeGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthMeMeGet(options);
+        async apiAuthMeGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthMeGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthMeMeGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthMeGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -685,10 +1055,10 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiAuthMyMenusMenusGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthMyMenusMenusGet(options);
+        async apiAuthMenusGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthMenusGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthMyMenusMenusGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthMenusGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -696,10 +1066,10 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiAuthMyPermissionsPermissionsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthMyPermissionsPermissionsGet(options);
+        async apiAuthPermissionsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthPermissionsGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthMyPermissionsPermissionsGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthPermissionsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -708,10 +1078,10 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiAuthRefreshRefreshPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthRefreshRefreshPost(loginResponse, options);
+        async apiAuthRefreshPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthRefreshPost(loginResponse, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthRefreshRefreshPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthRefreshPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -720,10 +1090,10 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiAuthRegisterRegisterPost(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthRegisterRegisterPost(registerRequest, options);
+        async apiAuthRegisterPost(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthRegisterPost(registerRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthRegisterRegisterPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiAuthRegisterPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -741,8 +1111,8 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthCheckPermissionCheckPermissionGet(code?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiAuthCheckPermissionCheckPermissionGet(code, options).then((request) => request(axios, basePath));
+        apiAuthCheckPermissionGet(code?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAuthCheckPermissionGet(code, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -750,8 +1120,8 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthLoginLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiAuthLoginLoginPost(loginRequest, options).then((request) => request(axios, basePath));
+        apiAuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAuthLoginPost(loginRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -759,32 +1129,32 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthLogoutLogoutPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiAuthLogoutLogoutPost(loginResponse, options).then((request) => request(axios, basePath));
+        apiAuthLogoutPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAuthLogoutPost(loginResponse, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthMeMeGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiAuthMeMeGet(options).then((request) => request(axios, basePath));
+        apiAuthMeGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAuthMeGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthMyMenusMenusGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiAuthMyMenusMenusGet(options).then((request) => request(axios, basePath));
+        apiAuthMenusGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAuthMenusGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthMyPermissionsPermissionsGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiAuthMyPermissionsPermissionsGet(options).then((request) => request(axios, basePath));
+        apiAuthPermissionsGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAuthPermissionsGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -792,8 +1162,8 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthRefreshRefreshPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiAuthRefreshRefreshPost(loginResponse, options).then((request) => request(axios, basePath));
+        apiAuthRefreshPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAuthRefreshPost(loginResponse, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -801,8 +1171,8 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthRegisterRegisterPost(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiAuthRegisterRegisterPost(registerRequest, options).then((request) => request(axios, basePath));
+        apiAuthRegisterPost(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiAuthRegisterPost(registerRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -817,8 +1187,8 @@ export class AuthApi extends BaseAPI {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiAuthCheckPermissionCheckPermissionGet(code?: string, options?: RawAxiosRequestConfig) {
-        return AuthApiFp(this.configuration).apiAuthCheckPermissionCheckPermissionGet(code, options).then((request) => request(this.axios, this.basePath));
+    public apiAuthCheckPermissionGet(code?: string, options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiAuthCheckPermissionGet(code, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -827,8 +1197,8 @@ export class AuthApi extends BaseAPI {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiAuthLoginLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig) {
-        return AuthApiFp(this.configuration).apiAuthLoginLoginPost(loginRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiAuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiAuthLoginPost(loginRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -837,8 +1207,8 @@ export class AuthApi extends BaseAPI {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiAuthLogoutLogoutPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig) {
-        return AuthApiFp(this.configuration).apiAuthLogoutLogoutPost(loginResponse, options).then((request) => request(this.axios, this.basePath));
+    public apiAuthLogoutPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiAuthLogoutPost(loginResponse, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -846,8 +1216,8 @@ export class AuthApi extends BaseAPI {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiAuthMeMeGet(options?: RawAxiosRequestConfig) {
-        return AuthApiFp(this.configuration).apiAuthMeMeGet(options).then((request) => request(this.axios, this.basePath));
+    public apiAuthMeGet(options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiAuthMeGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -855,8 +1225,8 @@ export class AuthApi extends BaseAPI {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiAuthMyMenusMenusGet(options?: RawAxiosRequestConfig) {
-        return AuthApiFp(this.configuration).apiAuthMyMenusMenusGet(options).then((request) => request(this.axios, this.basePath));
+    public apiAuthMenusGet(options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiAuthMenusGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -864,8 +1234,8 @@ export class AuthApi extends BaseAPI {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiAuthMyPermissionsPermissionsGet(options?: RawAxiosRequestConfig) {
-        return AuthApiFp(this.configuration).apiAuthMyPermissionsPermissionsGet(options).then((request) => request(this.axios, this.basePath));
+    public apiAuthPermissionsGet(options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiAuthPermissionsGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -874,8 +1244,8 @@ export class AuthApi extends BaseAPI {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiAuthRefreshRefreshPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig) {
-        return AuthApiFp(this.configuration).apiAuthRefreshRefreshPost(loginResponse, options).then((request) => request(this.axios, this.basePath));
+    public apiAuthRefreshPost(loginResponse: LoginResponse, options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiAuthRefreshPost(loginResponse, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -884,8 +1254,8 @@ export class AuthApi extends BaseAPI {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiAuthRegisterRegisterPost(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig) {
-        return AuthApiFp(this.configuration).apiAuthRegisterRegisterPost(registerRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiAuthRegisterPost(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiAuthRegisterPost(registerRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -896,6 +1266,39 @@ export class AuthApi extends BaseAPI {
  */
 export const DocumentApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
+        /**
+         * 
+         * @param {DocumentBatchMoveRequest} documentBatchMoveRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentBatchMoveBatchMovePost: async (documentBatchMoveRequest: DocumentBatchMoveRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'documentBatchMoveRequest' is not null or undefined
+            assertParamExists('apiDocumentBatchMoveBatchMovePost', 'documentBatchMoveRequest', documentBatchMoveRequest)
+            const localVarPath = `/api/Document/BatchMove/batch-move`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(documentBatchMoveRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
         /**
          * 
          * @param {BatchDeleteRequest} batchDeleteRequest 
@@ -923,6 +1326,39 @@ export const DocumentApiAxiosParamCreator = function (configuration?: Configurat
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(batchDeleteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentGetBreadcrumbBreadcrumbGet: async (id?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Document/GetBreadcrumb/breadcrumb`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (id !== undefined) {
+                localVarQueryParameter['id'] = id;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -964,13 +1400,46 @@ export const DocumentApiAxiosParamCreator = function (configuration?: Configurat
         },
         /**
          * 
-         * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {string} [projectId] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiDocumentListGet: async (keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiDocumentGetTreeTreeGet: async (projectId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Document/GetTree/tree`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (projectId !== undefined) {
+                localVarQueryParameter['projectId'] = projectId;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/Document/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -999,6 +1468,39 @@ export const DocumentApiAxiosParamCreator = function (configuration?: Configurat
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {DocumentMoveRequest} documentMoveRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentMoveMovePost: async (documentMoveRequest: DocumentMoveRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'documentMoveRequest' is not null or undefined
+            assertParamExists('apiDocumentMoveMovePost', 'documentMoveRequest', documentMoveRequest)
+            const localVarPath = `/api/Document/Move/move`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(documentMoveRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1049,6 +1551,18 @@ export const DocumentApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {DocumentBatchMoveRequest} documentBatchMoveRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentBatchMoveBatchMovePost(documentBatchMoveRequest: DocumentBatchMoveRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentBatchMoveBatchMovePost(documentBatchMoveRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentBatchMoveBatchMovePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {BatchDeleteRequest} batchDeleteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1065,6 +1579,18 @@ export const DocumentApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        async apiDocumentGetBreadcrumbBreadcrumbGet(id?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentGetBreadcrumbBreadcrumbGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentGetBreadcrumbBreadcrumbGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         async apiDocumentGetGet(id?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentGetGet(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
@@ -1073,16 +1599,40 @@ export const DocumentApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {string} [projectId] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiDocumentListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiDocumentGetTreeTreeGet(projectId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentGetTreeTreeGet(projectId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentGetTreeTreeGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentListGet(keyword, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentListGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {DocumentMoveRequest} documentMoveRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentMoveMovePost(documentMoveRequest: DocumentMoveRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentMoveMovePost(documentMoveRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentMoveMovePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1108,6 +1658,15 @@ export const DocumentApiFactory = function (configuration?: Configuration, baseP
     return {
         /**
          * 
+         * @param {DocumentBatchMoveRequest} documentBatchMoveRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentBatchMoveBatchMovePost(documentBatchMoveRequest: DocumentBatchMoveRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentBatchMoveBatchMovePost(documentBatchMoveRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {BatchDeleteRequest} batchDeleteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1121,19 +1680,46 @@ export const DocumentApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        apiDocumentGetBreadcrumbBreadcrumbGet(id?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentGetBreadcrumbBreadcrumbGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         apiDocumentGetGet(id?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiDocumentGetGet(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {string} [projectId] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiDocumentListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiDocumentGetTreeTreeGet(projectId?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentGetTreeTreeGet(projectId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiDocumentListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {DocumentMoveRequest} documentMoveRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentMoveMovePost(documentMoveRequest: DocumentMoveRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentMoveMovePost(documentMoveRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1153,6 +1739,16 @@ export const DocumentApiFactory = function (configuration?: Configuration, baseP
 export class DocumentApi extends BaseAPI {
     /**
      * 
+     * @param {DocumentBatchMoveRequest} documentBatchMoveRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentBatchMoveBatchMovePost(documentBatchMoveRequest: DocumentBatchMoveRequest, options?: RawAxiosRequestConfig) {
+        return DocumentApiFp(this.configuration).apiDocumentBatchMoveBatchMovePost(documentBatchMoveRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {BatchDeleteRequest} batchDeleteRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -1167,20 +1763,50 @@ export class DocumentApi extends BaseAPI {
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
+    public apiDocumentGetBreadcrumbBreadcrumbGet(id?: string, options?: RawAxiosRequestConfig) {
+        return DocumentApiFp(this.configuration).apiDocumentGetBreadcrumbBreadcrumbGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [id] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
     public apiDocumentGetGet(id?: string, options?: RawAxiosRequestConfig) {
         return DocumentApiFp(this.configuration).apiDocumentGetGet(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} [keyword] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {string} [projectId] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiDocumentListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiDocumentGetTreeTreeGet(projectId?: string, options?: RawAxiosRequestConfig) {
+        return DocumentApiFp(this.configuration).apiDocumentGetTreeTreeGet(projectId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [keyword] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return DocumentApiFp(this.configuration).apiDocumentListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {DocumentMoveRequest} documentMoveRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentMoveMovePost(documentMoveRequest: DocumentMoveRequest, options?: RawAxiosRequestConfig) {
+        return DocumentApiFp(this.configuration).apiDocumentMoveMovePost(documentMoveRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1191,6 +1817,599 @@ export class DocumentApi extends BaseAPI {
      */
     public apiDocumentUpsertPost(documentUpsertRequest: DocumentUpsertRequest, options?: RawAxiosRequestConfig) {
         return DocumentApiFp(this.configuration).apiDocumentUpsertPost(documentUpsertRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * DocumentAttachmentApi - axios parameter creator
+ */
+export const DocumentAttachmentApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {string} [documentId] 
+         * @param {Array<File>} [files] 
+         * @param {ApiAISupportListGetPageParameter} [startSort] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentBatchUploadPost: async (documentId?: string, files?: Array<File>, startSort?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/DocumentAttachment/batch-upload`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+            const localVarFormParams = new URLSearchParams();
+
+
+            if (documentId !== undefined) { 
+                localVarFormParams.set('DocumentId', documentId as any);
+            }
+            if (files) {
+                files.forEach((element) => {
+                    localVarFormParams.set('Files', element as any);
+                })
+            }
+
+
+            if (startSort !== undefined) { 
+                localVarFormParams.set('StartSort', startSort as any);
+            }
+            localVarHeaderParameter['Content-Type'] = 'application/x-www-form-urlencoded';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = localVarFormParams.toString();
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentContentGet: async (id?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/DocumentAttachment/content`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (id !== undefined) {
+                localVarQueryParameter['id'] = id;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentDeletePost: async (batchDeleteRequest: BatchDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'batchDeleteRequest' is not null or undefined
+            assertParamExists('apiDocumentAttachmentDeletePost', 'batchDeleteRequest', batchDeleteRequest)
+            const localVarPath = `/api/DocumentAttachment/delete`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(batchDeleteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentDownloadGet: async (id?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/DocumentAttachment/download`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (id !== undefined) {
+                localVarQueryParameter['id'] = id;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [documentId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentListGet: async (documentId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/DocumentAttachment/list`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (documentId !== undefined) {
+                localVarQueryParameter['documentId'] = documentId;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentMarkdownLinkGet: async (id?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/DocumentAttachment/markdown-link`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (id !== undefined) {
+                localVarQueryParameter['id'] = id;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {DocumentAttachmentUpdateRequest} documentAttachmentUpdateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentUpdatePost: async (documentAttachmentUpdateRequest: DocumentAttachmentUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'documentAttachmentUpdateRequest' is not null or undefined
+            assertParamExists('apiDocumentAttachmentUpdatePost', 'documentAttachmentUpdateRequest', documentAttachmentUpdateRequest)
+            const localVarPath = `/api/DocumentAttachment/update`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(documentAttachmentUpdateRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [documentId] 
+         * @param {File} [file] 
+         * @param {boolean} [isInline] 
+         * @param {ApiAISupportListGetPageParameter} [sort] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentUploadPost: async (documentId?: string, file?: File, isInline?: boolean, sort?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/DocumentAttachment/upload`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+            const localVarFormParams = new URLSearchParams();
+
+
+            if (documentId !== undefined) { 
+                localVarFormParams.set('DocumentId', documentId as any);
+            }
+
+            if (file !== undefined) { 
+                localVarFormParams.set('File', file as any);
+            }
+
+            if (isInline !== undefined) { 
+                localVarFormParams.set('IsInline', isInline as any);
+            }
+
+            if (sort !== undefined) { 
+                localVarFormParams.set('Sort', sort as any);
+            }
+            localVarHeaderParameter['Content-Type'] = 'application/x-www-form-urlencoded';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = localVarFormParams.toString();
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * DocumentAttachmentApi - functional programming interface
+ */
+export const DocumentAttachmentApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = DocumentAttachmentApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {string} [documentId] 
+         * @param {Array<File>} [files] 
+         * @param {ApiAISupportListGetPageParameter} [startSort] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentAttachmentBatchUploadPost(documentId?: string, files?: Array<File>, startSort?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentAttachmentBatchUploadPost(documentId, files, startSort, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentAttachmentApi.apiDocumentAttachmentBatchUploadPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentAttachmentContentGet(id?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentAttachmentContentGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentAttachmentApi.apiDocumentAttachmentContentGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentAttachmentDeletePost(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentAttachmentDeletePost(batchDeleteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentAttachmentApi.apiDocumentAttachmentDeletePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentAttachmentDownloadGet(id?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentAttachmentDownloadGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentAttachmentApi.apiDocumentAttachmentDownloadGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [documentId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentAttachmentListGet(documentId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentAttachmentListGet(documentId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentAttachmentApi.apiDocumentAttachmentListGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentAttachmentMarkdownLinkGet(id?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentAttachmentMarkdownLinkGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentAttachmentApi.apiDocumentAttachmentMarkdownLinkGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {DocumentAttachmentUpdateRequest} documentAttachmentUpdateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentAttachmentUpdatePost(documentAttachmentUpdateRequest: DocumentAttachmentUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentAttachmentUpdatePost(documentAttachmentUpdateRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentAttachmentApi.apiDocumentAttachmentUpdatePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [documentId] 
+         * @param {File} [file] 
+         * @param {boolean} [isInline] 
+         * @param {ApiAISupportListGetPageParameter} [sort] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentAttachmentUploadPost(documentId?: string, file?: File, isInline?: boolean, sort?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentAttachmentUploadPost(documentId, file, isInline, sort, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentAttachmentApi.apiDocumentAttachmentUploadPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * DocumentAttachmentApi - factory interface
+ */
+export const DocumentAttachmentApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = DocumentAttachmentApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {string} [documentId] 
+         * @param {Array<File>} [files] 
+         * @param {ApiAISupportListGetPageParameter} [startSort] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentBatchUploadPost(documentId?: string, files?: Array<File>, startSort?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentAttachmentBatchUploadPost(documentId, files, startSort, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentContentGet(id?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentAttachmentContentGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentDeletePost(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentAttachmentDeletePost(batchDeleteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentDownloadGet(id?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentAttachmentDownloadGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [documentId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentListGet(documentId?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentAttachmentListGet(documentId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentMarkdownLinkGet(id?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentAttachmentMarkdownLinkGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {DocumentAttachmentUpdateRequest} documentAttachmentUpdateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentUpdatePost(documentAttachmentUpdateRequest: DocumentAttachmentUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentAttachmentUpdatePost(documentAttachmentUpdateRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [documentId] 
+         * @param {File} [file] 
+         * @param {boolean} [isInline] 
+         * @param {ApiAISupportListGetPageParameter} [sort] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentAttachmentUploadPost(documentId?: string, file?: File, isInline?: boolean, sort?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentAttachmentUploadPost(documentId, file, isInline, sort, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * DocumentAttachmentApi - object-oriented interface
+ */
+export class DocumentAttachmentApi extends BaseAPI {
+    /**
+     * 
+     * @param {string} [documentId] 
+     * @param {Array<File>} [files] 
+     * @param {ApiAISupportListGetPageParameter} [startSort] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentAttachmentBatchUploadPost(documentId?: string, files?: Array<File>, startSort?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
+        return DocumentAttachmentApiFp(this.configuration).apiDocumentAttachmentBatchUploadPost(documentId, files, startSort, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [id] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentAttachmentContentGet(id?: string, options?: RawAxiosRequestConfig) {
+        return DocumentAttachmentApiFp(this.configuration).apiDocumentAttachmentContentGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {BatchDeleteRequest} batchDeleteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentAttachmentDeletePost(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig) {
+        return DocumentAttachmentApiFp(this.configuration).apiDocumentAttachmentDeletePost(batchDeleteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [id] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentAttachmentDownloadGet(id?: string, options?: RawAxiosRequestConfig) {
+        return DocumentAttachmentApiFp(this.configuration).apiDocumentAttachmentDownloadGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [documentId] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentAttachmentListGet(documentId?: string, options?: RawAxiosRequestConfig) {
+        return DocumentAttachmentApiFp(this.configuration).apiDocumentAttachmentListGet(documentId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [id] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentAttachmentMarkdownLinkGet(id?: string, options?: RawAxiosRequestConfig) {
+        return DocumentAttachmentApiFp(this.configuration).apiDocumentAttachmentMarkdownLinkGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {DocumentAttachmentUpdateRequest} documentAttachmentUpdateRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentAttachmentUpdatePost(documentAttachmentUpdateRequest: DocumentAttachmentUpdateRequest, options?: RawAxiosRequestConfig) {
+        return DocumentAttachmentApiFp(this.configuration).apiDocumentAttachmentUpdatePost(documentAttachmentUpdateRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [documentId] 
+     * @param {File} [file] 
+     * @param {boolean} [isInline] 
+     * @param {ApiAISupportListGetPageParameter} [sort] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentAttachmentUploadPost(documentId?: string, file?: File, isInline?: boolean, sort?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
+        return DocumentAttachmentApiFp(this.configuration).apiDocumentAttachmentUploadPost(documentId, file, isInline, sort, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -1270,12 +2489,12 @@ export const FileResourceApiAxiosParamCreator = function (configuration?: Config
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFileResourceListGet: async (keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiFileResourceListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/FileResource/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1379,12 +2598,12 @@ export const FileResourceApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiFileResourceListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiFileResourceListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiFileResourceListGet(keyword, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FileResourceApi.apiFileResourceListGet']?.[localVarOperationServerIndex]?.url;
@@ -1432,12 +2651,12 @@ export const FileResourceApiFactory = function (configuration?: Configuration, b
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFileResourceListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiFileResourceListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiFileResourceListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1479,12 +2698,12 @@ export class FileResourceApi extends BaseAPI {
     /**
      * 
      * @param {string} [keyword] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiFileResourceListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiFileResourceListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return FileResourceApiFp(this.configuration).apiFileResourceListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -1496,6 +2715,311 @@ export class FileResourceApi extends BaseAPI {
      */
     public apiFileResourceUpsertPost(fileResourceUpsertRequest: FileResourceUpsertRequest, options?: RawAxiosRequestConfig) {
         return FileResourceApiFp(this.configuration).apiFileResourceUpsertPost(fileResourceUpsertRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * GitCredentialApi - axios parameter creator
+ */
+export const GitCredentialApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGitCredentialDeleteDelete: async (batchDeleteRequest: BatchDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'batchDeleteRequest' is not null or undefined
+            assertParamExists('apiGitCredentialDeleteDelete', 'batchDeleteRequest', batchDeleteRequest)
+            const localVarPath = `/api/GitCredential/Delete`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(batchDeleteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGitCredentialGetGet: async (id?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/GitCredential/Get`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (id !== undefined) {
+                localVarQueryParameter['id'] = id;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGitCredentialListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/GitCredential/List`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (keyword !== undefined) {
+                localVarQueryParameter['Keyword'] = keyword;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['Page'] = page;
+            }
+
+            if (pageSize !== undefined) {
+                localVarQueryParameter['PageSize'] = pageSize;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {GitCredentialUpsertRequest} gitCredentialUpsertRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGitCredentialUpsertPost: async (gitCredentialUpsertRequest: GitCredentialUpsertRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'gitCredentialUpsertRequest' is not null or undefined
+            assertParamExists('apiGitCredentialUpsertPost', 'gitCredentialUpsertRequest', gitCredentialUpsertRequest)
+            const localVarPath = `/api/GitCredential/Upsert`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(gitCredentialUpsertRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * GitCredentialApi - functional programming interface
+ */
+export const GitCredentialApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = GitCredentialApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiGitCredentialDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGitCredentialDeleteDelete(batchDeleteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GitCredentialApi.apiGitCredentialDeleteDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiGitCredentialGetGet(id?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGitCredentialGetGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GitCredentialApi.apiGitCredentialGetGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiGitCredentialListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGitCredentialListGet(keyword, page, pageSize, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GitCredentialApi.apiGitCredentialListGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {GitCredentialUpsertRequest} gitCredentialUpsertRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiGitCredentialUpsertPost(gitCredentialUpsertRequest: GitCredentialUpsertRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGitCredentialUpsertPost(gitCredentialUpsertRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GitCredentialApi.apiGitCredentialUpsertPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * GitCredentialApi - factory interface
+ */
+export const GitCredentialApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = GitCredentialApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGitCredentialDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiGitCredentialDeleteDelete(batchDeleteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGitCredentialGetGet(id?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiGitCredentialGetGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGitCredentialListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiGitCredentialListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {GitCredentialUpsertRequest} gitCredentialUpsertRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGitCredentialUpsertPost(gitCredentialUpsertRequest: GitCredentialUpsertRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiGitCredentialUpsertPost(gitCredentialUpsertRequest, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * GitCredentialApi - object-oriented interface
+ */
+export class GitCredentialApi extends BaseAPI {
+    /**
+     * 
+     * @param {BatchDeleteRequest} batchDeleteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiGitCredentialDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig) {
+        return GitCredentialApiFp(this.configuration).apiGitCredentialDeleteDelete(batchDeleteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [id] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiGitCredentialGetGet(id?: string, options?: RawAxiosRequestConfig) {
+        return GitCredentialApiFp(this.configuration).apiGitCredentialGetGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [keyword] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiGitCredentialListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
+        return GitCredentialApiFp(this.configuration).apiGitCredentialListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {GitCredentialUpsertRequest} gitCredentialUpsertRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiGitCredentialUpsertPost(gitCredentialUpsertRequest: GitCredentialUpsertRequest, options?: RawAxiosRequestConfig) {
+        return GitCredentialApiFp(this.configuration).apiGitCredentialUpsertPost(gitCredentialUpsertRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -1575,12 +3099,12 @@ export const MenuApiAxiosParamCreator = function (configuration?: Configuration)
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiMenuListGet: async (keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiMenuListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/Menu/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1684,12 +3208,12 @@ export const MenuApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiMenuListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiMenuListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiMenuListGet(keyword, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MenuApi.apiMenuListGet']?.[localVarOperationServerIndex]?.url;
@@ -1737,12 +3261,12 @@ export const MenuApiFactory = function (configuration?: Configuration, basePath?
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiMenuListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiMenuListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiMenuListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1784,12 +3308,12 @@ export class MenuApi extends BaseAPI {
     /**
      * 
      * @param {string} [keyword] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiMenuListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiMenuListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return MenuApiFp(this.configuration).apiMenuListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -1880,12 +3404,12 @@ export const PermissionApiAxiosParamCreator = function (configuration?: Configur
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiPermissionListGet: async (keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiPermissionListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/Permission/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1989,12 +3513,12 @@ export const PermissionApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiPermissionListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiPermissionListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiPermissionListGet(keyword, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PermissionApi.apiPermissionListGet']?.[localVarOperationServerIndex]?.url;
@@ -2042,12 +3566,12 @@ export const PermissionApiFactory = function (configuration?: Configuration, bas
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiPermissionListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiPermissionListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiPermissionListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2089,12 +3613,12 @@ export class PermissionApi extends BaseAPI {
     /**
      * 
      * @param {string} [keyword] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiPermissionListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiPermissionListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return PermissionApiFp(this.configuration).apiPermissionListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -2185,12 +3709,12 @@ export const ProjectApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiProjectListGet: async (keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiProjectListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/Project/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2294,12 +3818,12 @@ export const ProjectApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiProjectListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiProjectListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectListGet(keyword, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProjectApi.apiProjectListGet']?.[localVarOperationServerIndex]?.url;
@@ -2347,12 +3871,12 @@ export const ProjectApiFactory = function (configuration?: Configuration, basePa
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiProjectListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiProjectListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiProjectListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2394,12 +3918,12 @@ export class ProjectApi extends BaseAPI {
     /**
      * 
      * @param {string} [keyword] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiProjectListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiProjectListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return ProjectApiFp(this.configuration).apiProjectListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -2411,6 +3935,488 @@ export class ProjectApi extends BaseAPI {
      */
     public apiProjectUpsertPost(projectUpsertRequest: ProjectUpsertRequest, options?: RawAxiosRequestConfig) {
         return ProjectApiFp(this.configuration).apiProjectUpsertPost(projectUpsertRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * ProjectAISupportApi - axios parameter creator
+ */
+export const ProjectAISupportApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {ProjectAISupportAssignRequest} projectAISupportAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectAISupportAssignPost: async (projectAISupportAssignRequest: ProjectAISupportAssignRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'projectAISupportAssignRequest' is not null or undefined
+            assertParamExists('apiProjectAISupportAssignPost', 'projectAISupportAssignRequest', projectAISupportAssignRequest)
+            const localVarPath = `/api/ProjectAISupport/Assign`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(projectAISupportAssignRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectAISupportDeleteDelete: async (batchDeleteRequest: BatchDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'batchDeleteRequest' is not null or undefined
+            assertParamExists('apiProjectAISupportDeleteDelete', 'batchDeleteRequest', batchDeleteRequest)
+            const localVarPath = `/api/ProjectAISupport/Delete`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(batchDeleteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectAISupportListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/ProjectAISupport/List`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (keyword !== undefined) {
+                localVarQueryParameter['Keyword'] = keyword;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['Page'] = page;
+            }
+
+            if (pageSize !== undefined) {
+                localVarQueryParameter['PageSize'] = pageSize;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * ProjectAISupportApi - functional programming interface
+ */
+export const ProjectAISupportApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = ProjectAISupportApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {ProjectAISupportAssignRequest} projectAISupportAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectAISupportAssignPost(projectAISupportAssignRequest: ProjectAISupportAssignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectAISupportAssignPost(projectAISupportAssignRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectAISupportApi.apiProjectAISupportAssignPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectAISupportDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectAISupportDeleteDelete(batchDeleteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectAISupportApi.apiProjectAISupportDeleteDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectAISupportListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectAISupportListGet(keyword, page, pageSize, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectAISupportApi.apiProjectAISupportListGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * ProjectAISupportApi - factory interface
+ */
+export const ProjectAISupportApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = ProjectAISupportApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {ProjectAISupportAssignRequest} projectAISupportAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectAISupportAssignPost(projectAISupportAssignRequest: ProjectAISupportAssignRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiProjectAISupportAssignPost(projectAISupportAssignRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectAISupportDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiProjectAISupportDeleteDelete(batchDeleteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectAISupportListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiProjectAISupportListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * ProjectAISupportApi - object-oriented interface
+ */
+export class ProjectAISupportApi extends BaseAPI {
+    /**
+     * 
+     * @param {ProjectAISupportAssignRequest} projectAISupportAssignRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiProjectAISupportAssignPost(projectAISupportAssignRequest: ProjectAISupportAssignRequest, options?: RawAxiosRequestConfig) {
+        return ProjectAISupportApiFp(this.configuration).apiProjectAISupportAssignPost(projectAISupportAssignRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {BatchDeleteRequest} batchDeleteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiProjectAISupportDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig) {
+        return ProjectAISupportApiFp(this.configuration).apiProjectAISupportDeleteDelete(batchDeleteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [keyword] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiProjectAISupportListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
+        return ProjectAISupportApiFp(this.configuration).apiProjectAISupportListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * ProjectGitCredentialApi - axios parameter creator
+ */
+export const ProjectGitCredentialApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {ProjectGitCredentialAssignRequest} projectGitCredentialAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectGitCredentialAssignPost: async (projectGitCredentialAssignRequest: ProjectGitCredentialAssignRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'projectGitCredentialAssignRequest' is not null or undefined
+            assertParamExists('apiProjectGitCredentialAssignPost', 'projectGitCredentialAssignRequest', projectGitCredentialAssignRequest)
+            const localVarPath = `/api/ProjectGitCredential/Assign`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(projectGitCredentialAssignRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectGitCredentialDeleteDelete: async (batchDeleteRequest: BatchDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'batchDeleteRequest' is not null or undefined
+            assertParamExists('apiProjectGitCredentialDeleteDelete', 'batchDeleteRequest', batchDeleteRequest)
+            const localVarPath = `/api/ProjectGitCredential/Delete`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(batchDeleteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectGitCredentialListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/ProjectGitCredential/List`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (keyword !== undefined) {
+                localVarQueryParameter['Keyword'] = keyword;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['Page'] = page;
+            }
+
+            if (pageSize !== undefined) {
+                localVarQueryParameter['PageSize'] = pageSize;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * ProjectGitCredentialApi - functional programming interface
+ */
+export const ProjectGitCredentialApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = ProjectGitCredentialApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {ProjectGitCredentialAssignRequest} projectGitCredentialAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectGitCredentialAssignPost(projectGitCredentialAssignRequest: ProjectGitCredentialAssignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectGitCredentialAssignPost(projectGitCredentialAssignRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectGitCredentialApi.apiProjectGitCredentialAssignPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectGitCredentialDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectGitCredentialDeleteDelete(batchDeleteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectGitCredentialApi.apiProjectGitCredentialDeleteDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiProjectGitCredentialListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiProjectGitCredentialListGet(keyword, page, pageSize, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProjectGitCredentialApi.apiProjectGitCredentialListGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * ProjectGitCredentialApi - factory interface
+ */
+export const ProjectGitCredentialApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = ProjectGitCredentialApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {ProjectGitCredentialAssignRequest} projectGitCredentialAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectGitCredentialAssignPost(projectGitCredentialAssignRequest: ProjectGitCredentialAssignRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiProjectGitCredentialAssignPost(projectGitCredentialAssignRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectGitCredentialDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiProjectGitCredentialDeleteDelete(batchDeleteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiProjectGitCredentialListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiProjectGitCredentialListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * ProjectGitCredentialApi - object-oriented interface
+ */
+export class ProjectGitCredentialApi extends BaseAPI {
+    /**
+     * 
+     * @param {ProjectGitCredentialAssignRequest} projectGitCredentialAssignRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiProjectGitCredentialAssignPost(projectGitCredentialAssignRequest: ProjectGitCredentialAssignRequest, options?: RawAxiosRequestConfig) {
+        return ProjectGitCredentialApiFp(this.configuration).apiProjectGitCredentialAssignPost(projectGitCredentialAssignRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {BatchDeleteRequest} batchDeleteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiProjectGitCredentialDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig) {
+        return ProjectGitCredentialApiFp(this.configuration).apiProjectGitCredentialDeleteDelete(batchDeleteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [keyword] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiProjectGitCredentialListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
+        return ProjectGitCredentialApiFp(this.configuration).apiProjectGitCredentialListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -2586,12 +4592,12 @@ export const RoleApiAxiosParamCreator = function (configuration?: Configuration)
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRoleListGet: async (keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiRoleListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/Role/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2731,12 +4737,12 @@ export const RoleApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiRoleListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiRoleListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiRoleListGet(keyword, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['RoleApi.apiRoleListGet']?.[localVarOperationServerIndex]?.url;
@@ -2811,12 +4817,12 @@ export const RoleApiFactory = function (configuration?: Configuration, basePath?
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRoleListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiRoleListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiRoleListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2888,12 +4894,12 @@ export class RoleApi extends BaseAPI {
     /**
      * 
      * @param {string} [keyword] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiRoleListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiRoleListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return RoleApiFp(this.configuration).apiRoleListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -2985,12 +4991,12 @@ export const RoleDocumentApiAxiosParamCreator = function (configuration?: Config
          * 
          * @param {string} [roleId] 
          * @param {string} [documentId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRoleDocumentListGet: async (roleId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiRoleDocumentListGet: async (roleId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/RoleDocument/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3066,12 +5072,12 @@ export const RoleDocumentApiFp = function(configuration?: Configuration) {
          * 
          * @param {string} [roleId] 
          * @param {string} [documentId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiRoleDocumentListGet(roleId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiRoleDocumentListGet(roleId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiRoleDocumentListGet(roleId, documentId, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['RoleDocumentApi.apiRoleDocumentListGet']?.[localVarOperationServerIndex]?.url;
@@ -3108,12 +5114,12 @@ export const RoleDocumentApiFactory = function (configuration?: Configuration, b
          * 
          * @param {string} [roleId] 
          * @param {string} [documentId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRoleDocumentListGet(roleId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiRoleDocumentListGet(roleId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiRoleDocumentListGet(roleId, documentId, page, pageSize, options).then((request) => request(axios, basePath));
         },
     };
@@ -3147,12 +5153,12 @@ export class RoleDocumentApi extends BaseAPI {
      * 
      * @param {string} [roleId] 
      * @param {string} [documentId] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiRoleDocumentListGet(roleId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiRoleDocumentListGet(roleId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return RoleDocumentApiFp(this.configuration).apiRoleDocumentListGet(roleId, documentId, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 }
@@ -3234,12 +5240,12 @@ export const RoleMenuApiAxiosParamCreator = function (configuration?: Configurat
          * 
          * @param {string} [roleId] 
          * @param {string} [menuId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRoleMenuListGet: async (roleId?: string, menuId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiRoleMenuListGet: async (roleId?: string, menuId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/RoleMenu/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3315,12 +5321,12 @@ export const RoleMenuApiFp = function(configuration?: Configuration) {
          * 
          * @param {string} [roleId] 
          * @param {string} [menuId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiRoleMenuListGet(roleId?: string, menuId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiRoleMenuListGet(roleId?: string, menuId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiRoleMenuListGet(roleId, menuId, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['RoleMenuApi.apiRoleMenuListGet']?.[localVarOperationServerIndex]?.url;
@@ -3357,12 +5363,12 @@ export const RoleMenuApiFactory = function (configuration?: Configuration, baseP
          * 
          * @param {string} [roleId] 
          * @param {string} [menuId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRoleMenuListGet(roleId?: string, menuId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiRoleMenuListGet(roleId?: string, menuId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiRoleMenuListGet(roleId, menuId, page, pageSize, options).then((request) => request(axios, basePath));
         },
     };
@@ -3396,12 +5402,12 @@ export class RoleMenuApi extends BaseAPI {
      * 
      * @param {string} [roleId] 
      * @param {string} [menuId] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiRoleMenuListGet(roleId?: string, menuId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiRoleMenuListGet(roleId?: string, menuId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return RoleMenuApiFp(this.configuration).apiRoleMenuListGet(roleId, menuId, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 }
@@ -3483,12 +5489,12 @@ export const RolePermissionApiAxiosParamCreator = function (configuration?: Conf
          * 
          * @param {string} [roleId] 
          * @param {string} [permissionId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRolePermissionListGet: async (roleId?: string, permissionId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiRolePermissionListGet: async (roleId?: string, permissionId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/RolePermission/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3564,12 +5570,12 @@ export const RolePermissionApiFp = function(configuration?: Configuration) {
          * 
          * @param {string} [roleId] 
          * @param {string} [permissionId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiRolePermissionListGet(roleId?: string, permissionId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiRolePermissionListGet(roleId?: string, permissionId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiRolePermissionListGet(roleId, permissionId, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['RolePermissionApi.apiRolePermissionListGet']?.[localVarOperationServerIndex]?.url;
@@ -3606,12 +5612,12 @@ export const RolePermissionApiFactory = function (configuration?: Configuration,
          * 
          * @param {string} [roleId] 
          * @param {string} [permissionId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRolePermissionListGet(roleId?: string, permissionId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiRolePermissionListGet(roleId?: string, permissionId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiRolePermissionListGet(roleId, permissionId, page, pageSize, options).then((request) => request(axios, basePath));
         },
     };
@@ -3645,12 +5651,12 @@ export class RolePermissionApi extends BaseAPI {
      * 
      * @param {string} [roleId] 
      * @param {string} [permissionId] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiRolePermissionListGet(roleId?: string, permissionId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiRolePermissionListGet(roleId?: string, permissionId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return RolePermissionApiFp(this.configuration).apiRolePermissionListGet(roleId, permissionId, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 }
@@ -3662,6 +5668,39 @@ export class RolePermissionApi extends BaseAPI {
  */
 export const TeamApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
+        /**
+         * 
+         * @param {TeamUserAssignRequest} teamUserAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTeamAssignUsersAssignUsersPost: async (teamUserAssignRequest: TeamUserAssignRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'teamUserAssignRequest' is not null or undefined
+            assertParamExists('apiTeamAssignUsersAssignUsersPost', 'teamUserAssignRequest', teamUserAssignRequest)
+            const localVarPath = `/api/Team/AssignUsers/assign-users`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(teamUserAssignRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
         /**
          * 
          * @param {BatchDeleteRequest} batchDeleteRequest 
@@ -3795,12 +5834,12 @@ export const TeamApiAxiosParamCreator = function (configuration?: Configuration)
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiTeamListGet: async (keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiTeamListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/Team/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3879,6 +5918,18 @@ export const TeamApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {TeamUserAssignRequest} teamUserAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiTeamAssignUsersAssignUsersPost(teamUserAssignRequest: TeamUserAssignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiTeamAssignUsersAssignUsersPost(teamUserAssignRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TeamApi.apiTeamAssignUsersAssignUsersPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {BatchDeleteRequest} batchDeleteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3928,12 +5979,12 @@ export const TeamApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiTeamListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiTeamListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiTeamListGet(keyword, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['TeamApi.apiTeamListGet']?.[localVarOperationServerIndex]?.url;
@@ -3960,6 +6011,15 @@ export const TeamApiFp = function(configuration?: Configuration) {
 export const TeamApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
     const localVarFp = TeamApiFp(configuration)
     return {
+        /**
+         * 
+         * @param {TeamUserAssignRequest} teamUserAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTeamAssignUsersAssignUsersPost(teamUserAssignRequest: TeamUserAssignRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiTeamAssignUsersAssignUsersPost(teamUserAssignRequest, options).then((request) => request(axios, basePath));
+        },
         /**
          * 
          * @param {BatchDeleteRequest} batchDeleteRequest 
@@ -3999,12 +6059,12 @@ export const TeamApiFactory = function (configuration?: Configuration, basePath?
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiTeamListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiTeamListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiTeamListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
         },
         /**
@@ -4023,6 +6083,16 @@ export const TeamApiFactory = function (configuration?: Configuration, basePath?
  * TeamApi - object-oriented interface
  */
 export class TeamApi extends BaseAPI {
+    /**
+     * 
+     * @param {TeamUserAssignRequest} teamUserAssignRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiTeamAssignUsersAssignUsersPost(teamUserAssignRequest: TeamUserAssignRequest, options?: RawAxiosRequestConfig) {
+        return TeamApiFp(this.configuration).apiTeamAssignUsersAssignUsersPost(teamUserAssignRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @param {BatchDeleteRequest} batchDeleteRequest 
@@ -4066,12 +6136,12 @@ export class TeamApi extends BaseAPI {
     /**
      * 
      * @param {string} [keyword] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiTeamListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiTeamListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return TeamApiFp(this.configuration).apiTeamListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -4163,12 +6233,12 @@ export const TeamDocumentApiAxiosParamCreator = function (configuration?: Config
          * 
          * @param {string} [teamId] 
          * @param {string} [documentId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiTeamDocumentListGet: async (teamId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiTeamDocumentListGet: async (teamId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/TeamDocument/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4244,12 +6314,12 @@ export const TeamDocumentApiFp = function(configuration?: Configuration) {
          * 
          * @param {string} [teamId] 
          * @param {string} [documentId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiTeamDocumentListGet(teamId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiTeamDocumentListGet(teamId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiTeamDocumentListGet(teamId, documentId, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['TeamDocumentApi.apiTeamDocumentListGet']?.[localVarOperationServerIndex]?.url;
@@ -4286,12 +6356,12 @@ export const TeamDocumentApiFactory = function (configuration?: Configuration, b
          * 
          * @param {string} [teamId] 
          * @param {string} [documentId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiTeamDocumentListGet(teamId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiTeamDocumentListGet(teamId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiTeamDocumentListGet(teamId, documentId, page, pageSize, options).then((request) => request(axios, basePath));
         },
     };
@@ -4325,12 +6395,12 @@ export class TeamDocumentApi extends BaseAPI {
      * 
      * @param {string} [teamId] 
      * @param {string} [documentId] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiTeamDocumentListGet(teamId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiTeamDocumentListGet(teamId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return TeamDocumentApiFp(this.configuration).apiTeamDocumentListGet(teamId, documentId, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 }
@@ -4412,12 +6482,12 @@ export const TeamProjectApiAxiosParamCreator = function (configuration?: Configu
          * 
          * @param {string} [teamId] 
          * @param {string} [projectId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiTeamProjectListGet: async (teamId?: string, projectId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiTeamProjectListGet: async (teamId?: string, projectId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/TeamProject/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4493,12 +6563,12 @@ export const TeamProjectApiFp = function(configuration?: Configuration) {
          * 
          * @param {string} [teamId] 
          * @param {string} [projectId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiTeamProjectListGet(teamId?: string, projectId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiTeamProjectListGet(teamId?: string, projectId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiTeamProjectListGet(teamId, projectId, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['TeamProjectApi.apiTeamProjectListGet']?.[localVarOperationServerIndex]?.url;
@@ -4535,12 +6605,12 @@ export const TeamProjectApiFactory = function (configuration?: Configuration, ba
          * 
          * @param {string} [teamId] 
          * @param {string} [projectId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiTeamProjectListGet(teamId?: string, projectId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiTeamProjectListGet(teamId?: string, projectId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiTeamProjectListGet(teamId, projectId, page, pageSize, options).then((request) => request(axios, basePath));
         },
     };
@@ -4574,12 +6644,12 @@ export class TeamProjectApi extends BaseAPI {
      * 
      * @param {string} [teamId] 
      * @param {string} [projectId] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiTeamProjectListGet(teamId?: string, projectId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiTeamProjectListGet(teamId?: string, projectId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return TeamProjectApiFp(this.configuration).apiTeamProjectListGet(teamId, projectId, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 }
@@ -4660,12 +6730,12 @@ export const TenantApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiTenantListGet: async (keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiTenantListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/Tenant/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4769,12 +6839,12 @@ export const TenantApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiTenantListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiTenantListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiTenantListGet(keyword, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['TenantApi.apiTenantListGet']?.[localVarOperationServerIndex]?.url;
@@ -4822,12 +6892,12 @@ export const TenantApiFactory = function (configuration?: Configuration, basePat
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiTenantListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiTenantListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiTenantListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
         },
         /**
@@ -4869,12 +6939,12 @@ export class TenantApi extends BaseAPI {
     /**
      * 
      * @param {string} [keyword] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiTenantListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiTenantListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return TenantApiFp(this.configuration).apiTenantListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -5093,12 +7163,12 @@ export const UserApiAxiosParamCreator = function (configuration?: Configuration)
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUserListGet: async (keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiUserListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/User/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5278,12 +7348,12 @@ export const UserApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiUserListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiUserListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiUserListGet(keyword, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UserApi.apiUserListGet']?.[localVarOperationServerIndex]?.url;
@@ -5378,12 +7448,12 @@ export const UserApiFactory = function (configuration?: Configuration, basePath?
         /**
          * 
          * @param {string} [keyword] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUserListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiUserListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiUserListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
         },
         /**
@@ -5473,12 +7543,12 @@ export class UserApi extends BaseAPI {
     /**
      * 
      * @param {string} [keyword] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiUserListGet(keyword?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiUserListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return UserApiFp(this.configuration).apiUserListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -5579,12 +7649,12 @@ export const UserDocumentApiAxiosParamCreator = function (configuration?: Config
          * 
          * @param {string} [userId] 
          * @param {string} [documentId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUserDocumentListGet: async (userId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiUserDocumentListGet: async (userId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/UserDocument/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5660,12 +7730,12 @@ export const UserDocumentApiFp = function(configuration?: Configuration) {
          * 
          * @param {string} [userId] 
          * @param {string} [documentId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiUserDocumentListGet(userId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiUserDocumentListGet(userId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiUserDocumentListGet(userId, documentId, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UserDocumentApi.apiUserDocumentListGet']?.[localVarOperationServerIndex]?.url;
@@ -5702,12 +7772,12 @@ export const UserDocumentApiFactory = function (configuration?: Configuration, b
          * 
          * @param {string} [userId] 
          * @param {string} [documentId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUserDocumentListGet(userId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiUserDocumentListGet(userId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiUserDocumentListGet(userId, documentId, page, pageSize, options).then((request) => request(axios, basePath));
         },
     };
@@ -5741,13 +7811,254 @@ export class UserDocumentApi extends BaseAPI {
      * 
      * @param {string} [userId] 
      * @param {string} [documentId] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiUserDocumentListGet(userId?: string, documentId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiUserDocumentListGet(userId?: string, documentId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return UserDocumentApiFp(this.configuration).apiUserDocumentListGet(userId, documentId, page, pageSize, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * UserGitCredentialApi - axios parameter creator
+ */
+export const UserGitCredentialApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {UserGitCredentialAssignRequest} userGitCredentialAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUserGitCredentialAssignPost: async (userGitCredentialAssignRequest: UserGitCredentialAssignRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userGitCredentialAssignRequest' is not null or undefined
+            assertParamExists('apiUserGitCredentialAssignPost', 'userGitCredentialAssignRequest', userGitCredentialAssignRequest)
+            const localVarPath = `/api/UserGitCredential/Assign`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(userGitCredentialAssignRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUserGitCredentialDeleteDelete: async (batchDeleteRequest: BatchDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'batchDeleteRequest' is not null or undefined
+            assertParamExists('apiUserGitCredentialDeleteDelete', 'batchDeleteRequest', batchDeleteRequest)
+            const localVarPath = `/api/UserGitCredential/Delete`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(batchDeleteRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUserGitCredentialListGet: async (keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/UserGitCredential/List`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (keyword !== undefined) {
+                localVarQueryParameter['Keyword'] = keyword;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['Page'] = page;
+            }
+
+            if (pageSize !== undefined) {
+                localVarQueryParameter['PageSize'] = pageSize;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * UserGitCredentialApi - functional programming interface
+ */
+export const UserGitCredentialApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = UserGitCredentialApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {UserGitCredentialAssignRequest} userGitCredentialAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiUserGitCredentialAssignPost(userGitCredentialAssignRequest: UserGitCredentialAssignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUserGitCredentialAssignPost(userGitCredentialAssignRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UserGitCredentialApi.apiUserGitCredentialAssignPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiUserGitCredentialDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUserGitCredentialDeleteDelete(batchDeleteRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UserGitCredentialApi.apiUserGitCredentialDeleteDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiUserGitCredentialListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUserGitCredentialListGet(keyword, page, pageSize, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UserGitCredentialApi.apiUserGitCredentialListGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * UserGitCredentialApi - factory interface
+ */
+export const UserGitCredentialApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = UserGitCredentialApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {UserGitCredentialAssignRequest} userGitCredentialAssignRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUserGitCredentialAssignPost(userGitCredentialAssignRequest: UserGitCredentialAssignRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiUserGitCredentialAssignPost(userGitCredentialAssignRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {BatchDeleteRequest} batchDeleteRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUserGitCredentialDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiUserGitCredentialDeleteDelete(batchDeleteRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [keyword] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUserGitCredentialListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiUserGitCredentialListGet(keyword, page, pageSize, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * UserGitCredentialApi - object-oriented interface
+ */
+export class UserGitCredentialApi extends BaseAPI {
+    /**
+     * 
+     * @param {UserGitCredentialAssignRequest} userGitCredentialAssignRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiUserGitCredentialAssignPost(userGitCredentialAssignRequest: UserGitCredentialAssignRequest, options?: RawAxiosRequestConfig) {
+        return UserGitCredentialApiFp(this.configuration).apiUserGitCredentialAssignPost(userGitCredentialAssignRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {BatchDeleteRequest} batchDeleteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiUserGitCredentialDeleteDelete(batchDeleteRequest: BatchDeleteRequest, options?: RawAxiosRequestConfig) {
+        return UserGitCredentialApiFp(this.configuration).apiUserGitCredentialDeleteDelete(batchDeleteRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [keyword] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiUserGitCredentialListGet(keyword?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
+        return UserGitCredentialApiFp(this.configuration).apiUserGitCredentialListGet(keyword, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -5828,12 +8139,12 @@ export const UserRoleApiAxiosParamCreator = function (configuration?: Configurat
          * 
          * @param {string} [userId] 
          * @param {string} [roleId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUserRoleListGet: async (userId?: string, roleId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiUserRoleListGet: async (userId?: string, roleId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/UserRole/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5909,12 +8220,12 @@ export const UserRoleApiFp = function(configuration?: Configuration) {
          * 
          * @param {string} [userId] 
          * @param {string} [roleId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiUserRoleListGet(userId?: string, roleId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiUserRoleListGet(userId?: string, roleId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiUserRoleListGet(userId, roleId, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UserRoleApi.apiUserRoleListGet']?.[localVarOperationServerIndex]?.url;
@@ -5951,12 +8262,12 @@ export const UserRoleApiFactory = function (configuration?: Configuration, baseP
          * 
          * @param {string} [userId] 
          * @param {string} [roleId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUserRoleListGet(userId?: string, roleId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiUserRoleListGet(userId?: string, roleId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiUserRoleListGet(userId, roleId, page, pageSize, options).then((request) => request(axios, basePath));
         },
     };
@@ -5990,12 +8301,12 @@ export class UserRoleApi extends BaseAPI {
      * 
      * @param {string} [userId] 
      * @param {string} [roleId] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiUserRoleListGet(userId?: string, roleId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiUserRoleListGet(userId?: string, roleId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return UserRoleApiFp(this.configuration).apiUserRoleListGet(userId, roleId, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 }
@@ -6077,12 +8388,12 @@ export const UserTeamApiAxiosParamCreator = function (configuration?: Configurat
          * 
          * @param {string} [userId] 
          * @param {string} [teamId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUserTeamListGet: async (userId?: string, teamId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiUserTeamListGet: async (userId?: string, teamId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/UserTeam/List`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -6158,12 +8469,12 @@ export const UserTeamApiFp = function(configuration?: Configuration) {
          * 
          * @param {string} [userId] 
          * @param {string} [teamId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiUserTeamListGet(userId?: string, teamId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async apiUserTeamListGet(userId?: string, teamId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiUserTeamListGet(userId, teamId, page, pageSize, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UserTeamApi.apiUserTeamListGet']?.[localVarOperationServerIndex]?.url;
@@ -6200,12 +8511,12 @@ export const UserTeamApiFactory = function (configuration?: Configuration, baseP
          * 
          * @param {string} [userId] 
          * @param {string} [teamId] 
-         * @param {ApiDocumentListGetPageParameter} [page] 
-         * @param {ApiDocumentListGetPageParameter} [pageSize] 
+         * @param {ApiAISupportListGetPageParameter} [page] 
+         * @param {ApiAISupportListGetPageParameter} [pageSize] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUserTeamListGet(userId?: string, teamId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+        apiUserTeamListGet(userId?: string, teamId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiUserTeamListGet(userId, teamId, page, pageSize, options).then((request) => request(axios, basePath));
         },
     };
@@ -6239,12 +8550,12 @@ export class UserTeamApi extends BaseAPI {
      * 
      * @param {string} [userId] 
      * @param {string} [teamId] 
-     * @param {ApiDocumentListGetPageParameter} [page] 
-     * @param {ApiDocumentListGetPageParameter} [pageSize] 
+     * @param {ApiAISupportListGetPageParameter} [page] 
+     * @param {ApiAISupportListGetPageParameter} [pageSize] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiUserTeamListGet(userId?: string, teamId?: string, page?: ApiDocumentListGetPageParameter, pageSize?: ApiDocumentListGetPageParameter, options?: RawAxiosRequestConfig) {
+    public apiUserTeamListGet(userId?: string, teamId?: string, page?: ApiAISupportListGetPageParameter, pageSize?: ApiAISupportListGetPageParameter, options?: RawAxiosRequestConfig) {
         return UserTeamApiFp(this.configuration).apiUserTeamListGet(userId, teamId, page, pageSize, options).then((request) => request(this.axios, this.basePath));
     }
 }

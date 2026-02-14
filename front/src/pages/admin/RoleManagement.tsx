@@ -1,57 +1,57 @@
 import React, { useState, useEffect } from 'react'
-import { Button } from '../../components'
-import { rolesApi, permissionsApi } from '../../services/auth'
+import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
+import { rolesApi, permissionsApi, rolePermissionApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
+import { 
+  PlusIcon, 
+  PencilIcon, 
+  TrashIcon, 
+  MagnifyingGlassIcon,
+  ShieldCheckIcon,
+  ArrowPathIcon,
+  KeyIcon
+} from '@heroicons/react/24/solid'
 
 interface Role {
   id: string
   name: string
   code: string
-  description: string
-  isEnabled: boolean
-  isPin: boolean
-  parentId?: string
+  description?: string
 }
 
 interface Permission {
   id: string
   name: string
   code: string
-  description: string
-}
-
-interface Menu {
-  id: string
-  name: string
-  code: string
-  url: string
+  description?: string
 }
 
 export default function RoleManagement() {
   const [roles, setRoles] = useState<Role[]>([])
+  const [filteredRoles, setFilteredRoles] = useState<Role[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
-  const [menus, setMenus] = useState<Menu[]>([])
   const [loading, setLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [showModal, setShowModal] = useState(false)
-  const [showPermissionModal, setShowPermissionModal] = useState(false)
-  const [showMenuModal, setShowMenuModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null)
+  const [deletingRole, setDeletingRole] = useState<Role | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     code: '',
     description: '',
-    isEnabled: true,
   })
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
-  const [selectedMenus, setSelectedMenus] = useState<string[]>([])
-  const { showToast } = useToast()
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const { show: showToast } = useToast()
 
   const fetchRoles = async () => {
     setLoading(true)
     try {
       const response = await rolesApi.apiRoleListGet()
-      setRoles((response.data.data?.items as Role[]) || [])
+      const data = (response.data.data as Role[]) || []
+      setRoles(data)
+      setFilteredRoles(data)
     } catch (error) {
       showToast('获取角色列表失败', 'error')
     } finally {
@@ -62,250 +62,337 @@ export default function RoleManagement() {
   const fetchPermissions = async () => {
     try {
       const response = await permissionsApi.apiPermissionListGet()
-      setPermissions((response.data.data?.items as Permission[]) || [])
+      setPermissions((response.data.data as Permission[]) || [])
     } catch (error) {
       console.error('Failed to fetch permissions:', error)
-    }
-  }
-
-  const fetchMenus = async () => {
-    try {
-      // 使用菜单 API 或从其他方式获取
-      // 这里简化处理
-      setMenus([])
-    } catch (error) {
-      console.error('Failed to fetch menus:', error)
     }
   }
 
   useEffect(() => {
     fetchRoles()
     fetchPermissions()
-    fetchMenus()
   }, [])
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredRoles(roles)
+      return
+    }
+    const query = searchQuery.toLowerCase()
+    const filtered = roles.filter(role => 
+      role.name.toLowerCase().includes(query) ||
+      role.code.toLowerCase().includes(query) ||
+      role.description?.toLowerCase().includes(query)
+    )
+    setFilteredRoles(filtered)
+  }, [searchQuery, roles])
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {}
+    if (!formData.name.trim()) {
+      errors.name = '请输入角色名称'
+    }
+    if (!formData.code.trim()) {
+      errors.code = '请输入角色编码'
+    }
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateForm()) return
+
     try {
       if (editingRole) {
         await rolesApi.apiRoleUpsertPost({
-          roleUpsertRequest: {
             id: editingRole.id,
             ...formData,
-          }
-        })
+          })
+        await rolePermissionApi.apiRolePermissionAssignPost({
+            roleId: editingRole.id,
+            permissionIds: selectedPermissions,
+          })
         showToast('角色更新成功', 'success')
       } else {
-        await rolesApi.apiRoleUpsertPost({
-          roleUpsertRequest: formData
-        })
+        const response = await rolesApi.apiRoleUpsertPost(formData)
+        const newRoleId = (response.data.data as any)?.id
+        if (newRoleId && selectedPermissions.length > 0) {
+          await rolePermissionApi.apiRolePermissionAssignPost({
+              roleId: newRoleId,
+              permissionIds: selectedPermissions,
+            })
+        }
         showToast('角色创建成功', 'success')
       }
-      setShowModal(false)
-      setEditingRole(null)
-      setFormData({ name: '', code: '', description: '', isEnabled: true })
+      closeModal()
       fetchRoles()
     } catch (error) {
       showToast('操作失败', 'error')
     }
   }
 
-  const handleEdit = (role: Role) => {
+  const handleEdit = async (role: Role) => {
     setEditingRole(role)
     setFormData({
       name: role.name,
       code: role.code,
-      description: role.description,
-      isEnabled: role.isEnabled,
+      description: role.description || '',
     })
-    setShowModal(true)
-  }
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('确定要删除该角色吗？')) return
     try {
-      await rolesApi.apiRoleDeleteDelete({
-        batchDeleteRequest: { ids: [id] }
-      })
-      showToast('删除成功', 'success')
-      fetchRoles()
-    } catch (error) {
-      showToast('删除失败', 'error')
-    }
-  }
-
-  const openPermissionModal = async (role: Role) => {
-    setSelectedRole(role)
-    try {
-      const response = await rolesApi.apiRolePermissionsGet(role.id)
+      const response = await rolesApi.apiRoleGetRolePermissionsIdPermissionsGet(role.id)
       const rolePermissions = (response.data.data as any[]) || []
       setSelectedPermissions(rolePermissions.map(p => p.id))
     } catch (error) {
       setSelectedPermissions([])
     }
-    setShowPermissionModal(true)
+    setShowModal(true)
   }
 
-  const savePermissions = async () => {
-    if (!selectedRole) return
+  const handleDelete = (role: Role) => {
+    setDeletingRole(role)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!deletingRole) return
     try {
-      await rolesApi.apiRolepermissionAssignPost({
-        rolePermissionAssignRequest: {
-          roleId: selectedRole.id,
-          permissionIds: selectedPermissions,
-        }
-      })
-      showToast('权限分配成功', 'success')
-      setShowPermissionModal(false)
+      await rolesApi.apiRoleDeleteDelete({ ids: [deletingRole.id] })
+      showToast('删除成功', 'success')
+      fetchRoles()
     } catch (error) {
-      showToast('权限分配失败', 'error')
+      showToast('删除失败', 'error')
+    } finally {
+      setShowDeleteModal(false)
+      setDeletingRole(null)
     }
   }
 
+  const closeModal = () => {
+    setShowModal(false)
+    setEditingRole(null)
+    setFormData({ name: '', code: '', description: '' })
+    setSelectedPermissions([])
+    setFormErrors({})
+  }
+
+  const openCreateModal = () => {
+    setEditingRole(null)
+    setFormData({ name: '', code: '', description: '' })
+    setSelectedPermissions([])
+    setFormErrors({})
+    setShowModal(true)
+  }
+
+  const columns = [
+    {
+      key: 'name',
+      title: '角色名称',
+      render: (role: Role) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
+            <ShieldCheckIcon className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-medium text-surface-900 dark:text-white">{role.name}</div>
+            <div className="text-xs text-surface-500">{role.code}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'description',
+      title: '描述',
+      render: (role: Role) => (
+        <span className="text-surface-600 dark:text-surface-400">
+          {role.description || '-'}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      title: '操作',
+      align: 'right' as const,
+      render: (role: Role) => (
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={() => handleEdit(role)}
+            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+            title="编辑"
+          >
+            <PencilIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDelete(role)}
+            className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            title="删除"
+          >
+            <TrashIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    },
+  ]
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">角色管理</h1>
-        <Button onClick={() => {
-          setEditingRole(null)
-          setFormData({ name: '', code: '', description: '', isEnabled: true })
-          setShowModal(true)
-        }}>
+    <div className="container-main py-8 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-surface-900 dark:text-white">角色管理</h1>
+          <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
+            配置系统角色及权限分配
+          </p>
+        </div>
+        <Button onClick={openCreateModal} leftIcon={<PlusIcon className="w-4 h-4" />}>
           新增角色
         </Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-10">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-        </div>
-      ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">名称</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">代码</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">描述</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">状态</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">操作</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {roles.map(role => (
-                <tr key={role.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{role.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{role.code}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{role.description}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {role.isEnabled ? <span className="text-green-600">启用</span> : <span className="text-red-600">禁用</span>}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => openPermissionModal(role)} className="text-blue-600 hover:text-blue-900 mr-3">权限</button>
-                    <button onClick={() => handleEdit(role)} className="text-indigo-600 hover:text-indigo-900 mr-3">编辑</button>
-                    <button onClick={() => handleDelete(role.id)} className="text-red-600 hover:text-red-900">删除</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* 角色编辑模态框 */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">{editingRole ? '编辑角色' : '新增角色'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">名称</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">代码</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.code}
-                  onChange={e => setFormData({ ...formData, code: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">描述</label>
-                <textarea
-                  value={formData.description}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
-                  rows={3}
-                />
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isEnabled"
-                  checked={formData.isEnabled}
-                  onChange={e => setFormData({ ...formData, isEnabled: e.target.checked })}
-                  className="mr-2"
-                />
-                <label htmlFor="isEnabled" className="text-sm text-gray-700 dark:text-gray-300">启用</label>
-              </div>
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button variant="secondary" onClick={() => setShowModal(false)} type="button">取消</Button>
-                <Button type="submit">保存</Button>
-              </div>
-            </form>
+      {/* Filters */}
+      <Card className="mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
+            <input
+              type="text"
+              placeholder="搜索角色名称或编码..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+            />
           </div>
+          <Button 
+            variant="secondary" 
+            leftIcon={<ArrowPathIcon className="w-4 h-4" />}
+            onClick={fetchRoles}
+          >
+            刷新
+          </Button>
         </div>
-      )}
+      </Card>
 
-      {/* 权限分配模态框 */}
-      {showPermissionModal && selectedRole && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg max-h-[80vh] flex flex-col">
-            <h2 className="text-xl font-bold mb-4">分配权限 - {selectedRole.name}</h2>
-            <div className="flex-1 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-3 mb-4">
+      {/* Table */}
+      <Card>
+        {loading ? (
+          <LoadingSpinner centered text="加载中..." />
+        ) : filteredRoles.length === 0 ? (
+          <EmptyState
+            title={searchQuery ? '未找到匹配的角色' : '暂无角色'}
+            description={searchQuery ? '请尝试其他搜索条件' : '点击上方按钮添加第一个角色'}
+            action={!searchQuery ? { label: '新增角色', onClick: openCreateModal } : undefined}
+          />
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={filteredRoles}
+            rowKey="id"
+          />
+        )}
+      </Card>
+
+      {/* Create/Edit Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={closeModal}
+        title={editingRole ? '编辑角色' : '新增角色'}
+        description={editingRole ? '修改角色信息和权限' : '创建新角色并分配权限'}
+        size="lg"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={closeModal}>
+              取消
+            </Button>
+            <Button onClick={handleSubmit}>
+              {editingRole ? '保存修改' : '创建角色'}
+            </Button>
+          </div>
+        }
+      >
+        <form className="space-y-5">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Input
+              label="角色名称"
+              placeholder="请输入角色名称"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              error={formErrors.name}
+              required
+            />
+            <Input
+              label="角色编码"
+              placeholder="请输入角色编码"
+              value={formData.code}
+              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              error={formErrors.code}
+              required
+            />
+          </div>
+
+          <Input
+            label="描述"
+            placeholder="请输入角色描述"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+
+          <div>
+            <label className="form-label">权限分配</label>
+            <div className="border border-surface-300 dark:border-surface-600 rounded-xl p-4 max-h-64 overflow-y-auto">
               {permissions.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">暂无权限数据</p>
+                <p className="text-sm text-surface-500 text-center py-4">暂无可用权限</p>
               ) : (
-                <div className="space-y-2">
+                <div className="grid sm:grid-cols-2 gap-2">
                   {permissions.map(permission => (
-                    <label key={permission.id} className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                    <label key={permission.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 cursor-pointer transition-colors">
                       <input
                         type="checkbox"
                         checked={selectedPermissions.includes(permission.id)}
-                        onChange={e => {
+                        onChange={(e) => {
                           if (e.target.checked) {
                             setSelectedPermissions([...selectedPermissions, permission.id])
                           } else {
                             setSelectedPermissions(selectedPermissions.filter(id => id !== permission.id))
                           }
                         }}
-                        className="rounded border-gray-300"
+                        className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"
                       />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{permission.name}</div>
-                        <div className="text-xs text-gray-500">{permission.code}</div>
+                      <div className="flex items-center gap-2">
+                        <KeyIcon className="w-4 h-4 text-surface-400" />
+                        <div>
+                          <span className="text-sm font-medium text-surface-900 dark:text-white">
+                            {permission.name}
+                          </span>
+                          <span className="text-xs text-surface-500 ml-1">({permission.code})</span>
+                        </div>
                       </div>
                     </label>
                   ))}
                 </div>
               )}
             </div>
-            <div className="flex justify-end space-x-3">
-              <Button variant="secondary" onClick={() => setShowPermissionModal(false)} type="button">取消</Button>
-              <Button onClick={savePermissions}>保存</Button>
-            </div>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="确认删除"
+        description={`确定要删除角色 "${deletingRole?.name}" 吗？此操作不可恢复。`}
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              取消
+            </Button>
+            <Button variant="danger" onClick={confirmDelete}>
+              确认删除
+            </Button>
+          </div>
+        }
+      />
     </div>
   )
 }

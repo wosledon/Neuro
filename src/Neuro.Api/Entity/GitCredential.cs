@@ -48,7 +48,7 @@ public class GitCredential : EntityBase
     /// <summary>
     /// 最后一次使用时间（UTC）
     /// </summary>
-    public DateTimeOffset? LastUsedAt { get; set; }
+    public DateTime? LastUsedAt { get; set; }
 
     /// <summary>
     /// 备注或用途说明

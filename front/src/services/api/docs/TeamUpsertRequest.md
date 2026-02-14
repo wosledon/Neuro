@@ -13,7 +13,8 @@ Name | Type | Description | Notes
 **isPin** | **boolean** |  | [optional] [default to undefined]
 **parentId** | **string** |  | [optional] [default to undefined]
 **treePath** | **string** |  | [optional] [default to undefined]
-**sort** | [**DocumentUpsertRequestSort**](DocumentUpsertRequestSort.md) |  | [optional] [default to undefined]
+**sort** | [**AISupportUpsertRequestMaxTokens**](AISupportUpsertRequestMaxTokens.md) |  | [optional] [default to undefined]
+**leaderId** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -30,6 +31,7 @@ const instance: TeamUpsertRequest = {
     parentId,
     treePath,
     sort,
+    leaderId,
 };
 ```
 

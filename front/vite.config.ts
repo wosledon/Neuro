@@ -6,8 +6,21 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // proxy API requests to backend (adjust if backend runs on different port)
-      '/swagger': 'http://localhost:5000'
+      // Proxy API requests to backend
+      // Backend API paths start with /api
+      '/api': {
+        target: 'http://localhost:5146',
+        changeOrigin: true,
+        // Keep the /api prefix when forwarding
+      },
+      '/swagger': {
+        target: 'http://localhost:5146',
+        changeOrigin: true,
+      }
     }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
   }
 })

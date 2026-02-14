@@ -30,7 +30,8 @@ public class TeamController : ApiControllerBase
             IsPin = t.IsPin,
             ParentId = t.ParentId,
             TreePath = t.TreePath,
-            Sort = t.Sort
+            Sort = t.Sort,
+            LeaderId = t.LeaderId
         }).ToPagedListAsync(request.Page, request.PageSize);
 
         return Success(paged);
@@ -41,7 +42,7 @@ public class TeamController : ApiControllerBase
     {
         var t = await _db.Q<Team>().FirstOrDefaultAsync(x => x.Id == id);
         if (t is null) return Failure("Team not found.", 404);
-        var dto = new TeamDetail { Id = t.Id, Name = t.Name, Code = t.Code, Description = t.Description, IsEnabled = t.IsEnabled, IsPin = t.IsPin, ParentId = t.ParentId, TreePath = t.TreePath, Sort = t.Sort };
+        var dto = new TeamDetail { Id = t.Id, Name = t.Name, Code = t.Code, Description = t.Description, IsEnabled = t.IsEnabled, IsPin = t.IsPin, ParentId = t.ParentId, TreePath = t.TreePath, Sort = t.Sort, LeaderId = t.LeaderId };
         return Success(dto);
     }
 
@@ -61,6 +62,7 @@ public class TeamController : ApiControllerBase
             if (req.ParentId.HasValue) ent.ParentId = req.ParentId;
             if (!string.IsNullOrWhiteSpace(req.TreePath)) ent.TreePath = req.TreePath;
             if (req.Sort.HasValue) ent.Sort = req.Sort.Value;
+            if (req.LeaderId.HasValue) ent.LeaderId = req.LeaderId;
 
             await _db.UpdateAsync(ent);
             await _db.SaveChangesAsync();
@@ -68,7 +70,7 @@ public class TeamController : ApiControllerBase
         }
 
         if (string.IsNullOrWhiteSpace(req.Name)) return Failure("Name required.");
-        var nt = new Team { Name = req.Name!, Code = req.Code ?? string.Empty, Description = req.Description ?? string.Empty, IsEnabled = req.IsEnabled ?? true, IsPin = req.IsPin ?? false, ParentId = req.ParentId, TreePath = req.TreePath ?? string.Empty, Sort = req.Sort ?? 0 };
+        var nt = new Team { Name = req.Name!, Code = req.Code ?? string.Empty, Description = req.Description ?? string.Empty, IsEnabled = req.IsEnabled ?? true, IsPin = req.IsPin ?? false, ParentId = req.ParentId, TreePath = req.TreePath ?? string.Empty, Sort = req.Sort ?? 0, LeaderId = req.LeaderId };
         await _db.AddAsync(nt);
         await _db.SaveChangesAsync();
         return Success(new UpsertResponse { Id = nt.Id });
@@ -117,5 +119,37 @@ public class TeamController : ApiControllerBase
             .ToListAsync();
 
         return Success(projects);
+    }
+
+    /// <summary>
+    /// 为团队分配成员
+    /// </summary>
+    [HttpPost("assign-users")]
+    public async Task<IActionResult> AssignUsers([FromBody] TeamUserAssignRequest request)
+    {
+        if (request == null) return Failure("Invalid request.");
+        
+        var team = await _db.Q<Team>().FirstOrDefaultAsync(t => t.Id == request.TeamId);
+        if (team is null) return Failure("团队不存在。", 404);
+
+        // 移除现有成员
+        var existing = await _db.Q<UserTeam>().Where(ut => ut.TeamId == request.TeamId).ToListAsync();
+        foreach (var ut in existing)
+        {
+            await _db.RemoveAsync(ut);
+        }
+
+        // 添加新成员
+        foreach (var userId in request.UserIds)
+        {
+            var user = await _db.Q<User>().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null)
+            {
+                await _db.AddAsync(new UserTeam { UserId = userId, TeamId = request.TeamId });
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        return Success();
     }
 }

@@ -14,8 +14,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neuro.Abstractions\Neuro.Abstractions.csproj" />
-    <ProjectReference
-      Include="..\Neuro.EntityFrameworkCore.Sqlite\Neuro.EntityFrameworkCore.Sqlite.csproj" />
+    <ProjectReference Include="..\Neuro.EntityFrameworkCore.Sqlite\Neuro.EntityFrameworkCore.Sqlite.csproj" />
+    <ProjectReference Include="..\Neuro.Storage\Neuro.Storage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

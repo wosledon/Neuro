@@ -29,6 +29,7 @@ public class ProjectController : ApiControllerBase
             Type = p.Type,
             Description = p.Description,
             IsEnabled = p.IsEnabled,
+            Status = p.Status,
             IsPin = p.IsPin,
             ParentId = p.ParentId,
             TreePath = p.TreePath,
@@ -54,6 +55,7 @@ public class ProjectController : ApiControllerBase
             Type = p.Type,
             Description = p.Description,
             IsEnabled = p.IsEnabled,
+            Status = p.Status,
             IsPin = p.IsPin,
             ParentId = p.ParentId,
             TreePath = p.TreePath,
@@ -77,6 +79,7 @@ public class ProjectController : ApiControllerBase
             if (req.Type.HasValue) ent.Type = req.Type.Value;
             if (!string.IsNullOrWhiteSpace(req.Description)) ent.Description = req.Description;
             if (req.IsEnabled.HasValue) ent.IsEnabled = req.IsEnabled.Value;
+            if (req.Status.HasValue) ent.Status = req.Status.Value;
             if (req.IsPin.HasValue) ent.IsPin = req.IsPin.Value;
             if (req.ParentId.HasValue) ent.ParentId = req.ParentId;
             if (!string.IsNullOrWhiteSpace(req.TreePath)) ent.TreePath = req.TreePath;
@@ -99,6 +102,7 @@ public class ProjectController : ApiControllerBase
             Type = req.Type ?? ProjectTypeEnum.Document,
             Description = req.Description ?? string.Empty,
             IsEnabled = req.IsEnabled ?? true,
+            Status = req.Status ?? ProjectStatusEnum.Active,
             IsPin = req.IsPin ?? false,
             ParentId = req.ParentId,
             TreePath = req.TreePath ?? string.Empty,

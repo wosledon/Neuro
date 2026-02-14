@@ -1,23 +1,70 @@
-import React, { createContext, useContext, useState } from 'react'
-import Toast from './Toast'
+import React, { createContext, useContext, useState, useCallback } from 'react'
+import { ToastContainer, ToastType } from './Toast'
 
-const ToastContext = createContext({ show: (msg:string, type?:any)=>{} })
+interface ToastContextType {
+  show: (message: string, type?: ToastType) => void
+  showSuccess: (message: string) => void
+  showError: (message: string) => void
+  showInfo: (message: string) => void
+  showWarning: (message: string) => void
+}
 
-export function useToast(){ return useContext(ToastContext) }
+const ToastContext = createContext<ToastContextType | undefined>(undefined)
 
-export default function ToastProvider({ children }:{children:React.ReactNode}){
-  const [toasts, setToasts] = useState<{id:number,type:string,message:string}[]>([])
-  function show(message:string, type:'info'|'success'|'error'='info'){
-    const id = Date.now()
-    setToasts(t=>[...t, {id, type, message}])
-    setTimeout(()=> setToasts(t=>t.filter(x=>x.id!==id)), 3000)
+export function useToast() {
+  const context = useContext(ToastContext)
+  if (context === undefined) {
+    throw new Error('useToast must be used within a ToastProvider')
   }
+  return context
+}
+
+interface ToastItem {
+  id: string
+  type: ToastType
+  message: string
+}
+
+export default function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<ToastItem[]>([])
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
+  const show = useCallback((message: string, type: ToastType = 'info') => {
+    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    setToasts((prev) => [...prev, { id, type, message }])
+  }, [])
+
+  const showSuccess = useCallback((message: string) => {
+    show(message, 'success')
+  }, [show])
+
+  const showError = useCallback((message: string) => {
+    show(message, 'error')
+  }, [show])
+
+  const showInfo = useCallback((message: string) => {
+    show(message, 'info')
+  }, [show])
+
+  const showWarning = useCallback((message: string) => {
+    show(message, 'warning')
+  }, [show])
+
+  const value = {
+    show,
+    showSuccess,
+    showError,
+    showInfo,
+    showWarning,
+  }
+
   return (
-    <ToastContext.Provider value={{ show }}>
+    <ToastContext.Provider value={value}>
       {children}
-      <div className="fixed right-6 bottom-6 flex flex-col gap-3 z-50">
-        {toasts.map(t=> <Toast key={t.id} type={t.type as any} message={t.message} />)}
-      </div>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ToastContext.Provider>
   )
 }

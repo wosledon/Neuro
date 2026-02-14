@@ -120,8 +120,8 @@ No authorization required
 import {
     UserRoleApi,
     Configuration,
-    ApiDocumentListGetPageParameter,
-    ApiDocumentListGetPageParameter
+    ApiAISupportListGetPageParameter,
+    ApiAISupportListGetPageParameter
 } from './api';
 
 const configuration = new Configuration();
@@ -129,8 +129,8 @@ const apiInstance = new UserRoleApi(configuration);
 
 let userId: string; // (optional) (default to undefined)
 let roleId: string; // (optional) (default to undefined)
-let page: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
-let pageSize: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
+let page: ApiAISupportListGetPageParameter; // (optional) (default to undefined)
+let pageSize: ApiAISupportListGetPageParameter; // (optional) (default to undefined)
 
 const { status, data } = await apiInstance.apiUserRoleListGet(
     userId,
@@ -146,8 +146,8 @@ const { status, data } = await apiInstance.apiUserRoleListGet(
 |------------- | ------------- | ------------- | -------------|
 | **userId** | [**string**] |  | (optional) defaults to undefined|
 | **roleId** | [**string**] |  | (optional) defaults to undefined|
-| **page** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
-| **pageSize** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
+| **page** | [**ApiAISupportListGetPageParameter**] |  | (optional) defaults to undefined|
+| **pageSize** | [**ApiAISupportListGetPageParameter**] |  | (optional) defaults to undefined|
 
 
 ### Return type

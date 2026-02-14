@@ -11,4 +11,6 @@ public class TeamUpsertRequest
     public Guid? ParentId { get; set; }
     public string? TreePath { get; set; }
     public int? Sort { get; set; }
+
+    public Guid? LeaderId { get; set; }
 }

@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 **parentId** | **string** |  | [optional] [default to undefined]
 **url** | **string** |  | [optional] [default to undefined]
 **icon** | **string** |  | [optional] [default to undefined]
-**sort** | [**DocumentUpsertRequestSort**](DocumentUpsertRequestSort.md) |  | [optional] [default to undefined]
+**sort** | [**AISupportUpsertRequestMaxTokens**](AISupportUpsertRequestMaxTokens.md) |  | [optional] [default to undefined]
 
 ## Example
 

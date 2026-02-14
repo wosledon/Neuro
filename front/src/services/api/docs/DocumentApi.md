@@ -4,10 +4,65 @@ All URIs are relative to *http://localhost:5146*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
+|[**apiDocumentBatchMoveBatchMovePost**](#apidocumentbatchmovebatchmovepost) | **POST** /api/Document/BatchMove/batch-move | |
 |[**apiDocumentDeleteDelete**](#apidocumentdeletedelete) | **DELETE** /api/Document/Delete | |
+|[**apiDocumentGetBreadcrumbBreadcrumbGet**](#apidocumentgetbreadcrumbbreadcrumbget) | **GET** /api/Document/GetBreadcrumb/breadcrumb | |
 |[**apiDocumentGetGet**](#apidocumentgetget) | **GET** /api/Document/Get | |
+|[**apiDocumentGetTreeTreeGet**](#apidocumentgettreetreeget) | **GET** /api/Document/GetTree/tree | |
 |[**apiDocumentListGet**](#apidocumentlistget) | **GET** /api/Document/List | |
+|[**apiDocumentMoveMovePost**](#apidocumentmovemovepost) | **POST** /api/Document/Move/move | |
 |[**apiDocumentUpsertPost**](#apidocumentupsertpost) | **POST** /api/Document/Upsert | |
+
+# **apiDocumentBatchMoveBatchMovePost**
+> apiDocumentBatchMoveBatchMovePost(documentBatchMoveRequest)
+
+
+### Example
+
+```typescript
+import {
+    DocumentApi,
+    Configuration,
+    DocumentBatchMoveRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DocumentApi(configuration);
+
+let documentBatchMoveRequest: DocumentBatchMoveRequest; //
+
+const { status, data } = await apiInstance.apiDocumentBatchMoveBatchMovePost(
+    documentBatchMoveRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **documentBatchMoveRequest** | **DocumentBatchMoveRequest**|  | |
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json, text/json, application/*+json
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **apiDocumentDeleteDelete**
 > apiDocumentDeleteDelete(batchDeleteRequest)
@@ -50,6 +105,56 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: application/json, text/json, application/*+json
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiDocumentGetBreadcrumbBreadcrumbGet**
+> apiDocumentGetBreadcrumbBreadcrumbGet()
+
+
+### Example
+
+```typescript
+import {
+    DocumentApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DocumentApi(configuration);
+
+let id: string; // (optional) (default to undefined)
+
+const { status, data } = await apiInstance.apiDocumentGetBreadcrumbBreadcrumbGet(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | (optional) defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: Not defined
 
 
@@ -110,8 +215,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiDocumentListGet**
-> apiDocumentListGet()
+# **apiDocumentGetTreeTreeGet**
+> apiDocumentGetTreeTreeGet()
 
 
 ### Example
@@ -119,22 +224,16 @@ No authorization required
 ```typescript
 import {
     DocumentApi,
-    Configuration,
-    ApiDocumentListGetPageParameter,
-    ApiDocumentListGetPageParameter
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new DocumentApi(configuration);
 
-let keyword: string; // (optional) (default to undefined)
-let page: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
-let pageSize: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
+let projectId: string; // (optional) (default to undefined)
 
-const { status, data } = await apiInstance.apiDocumentListGet(
-    keyword,
-    page,
-    pageSize
+const { status, data } = await apiInstance.apiDocumentGetTreeTreeGet(
+    projectId
 );
 ```
 
@@ -142,9 +241,7 @@ const { status, data } = await apiInstance.apiDocumentListGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **keyword** | [**string**] |  | (optional) defaults to undefined|
-| **page** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
-| **pageSize** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
+| **projectId** | [**string**] |  | (optional) defaults to undefined|
 
 
 ### Return type
@@ -158,6 +255,115 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiDocumentListGet**
+> apiDocumentListGet()
+
+
+### Example
+
+```typescript
+import {
+    DocumentApi,
+    Configuration,
+    ApiAISupportListGetPageParameter,
+    ApiAISupportListGetPageParameter
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DocumentApi(configuration);
+
+let keyword: string; // (optional) (default to undefined)
+let page: ApiAISupportListGetPageParameter; // (optional) (default to undefined)
+let pageSize: ApiAISupportListGetPageParameter; // (optional) (default to undefined)
+
+const { status, data } = await apiInstance.apiDocumentListGet(
+    keyword,
+    page,
+    pageSize
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **keyword** | [**string**] |  | (optional) defaults to undefined|
+| **page** | [**ApiAISupportListGetPageParameter**] |  | (optional) defaults to undefined|
+| **pageSize** | [**ApiAISupportListGetPageParameter**] |  | (optional) defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiDocumentMoveMovePost**
+> apiDocumentMoveMovePost(documentMoveRequest)
+
+
+### Example
+
+```typescript
+import {
+    DocumentApi,
+    Configuration,
+    DocumentMoveRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DocumentApi(configuration);
+
+let documentMoveRequest: DocumentMoveRequest; //
+
+const { status, data } = await apiInstance.apiDocumentMoveMovePost(
+    documentMoveRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **documentMoveRequest** | **DocumentMoveRequest**|  | |
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json, text/json, application/*+json
  - **Accept**: Not defined
 
 

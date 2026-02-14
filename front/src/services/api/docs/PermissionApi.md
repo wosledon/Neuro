@@ -120,16 +120,16 @@ No authorization required
 import {
     PermissionApi,
     Configuration,
-    ApiDocumentListGetPageParameter,
-    ApiDocumentListGetPageParameter
+    ApiAISupportListGetPageParameter,
+    ApiAISupportListGetPageParameter
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new PermissionApi(configuration);
 
 let keyword: string; // (optional) (default to undefined)
-let page: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
-let pageSize: ApiDocumentListGetPageParameter; // (optional) (default to undefined)
+let page: ApiAISupportListGetPageParameter; // (optional) (default to undefined)
+let pageSize: ApiAISupportListGetPageParameter; // (optional) (default to undefined)
 
 const { status, data } = await apiInstance.apiPermissionListGet(
     keyword,
@@ -143,8 +143,8 @@ const { status, data } = await apiInstance.apiPermissionListGet(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **keyword** | [**string**] |  | (optional) defaults to undefined|
-| **page** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
-| **pageSize** | [**ApiDocumentListGetPageParameter**] |  | (optional) defaults to undefined|
+| **page** | [**ApiAISupportListGetPageParameter**] |  | (optional) defaults to undefined|
+| **pageSize** | [**ApiAISupportListGetPageParameter**] |  | (optional) defaults to undefined|
 
 
 ### Return type

@@ -1,6 +1,8 @@
+using Neuro.Abstractions.Entity;
+
 namespace Neuro.Api.Entity;
 
-public class UserGitCredential
+public class UserGitCredential : EntityBase
 {
     /// <summary>
     /// 关联的用户 ID

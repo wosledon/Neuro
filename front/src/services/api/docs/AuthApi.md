@@ -4,17 +4,17 @@ All URIs are relative to *http://localhost:5146*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**apiAuthCheckPermissionCheckPermissionGet**](#apiauthcheckpermissioncheckpermissionget) | **GET** /api/Auth/CheckPermission/check-permission | |
-|[**apiAuthLoginLoginPost**](#apiauthloginloginpost) | **POST** /api/Auth/Login/login | |
-|[**apiAuthLogoutLogoutPost**](#apiauthlogoutlogoutpost) | **POST** /api/Auth/Logout/logout | |
-|[**apiAuthMeMeGet**](#apiauthmemeget) | **GET** /api/Auth/Me/me | |
-|[**apiAuthMyMenusMenusGet**](#apiauthmymenusmenusget) | **GET** /api/Auth/MyMenus/menus | |
-|[**apiAuthMyPermissionsPermissionsGet**](#apiauthmypermissionspermissionsget) | **GET** /api/Auth/MyPermissions/permissions | |
-|[**apiAuthRefreshRefreshPost**](#apiauthrefreshrefreshpost) | **POST** /api/Auth/Refresh/refresh | |
-|[**apiAuthRegisterRegisterPost**](#apiauthregisterregisterpost) | **POST** /api/Auth/Register/register | |
+|[**apiAuthCheckPermissionGet**](#apiauthcheckpermissionget) | **GET** /api/Auth/CheckPermission | |
+|[**apiAuthLoginPost**](#apiauthloginpost) | **POST** /api/Auth/Login | |
+|[**apiAuthLogoutPost**](#apiauthlogoutpost) | **POST** /api/Auth/Logout | |
+|[**apiAuthMeGet**](#apiauthmeget) | **GET** /api/Auth/Me | |
+|[**apiAuthMenusGet**](#apiauthmenusget) | **GET** /api/Auth/Menus | |
+|[**apiAuthPermissionsGet**](#apiauthpermissionsget) | **GET** /api/Auth/Permissions | |
+|[**apiAuthRefreshPost**](#apiauthrefreshpost) | **POST** /api/Auth/Refresh | |
+|[**apiAuthRegisterPost**](#apiauthregisterpost) | **POST** /api/Auth/Register | |
 
-# **apiAuthCheckPermissionCheckPermissionGet**
-> apiAuthCheckPermissionCheckPermissionGet()
+# **apiAuthCheckPermissionGet**
+> apiAuthCheckPermissionGet()
 
 
 ### Example
@@ -30,7 +30,7 @@ const apiInstance = new AuthApi(configuration);
 
 let code: string; // (optional) (default to undefined)
 
-const { status, data } = await apiInstance.apiAuthCheckPermissionCheckPermissionGet(
+const { status, data } = await apiInstance.apiAuthCheckPermissionGet(
     code
 );
 ```
@@ -63,8 +63,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiAuthLoginLoginPost**
-> apiAuthLoginLoginPost(loginRequest)
+# **apiAuthLoginPost**
+> apiAuthLoginPost(loginRequest)
 
 
 ### Example
@@ -81,7 +81,7 @@ const apiInstance = new AuthApi(configuration);
 
 let loginRequest: LoginRequest; //
 
-const { status, data } = await apiInstance.apiAuthLoginLoginPost(
+const { status, data } = await apiInstance.apiAuthLoginPost(
     loginRequest
 );
 ```
@@ -114,8 +114,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiAuthLogoutLogoutPost**
-> apiAuthLogoutLogoutPost(loginResponse)
+# **apiAuthLogoutPost**
+> apiAuthLogoutPost(loginResponse)
 
 
 ### Example
@@ -132,7 +132,7 @@ const apiInstance = new AuthApi(configuration);
 
 let loginResponse: LoginResponse; //
 
-const { status, data } = await apiInstance.apiAuthLogoutLogoutPost(
+const { status, data } = await apiInstance.apiAuthLogoutPost(
     loginResponse
 );
 ```
@@ -165,8 +165,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiAuthMeMeGet**
-> apiAuthMeMeGet()
+# **apiAuthMeGet**
+> apiAuthMeGet()
 
 
 ### Example
@@ -180,7 +180,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
 
-const { status, data } = await apiInstance.apiAuthMeMeGet();
+const { status, data } = await apiInstance.apiAuthMeGet();
 ```
 
 ### Parameters
@@ -208,8 +208,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiAuthMyMenusMenusGet**
-> apiAuthMyMenusMenusGet()
+# **apiAuthMenusGet**
+> apiAuthMenusGet()
 
 
 ### Example
@@ -223,7 +223,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
 
-const { status, data } = await apiInstance.apiAuthMyMenusMenusGet();
+const { status, data } = await apiInstance.apiAuthMenusGet();
 ```
 
 ### Parameters
@@ -251,8 +251,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiAuthMyPermissionsPermissionsGet**
-> apiAuthMyPermissionsPermissionsGet()
+# **apiAuthPermissionsGet**
+> apiAuthPermissionsGet()
 
 
 ### Example
@@ -266,7 +266,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
 
-const { status, data } = await apiInstance.apiAuthMyPermissionsPermissionsGet();
+const { status, data } = await apiInstance.apiAuthPermissionsGet();
 ```
 
 ### Parameters
@@ -294,8 +294,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiAuthRefreshRefreshPost**
-> apiAuthRefreshRefreshPost(loginResponse)
+# **apiAuthRefreshPost**
+> apiAuthRefreshPost(loginResponse)
 
 
 ### Example
@@ -312,7 +312,7 @@ const apiInstance = new AuthApi(configuration);
 
 let loginResponse: LoginResponse; //
 
-const { status, data } = await apiInstance.apiAuthRefreshRefreshPost(
+const { status, data } = await apiInstance.apiAuthRefreshPost(
     loginResponse
 );
 ```
@@ -345,8 +345,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiAuthRegisterRegisterPost**
-> apiAuthRegisterRegisterPost(registerRequest)
+# **apiAuthRegisterPost**
+> apiAuthRegisterPost(registerRequest)
 
 
 ### Example
@@ -363,7 +363,7 @@ const apiInstance = new AuthApi(configuration);
 
 let registerRequest: RegisterRequest; //
 
-const { status, data } = await apiInstance.apiAuthRegisterRegisterPost(
+const { status, data } = await apiInstance.apiAuthRegisterPost(
     registerRequest
 );
 ```
