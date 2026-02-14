@@ -20,12 +20,12 @@ public class CurrentUserService : ICurrentUserService
     {
         get
         {
-            var id = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var id = User?.FindFirst("user_id")?.Value;
             return Guid.TryParse(id, out var g) ? g : null;
         }
     }
 
-    public string? UserName => User?.FindFirst(ClaimTypes.Name)?.Value;
+    public string? UserName => User?.FindFirst("user_name")?.Value;
 
     public Guid? TenantId
     {
@@ -35,6 +35,8 @@ public class CurrentUserService : ICurrentUserService
             return Guid.TryParse(v, out var t) ? t : null;
         }
     }
+
+    public bool IsSuper => User?.FindFirst("is_super")?.Value == "True";
 
     public bool IsAuthenticated => User?.Identity?.IsAuthenticated == true;
 }
