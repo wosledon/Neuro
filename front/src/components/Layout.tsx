@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { Route } from '../router'
+import Breadcrumb, { BreadcrumbItem } from './Breadcrumb'
 import { 
   HomeIcon,
   UsersIcon,
@@ -119,7 +120,29 @@ export default function Layout({
 }: Props) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['系统管理', '权限管理'])
+  
+  // 根据当前路由计算应该展开的菜单组
+  const getExpandedGroups = useCallback((): string[] => {
+    const groups: string[] = []
+    for (const item of menuItems) {
+      if (item.children?.some(child => child.route === activeRoute)) {
+        groups.push(item.label)
+      }
+    }
+    return groups.length > 0 ? groups : ['系统管理', '权限管理']
+  }, [activeRoute])
+  
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(getExpandedGroups)
+  
+  // 当路由变化时，自动展开对应的菜单组
+  useEffect(() => {
+    setExpandedGroups(prev => {
+      const required = getExpandedGroups()
+      // 合并已有的展开状态和必需的展开状态
+      const merged = [...new Set([...prev, ...required])]
+      return merged
+    })
+  }, [activeRoute, getExpandedGroups])
 
   const toggleGroup = (label: string) => {
     setExpandedGroups(prev => 
@@ -130,6 +153,33 @@ export default function Layout({
   }
 
   const isActive = (route: Route) => activeRoute === route
+  
+  // 判断菜单组是否处于激活状态（子菜单被选中）
+  const isGroupActive = (item: MenuItem): boolean => {
+    if (!item.children) return false
+    return item.children.some(child => child.route === activeRoute)
+  }
+
+  // 生成面包屑数据
+  const breadcrumbItems: BreadcrumbItem[] = useMemo(() => {
+    for (const item of menuItems) {
+      // 直接匹配一级菜单
+      if (item.route === activeRoute && !item.children) {
+        return [{ label: item.label }]
+      }
+      // 匹配二级菜单
+      if (item.children) {
+        const child = item.children.find(c => c.route === activeRoute)
+        if (child) {
+          return [
+            { label: item.label, route: item.route },
+            { label: child.label }
+          ]
+        }
+      }
+    }
+    return []
+  }, [activeRoute])
 
   const handleNavigate = (route: Route) => {
     onNavigate(route)
@@ -185,7 +235,7 @@ export default function Layout({
             const Icon = item.icon
             const hasChildren = item.children && item.children.length > 0
             const isExpanded = expandedGroups.includes(item.label)
-            const isGroupActive = item.children?.some(child => child.route === activeRoute)
+            const groupActive = isGroupActive(item)
 
             if (hasChildren && !sidebarCollapsed) {
               return (
@@ -193,7 +243,7 @@ export default function Layout({
                   <button
                     onClick={() => toggleGroup(item.label)}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
-                      isGroupActive 
+                      groupActive 
                         ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20' 
                         : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800'
                     }`}
@@ -238,7 +288,7 @@ export default function Layout({
                   key={item.route}
                   onClick={() => handleNavigate(item.route)}
                   className={`w-full flex items-center justify-center p-2 rounded-lg transition-colors ${
-                    isActive(item.route) || isGroupActive
+                    isActive(item.route) || groupActive
                       ? 'bg-primary-500 text-white'
                       : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800'
                   }`}
@@ -329,12 +379,7 @@ export default function Layout({
 
         {/* Desktop Header */}
         <div className="hidden lg:flex h-16 bg-white dark:bg-surface-900 border-b border-surface-200 dark:border-surface-800 items-center justify-between px-6 sticky top-0 z-30">
-          <h1 className="text-lg font-semibold text-surface-900 dark:text-white">
-            {menuItems.find(item => 
-              item.route === activeRoute || item.children?.some(child => child.route === activeRoute)
-            )?.children?.find(child => child.route === activeRoute)?.label || 
-              menuItems.find(item => item.route === activeRoute)?.label || 'Neuro'}
-          </h1>
+          <Breadcrumb items={breadcrumbItems} onNavigate={handleNavigate} />
           
           {user && (
             <div className="flex items-center gap-3">

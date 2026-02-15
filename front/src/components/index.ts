@@ -35,3 +35,6 @@ export type { EmptyStateProps } from './EmptyState'
 
 export { default as LoadingSpinner } from './LoadingSpinner'
 export type { LoadingSpinnerProps } from './LoadingSpinner'
+
+export { default as Breadcrumb } from './Breadcrumb'
+export type { BreadcrumbProps, BreadcrumbItem } from './Breadcrumb'
