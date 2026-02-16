@@ -17,6 +17,8 @@ public class RagServiceTests
     private ServiceProvider BuildProvider()
     {
         var services = new ServiceCollection();
+        services.AddOptions();
+        services.Configure<RagOptions>(_ => { });
         services.AddNeuroRAG();
 
         // Add test doubles
@@ -70,6 +72,8 @@ public class RagServiceTests
     private class TestVectorStore : IVectorStore
     {
         private readonly List<VectorRecord> _records = new();
+        public int Count => _records.Count;
+
         public Task DeleteAsync(System.Collections.Generic.IEnumerable<string> ids, CancellationToken cancellationToken = default)
         {
             _records.RemoveAll(r => ids.Contains(r.Id));

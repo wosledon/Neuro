@@ -70,7 +70,8 @@ export function useChatSignalR(options: UseChatSignalROptions = {}) {
 
     // 监听回答片段
     newConnection.on('AnswerChunk', (chunk: string) => {
-      console.log('📤 AnswerChunk:', chunk.substring(0, 50));
+      console.log('📤 AnswerChunk:', chunk);
+      console.log('📤 chunk length:', chunk.length, 'chunk type:', typeof chunk);
       onAnswerChunk?.(chunk);
     });
 

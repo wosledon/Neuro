@@ -55,7 +55,8 @@ public class TextChunkerTests
     public void Chunk_WithoutTokenizer_SplitsParagraphs()
     {
         var text = "Para1\n\nPara2\n\nPara3";
-        var chunker = new TextChunker(null);
+        // With small chunk size, each paragraph becomes its own chunk
+        var chunker = new TextChunker(null, chunkSize: 1, overlap: 0);
         var frags = chunker.Chunk(text).ToArray();
         Assert.Equal(3, frags.Length);
         Assert.Contains(frags, f => f.Text.Contains("Para1"));

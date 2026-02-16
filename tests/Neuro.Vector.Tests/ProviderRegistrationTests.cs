@@ -10,6 +10,8 @@ public class ProviderRegistrationTests
     private class DummyStore : IVectorStore
     {
         public string Name { get; }
+        public int Count => 0;
+
         public DummyStore(string name) => Name = name;
         public Task UpsertAsync(IEnumerable<VectorRecord> records, System.Threading.CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<IEnumerable<VectorRecord>> GetAsync(IEnumerable<string> ids, System.Threading.CancellationToken cancellationToken = default) => Task.FromResult((IEnumerable<VectorRecord>)new List<VectorRecord>());

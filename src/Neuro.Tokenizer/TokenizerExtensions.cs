@@ -12,7 +12,9 @@ public static class TokenizerExtensions
         var opts = new TokenizerOptions();
         configure?.Invoke(opts);
         services.AddSingleton(opts);
-        services.AddSingleton<ITokenizer>(sp => new TiktokenTokenizerAdapter(sp.GetRequiredService<TokenizerOptions>()));
+
+        // 使用BertWordPieceTokenizer - 支持WordPiece子词切分和完整vocab.txt加载
+        services.AddSingleton<ITokenizer>(sp => new BertWordPieceTokenizer(sp.GetRequiredService<TokenizerOptions>()));
         return services;
     }
 }

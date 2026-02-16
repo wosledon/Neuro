@@ -161,11 +161,16 @@ public class DocumentVectorizationService : BackgroundService
 
         try
         {
-            // 查询并删除该文档的所有向量块
             var prefix = documentId.ToString() + ":";
-            // 由于向量存储可能不支持前缀删除，这里简单处理
-            // 实际实现可能需要根据具体存储调整
-            _logger.LogDebug("删除文档 {DocumentId} 的现有向量记录", documentId);
+            var ids = (await vectorStore.ListIdsByPrefixAsync(prefix, cancellationToken)).ToArray();
+            if (ids.Length == 0)
+            {
+                _logger.LogDebug("文档 {DocumentId} 无旧向量记录可删除", documentId);
+                return;
+            }
+
+            await vectorStore.DeleteAsync(ids, cancellationToken);
+            _logger.LogInformation("文档 {DocumentId} 已删除 {Count} 条旧向量记录", documentId, ids.Length);
         }
         catch (Exception ex)
         {

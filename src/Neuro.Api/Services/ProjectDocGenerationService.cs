@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.SignalR;
 using Neuro.Api.Entity;
 using Neuro.Api.Hubs;
@@ -171,7 +172,7 @@ public class ProjectDocGenerationService : BackgroundService
             await hubContext.Clients.Group(projectId.ToString())
                 .SendAsync("DocGenProgress", update);
 
-            _logger.LogDebug("项目 {ProjectId} 进度更新: {Status} - {Progress}% - {Message}", 
+            _logger.LogDebug("项目 {ProjectId} 进度更新: {Status} - {Progress}% - {Message}",
                 projectId, status, progress, message);
         }
         catch (Exception ex)
@@ -222,7 +223,7 @@ public class ProjectDocGenerationService : BackgroundService
                 // 执行 git pull
                 _logger.LogInformation("项目 {ProjectId} 执行 git pull", project.Id);
                 var pullResult = await ExecuteGitCommandAsync(repoPath, "pull", cancellationToken);
-                return pullResult;
+                return pullResult.Success;
             }
             else
             {
@@ -240,7 +241,18 @@ public class ProjectDocGenerationService : BackgroundService
                     $"clone {project.RepositoryUrl} \"{repoPath}\"",
                     cancellationToken);
 
-                return cloneResult;
+                if (cloneResult.Success)
+                {
+                    return true;
+                }
+
+                if (await TryCloneWithSparseCheckoutAsync(project.RepositoryUrl, repoPath, cloneResult.Error, cancellationToken))
+                {
+                    _logger.LogWarning("项目 {ProjectId} 使用稀疏检出完成克隆（过滤非法路径）", project.Id);
+                    return true;
+                }
+
+                return false;
             }
         }
         catch (Exception ex)
@@ -253,12 +265,12 @@ public class ProjectDocGenerationService : BackgroundService
     /// <summary>
     /// 执行 Git 命令
     /// </summary>
-    private async Task<bool> ExecuteGitCommandAsync(string workingDir, string args, CancellationToken cancellationToken)
+    private async Task<GitCommandResult> ExecuteGitCommandAsync(string workingDir, string args, CancellationToken cancellationToken)
     {
         try
         {
             _logger.LogInformation("执行 Git 命令: git {Args} (工作目录: {WorkingDir})", args, workingDir);
-            
+
             var psi = new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "git",
@@ -271,34 +283,100 @@ public class ProjectDocGenerationService : BackgroundService
             };
 
             using var process = System.Diagnostics.Process.Start(psi);
-            if (process == null) 
+            if (process == null)
             {
                 _logger.LogError("无法启动 Git 进程，请确保 Git 已安装并在 PATH 中");
-                return false;
+                return new GitCommandResult(false, string.Empty, "无法启动 Git 进程", -1);
             }
 
             var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
             var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
-            
+
             await process.WaitForExitAsync(cancellationToken);
-            
+
             var output = await outputTask;
             var error = await errorTask;
 
             if (process.ExitCode != 0)
             {
                 _logger.LogError("Git 命令失败 (退出码: {ExitCode}): {Error}", process.ExitCode, error);
-                return false;
+                return new GitCommandResult(false, output, error, process.ExitCode);
             }
 
             _logger.LogInformation("Git 命令执行成功: {Output}", output);
-            return true;
+            return new GitCommandResult(true, output, error, process.ExitCode);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "执行 Git 命令失败: git {Args}", args);
+            return new GitCommandResult(false, string.Empty, ex.Message, -1);
+        }
+    }
+
+    private async Task<bool> TryCloneWithSparseCheckoutAsync(string repositoryUrl, string repoPath, string error, CancellationToken cancellationToken)
+    {
+        var invalidPaths = ExtractInvalidPaths(error);
+        if (invalidPaths.Count == 0)
+        {
             return false;
         }
+
+        _logger.LogWarning("检测到非法路径，尝试稀疏检出：{Paths}", string.Join(" | ", invalidPaths));
+
+        var parentDir = Path.GetDirectoryName(repoPath)!;
+        var cloneResult = await ExecuteGitCommandAsync(parentDir, $"clone --no-checkout {repositoryUrl} \"{repoPath}\"", cancellationToken);
+        if (!cloneResult.Success)
+        {
+            return false;
+        }
+
+        var initResult = await ExecuteGitCommandAsync(repoPath, "sparse-checkout init --no-cone", cancellationToken);
+        if (!initResult.Success)
+        {
+            return false;
+        }
+
+        var sparseFile = Path.Combine(repoPath, ".git", "info", "sparse-checkout");
+        var patterns = new List<string> { "**/*" };
+        foreach (var path in invalidPaths)
+        {
+            patterns.Add("!" + path.Replace('\\', '/'));
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(sparseFile)!);
+        await File.WriteAllLinesAsync(sparseFile, patterns, cancellationToken);
+
+        var checkoutResult = await ExecuteGitCommandAsync(repoPath, "checkout -f", cancellationToken);
+        return checkoutResult.Success;
+    }
+
+    private static IReadOnlyList<string> ExtractInvalidPaths(string error)
+    {
+        if (string.IsNullOrWhiteSpace(error))
+        {
+            return Array.Empty<string>();
+        }
+
+        var matches = Regex.Matches(error, "invalid path '([^']+)'", RegexOptions.IgnoreCase);
+        if (matches.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        var results = new List<string>();
+        foreach (Match match in matches)
+        {
+            if (match.Success && match.Groups.Count > 1)
+            {
+                var path = match.Groups[1].Value;
+                if (!string.IsNullOrWhiteSpace(path))
+                {
+                    results.Add(path);
+                }
+            }
+        }
+
+        return results;
     }
 
     /// <summary>
@@ -343,7 +421,7 @@ public class ProjectDocGenerationService : BackgroundService
         // 1. 创建或获取项目根文档
         var rootDoc = await db.Set<Entity.MyDocument>()
             .FirstOrDefaultAsync(d => d.ProjectId == project.Id && d.ParentId == null, cancellationToken);
-        
+
         if (rootDoc == null)
         {
             rootDoc = new Entity.MyDocument
@@ -421,7 +499,7 @@ public class ProjectDocGenerationService : BackgroundService
         }
 
         await db.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("项目 {ProjectId} 展平完成，根文档: {RootDocId}, 处理了 {Count} 个文件", 
+        _logger.LogInformation("项目 {ProjectId} 展平完成，根文档: {RootDocId}, 处理了 {Count} 个文件",
             project.Id, rootDoc.Id, files.Count);
     }
 
@@ -480,6 +558,8 @@ public class ProjectDocGenerationService : BackgroundService
         return path.Equals(pattern, StringComparison.OrdinalIgnoreCase);
     }
 }
+
+internal sealed record GitCommandResult(bool Success, string Output, string Error, int ExitCode);
 
 /// <summary>
 /// 项目文档生成服务扩展方法

@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Button, Badge } from '../components'
 import { useToast } from '../components/ToastProvider'
 import { 
@@ -81,10 +83,19 @@ export default function Chat() {
 
   // SignalR 流式聊天
   const handleAnswerChunk = useCallback((chunk: string) => {
-    setSessions(prev => prev.map(s => {
-      if (s.id === currentSessionId && streamingMessageId.current) {
-        const lastMessage = s.messages[s.messages.length - 1]
-        if (lastMessage && lastMessage.role === 'assistant' && lastMessage.isStreaming) {
+    console.log('📝 handleAnswerChunk called:', chunk, 'streamingMessageId:', streamingMessageId.current);
+    setSessions(prev => {
+      // 找到包含流式消息的 session
+      const targetSession = prev.find(s => s.messages.some(m => m.id === streamingMessageId.current));
+      if (!targetSession) {
+        console.log('❌ 未找到包含流式消息的 session:', streamingMessageId.current);
+        return prev;
+      }
+      
+      console.log('✅ 找到 session:', targetSession.id, '更新消息:', streamingMessageId.current);
+      
+      return prev.map(s => {
+        if (s.id === targetSession.id) {
           return {
             ...s,
             messages: s.messages.map(m => 
@@ -94,28 +105,36 @@ export default function Chat() {
             )
           }
         }
-      }
-      return s
-    }))
-  }, [currentSessionId])
+        return s
+      })
+    })
+  }, [])
 
   const handleAnswerComplete = useCallback((sources: ChatSource[]) => {
-    setSessions(prev => prev.map(s => {
-      if (s.id === currentSessionId && streamingMessageId.current) {
-        return {
-          ...s,
-          messages: s.messages.map(m => 
-            m.id === streamingMessageId.current
-              ? { ...m, isStreaming: false, sources }
-              : m
-          )
-        }
+    setSessions(prev => {
+      // 找到包含流式消息的 session
+      const targetSession = prev.find(s => s.messages.some(m => m.id === streamingMessageId.current));
+      if (!targetSession) {
+        return prev;
       }
-      return s
-    }))
+      
+      return prev.map(s => {
+        if (s.id === targetSession.id) {
+          return {
+            ...s,
+            messages: s.messages.map(m => 
+              m.id === streamingMessageId.current
+                ? { ...m, isStreaming: false, sources: sources }
+                : m
+            )
+          }
+        }
+        return s
+      })
+    })
     streamingMessageId.current = null
     setSearchResults([])
-  }, [currentSessionId])
+  }, [])
 
   const handleSearchComplete = useCallback((data: { count: number; sources: ChatSource[] }) => {
     setSearchResults(data.sources)
@@ -125,18 +144,26 @@ export default function Chat() {
     showToast(errorMessage, 'error')
     // 移除正在流式输出的消息
     if (streamingMessageId.current) {
-      setSessions(prev => prev.map(s => {
-        if (s.id === currentSessionId) {
-          return {
-            ...s,
-            messages: s.messages.filter(m => m.id !== streamingMessageId.current)
-          }
+      setSessions(prev => {
+        // 找到包含流式消息的 session
+        const targetSession = prev.find(s => s.messages.some(m => m.id === streamingMessageId.current));
+        if (!targetSession) {
+          return prev;
         }
-        return s
-      }))
+        
+        return prev.map(s => {
+          if (s.id === targetSession.id) {
+            return {
+              ...s,
+              messages: s.messages.filter(m => m.id !== streamingMessageId.current)
+            }
+          }
+          return s
+        })
+      })
       streamingMessageId.current = null
     }
-  }, [currentSessionId, showToast])
+  }, [showToast])
 
   const { isConnected, isStreaming, sendMessage: sendStreamMessage, cancelStream } = useChatSignalR({
     onAnswerChunk: handleAnswerChunk,
@@ -149,9 +176,34 @@ export default function Chat() {
     localStorage.setItem('chat_sessions', JSON.stringify(sessions))
   }, [sessions])
 
+  // 智能滚动：只在用户发送消息或AI开始回复时滚动，流式输出时不频繁滚动
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  
+  // 检测用户是否手动滚动（向上滚动时暂停自动滚动）
+  const handleScroll = useCallback(() => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
+      setShouldAutoScroll(isNearBottom)
+    }
+  }, [])
+  
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [currentSession?.messages])
+    if (shouldAutoScroll && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [currentSession?.messages, shouldAutoScroll])
+  
+  // AI流式输出时，每隔一段时间滚动一次（而不是每次更新都滚动）
+  useEffect(() => {
+    if (isStreaming && shouldAutoScroll) {
+      const interval = setInterval(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 500)
+      return () => clearInterval(interval)
+    }
+  }, [isStreaming, shouldAutoScroll])
 
   const createNewSession = () => {
     const newSession: ChatSession = {
@@ -215,6 +267,8 @@ export default function Chat() {
     const aiMessageId = (Date.now() + 1).toString()
     streamingMessageId.current = aiMessageId
     
+    console.log('📝 创建 AI 消息:', aiMessageId, 'sessionId:', sessionId);
+    
     const aiMessage: Message = {
       id: aiMessageId,
       role: 'assistant',
@@ -225,12 +279,14 @@ export default function Chat() {
     
     setSessions(prev => prev.map(s => {
       if (s.id === sessionId) {
+        console.log('✅ 添加 AI 消息到 session:', sessionId);
         return { ...s, messages: [...s.messages, aiMessage] }
       }
       return s
     }))
 
     // 使用 SignalR 发送消息
+    console.log('📤 发送 SignalR 消息:', { question, topK, sessionId });
     const success = await sendStreamMessage(question, topK, sessionId)
     
     if (!success) {
@@ -442,7 +498,11 @@ export default function Chat() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div 
+              ref={messagesContainerRef}
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto p-6 space-y-6"
+            >
               {currentSession.messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-surface-400">
                   <SparklesIcon className="w-12 h-12 mb-4" />
@@ -490,8 +550,10 @@ export default function Chat() {
                           {message.timestamp.toLocaleTimeString()}
                         </span>
                       </div>
-                      <div className="text-surface-700 dark:text-surface-300 whitespace-pre-wrap">
-                        {message.content}
+                      <div className="text-surface-700 dark:text-surface-300 prose prose-sm dark:prose-invert max-w-none break-words overflow-hidden">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {message.content}
+                        </ReactMarkdown>
                       </div>
                       
                       {/* Sources */}

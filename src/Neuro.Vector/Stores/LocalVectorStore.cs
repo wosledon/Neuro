@@ -105,6 +105,15 @@ public class LocalVectorStore : IVectorStore
         return Task.CompletedTask;
     }
 
+    public Task<IEnumerable<string>> ListIdsByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
+    {
+        var ids = _store.Keys
+            .Where(k => string.IsNullOrEmpty(prefix) || k.StartsWith(prefix, StringComparison.Ordinal))
+            .ToArray();
+
+        return Task.FromResult((IEnumerable<string>)ids);
+    }
+
     public Task<IEnumerable<(VectorRecord Record, float Score)>> QueryAsync(float[] queryEmbedding, int topK = 10, float minScore = -1f, CancellationToken cancellationToken = default)
     {
         if (queryEmbedding == null) throw new ArgumentNullException(nameof(queryEmbedding));

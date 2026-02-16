@@ -81,7 +81,7 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.FromSeconds(30)
     };
-    
+
     // SignalR WebSocket 支持 - 从 query string 获取 token
     options.Events = new JwtBearerEvents
     {
@@ -133,7 +133,16 @@ builder.Services.AddVectorizer(options =>
 });
 
 // 注册 RAG 服务
-builder.Services.AddNeuroRAG();
+builder.Services.AddNeuroRAG(options =>
+{
+    options.ChunkSize = 256;        // 更小的分块提升检索精度
+    options.ChunkOverlap = 50;      // 保持上下文连续性
+    options.MinScore = 0.3f;        // 过滤低质量结果
+    options.MinKeywordScore = 0f;
+    options.EnableLexicalFallback = false;  // 向量检索质量足够时不需要词法回退
+    options.TopK = 10;
+    options.VectorizeBatchSize = 16;
+});
 
 // 注册文档向量化后台服务
 builder.Services.AddSingleton<DocumentVectorizationService>();

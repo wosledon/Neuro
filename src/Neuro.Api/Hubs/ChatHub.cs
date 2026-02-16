@@ -100,11 +100,16 @@ public class ChatHub : Hub
                     string.Join("\n\n", sources.Select((s, i) => $"[{i + 1}] {s.Content}"));
 
                 // 模拟流式输出
+                _logger.LogInformation("开始流式输出，答案长度: {Length}", answer.Length);
+                int chunkIndex = 0;
                 foreach (var chunk in answer.Chunk(20))
                 {
-                    await Clients.Caller.SendAsync("AnswerChunk", new string(chunk));
+                    var chunkStr = new string(chunk);
+                    _logger.LogDebug("发送 AnswerChunk {Index}: {Content}", chunkIndex++, chunkStr);
+                    await Clients.Caller.SendAsync("AnswerChunk", chunkStr);
                     await Task.Delay(50); // 模拟打字效果
                 }
+                _logger.LogInformation("流式输出完成");
 
                 await Clients.Caller.SendAsync("AnswerComplete", new { Sources = sources });
                 return;
