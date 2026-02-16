@@ -8,4 +8,5 @@ public interface ICurrentUserService
     string? UserName { get; }
     Guid? TenantId { get; }
     bool IsAuthenticated { get; }
+    bool IsSuper { get; }
 }

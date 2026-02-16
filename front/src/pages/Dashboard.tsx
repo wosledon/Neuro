@@ -1,7 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useRouter } from '../router'
-import { Card, StatCard, Button, Badge } from '../components'
+import { Card, StatCard, Button, Badge, LoadingSpinner } from '../components'
+import { adminApi } from '../services/auth'
+import { scanFrontendMenus } from '../services/permissionSync'
+import { useToast } from '../components/ToastProvider'
+import { useSystemStatusSignalR } from '../hooks/useSystemStatusSignalR'
+import { useProjectDocSignalR, DocGenProgress } from '../hooks/useProjectDocSignalR'
+import { projectsApi } from '../services/auth'
 import { 
   UsersIcon, 
   ShieldCheckIcon, 
@@ -10,7 +16,16 @@ import {
   DocumentTextIcon,
   ArrowTrendingUpIcon,
   ClockIcon,
-  SparklesIcon
+  SparklesIcon,
+  BuildingOfficeIcon,
+  ListBulletIcon,
+  LockClosedIcon,
+  CpuChipIcon,
+  KeyIcon,
+  DocumentIcon,
+  BookOpenIcon,
+  ArrowPathIcon,
+  Bars3BottomLeftIcon,
 } from '@heroicons/react/24/solid'
 
 // Activity item type
@@ -23,23 +38,24 @@ interface Activity {
   user?: string
 }
 
-// Mock activities data
-const mockActivities: Activity[] = [
-  { id: '1', type: 'user', title: '新用户注册', description: '用户 admin 刚刚完成了注册', time: '2分钟前', user: '系统' },
-  { id: '2', type: 'document', title: '文档更新', description: 'API 文档 v2.0 已更新', time: '15分钟前', user: '张三' },
-  { id: '3', type: 'project', title: '项目创建', description: '新项目 "Neuro AI" 已创建', time: '1小时前', user: '李四' },
-  { id: '4', type: 'system', title: '系统备份', description: '每日自动备份已完成', time: '3小时前', user: '系统' },
-  { id: '5', type: 'user', title: '角色变更', description: '用户王五被分配为管理员', time: '5小时前', user: '管理员' },
-]
+// System status type
+interface SystemStatus {
+  cpuUsage: number
+  memoryUsage: number
+  memoryUsed: number
+  memoryTotal: number
+  storageUsage: number
+  storageUsed: number
+  storageTotal: number
+  uptime: string
+}
 
-// Quick action type
-interface QuickAction {
-  key: string
-  title: string
-  description: string
-  icon: React.ReactNode
-  color: string
-  route: string
+// Project with doc gen status
+interface ProjectWithDocGen {
+  id: string
+  name: string
+  docGenStatus?: number
+  docGenProgress?: DocGenProgress
 }
 
 // Activity icon component
@@ -65,11 +81,157 @@ function ActivityIcon({ type }: { type: Activity['type'] }) {
   )
 }
 
+// Quick action type
+interface QuickAction {
+  key: string
+  title: string
+  description: string
+  icon: React.ReactNode
+  color: string
+  route: string
+}
+
+// 统计数据类型
+interface DashboardStats {
+  users: number
+  roles: number
+  teams: number
+  projects: number
+  documents: number
+  tenants: number
+  menus: number
+  permissions: number
+  fileResources: number
+}
+
 export default function Dashboard() {
   const { user, menus } = useAuth()
   const { navigate } = useRouter()
+  const { show: showToast } = useToast()
   const [greeting, setGreeting] = useState('')
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [showAllActions, setShowAllActions] = useState(false)
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [activityPagination, setActivityPagination] = useState({
+    current: 1,
+    pageSize: 5,
+    total: 0
+  })
+  const [syncingPermissions, setSyncingPermissions] = useState(false)
+  const [syncingMenus, setSyncingMenus] = useState(false)
+  const [projectsWithDocGen, setProjectsWithDocGen] = useState<ProjectWithDocGen[]>([])
+  
+  // SignalR 回调函数使用 useCallback 避免重复创建
+  const handleStatusUpdate = useCallback((newStatus: SystemStatus) => {
+    console.log('收到实时系统状态:', newStatus)
+  }, [])
+
+  const handleSignalRError = useCallback((error: Error) => {
+    console.error('SignalR 错误:', error)
+  }, [])
+
+  // 使用 SignalR 接收实时系统状态
+  const { status: systemStatus, isConnected: signalRConnected } = useSystemStatusSignalR({
+    onStatusUpdate: handleStatusUpdate,
+    onError: handleSignalRError
+  })
+
+  // 获取项目列表并订阅文档生成进度
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await projectsApi.apiProjectListGet()
+        const projects = (response.data.data as any[]) || []
+        setProjectsWithDocGen(projects.map(p => ({
+          id: p.id,
+          name: p.name,
+          docGenStatus: p.docGenStatus
+        })))
+      } catch (error) {
+        console.error('获取项目列表失败:', error)
+      }
+    }
+    fetchProjects()
+  }, [])
+
+  // 处理文档生成进度更新 - 使用函数式更新避免依赖问题
+  const handleDocGenProgress = useCallback((progress: DocGenProgress) => {
+    console.log('🔄 收到进度更新:', progress)
+    setProjectsWithDocGen(prev => {
+      const updated = prev.map(project => {
+        // 确保 ID 比较时类型一致（都转为字符串）
+        if (String(project.id) === String(progress.projectId)) {
+          console.log('✅ 匹配到项目:', project.name, '更新进度:', progress.progress + '%')
+          return {
+            ...project,
+            docGenStatus: progress.status,
+            docGenProgress: progress
+          }
+        }
+        return project
+      })
+      return updated
+    })
+  }, [])
+
+  // 使用 SignalR 接收文档生成进度
+  const { subscribeProject, unsubscribeProject } = useProjectDocSignalR({
+    onProgress: handleDocGenProgress
+  })
+
+  // 订阅所有项目的文档生成进度
+  useEffect(() => {
+    const subscribeAll = async () => {
+      console.log('📡 订阅项目进度:', projectsWithDocGen.map(p => p.id))
+      for (const project of projectsWithDocGen) {
+        await subscribeProject(project.id)
+      }
+    }
+    subscribeAll()
+    
+    return () => {
+      projectsWithDocGen.forEach(project => {
+        unsubscribeProject(project.id)
+      })
+    }
+  }, [projectsWithDocGen])
+
+  // 同步权限
+  const handleSyncPermissions = async () => {
+    setSyncingPermissions(true)
+    try {
+      const response = await adminApi.apiAdminSyncPermissionsPost()
+      const result = response.data.data as any
+      showToast(`权限同步成功：新增 ${result.added} 个，更新 ${result.updated} 个`, 'success')
+      // 刷新活动列表
+      const activitiesResponse = await adminApi.apiAdminRecentActivitiesGet()
+      setActivities(activitiesResponse.data.data as Activity[])
+    } catch (error: any) {
+      showToast('权限同步失败：' + (error.response?.data?.message || error.message), 'error')
+    } finally {
+      setSyncingPermissions(false)
+    }
+  }
+
+  // 同步菜单
+  const handleSyncMenus = async () => {
+    setSyncingMenus(true)
+    try {
+      const menus = scanFrontendMenus()
+      const response = await adminApi.apiAdminSyncMenusPost(menus as any)
+      const result = response.data.data as any
+      showToast(`菜单同步成功：新增 ${result.added} 个，更新 ${result.updated} 个`, 'success')
+      // 刷新活动列表
+      const activitiesResponse = await adminApi.apiAdminRecentActivitiesGet()
+      setActivities(activitiesResponse.data.data as Activity[])
+    } catch (error: any) {
+      showToast('菜单同步失败：' + (error.response?.data?.message || error.message), 'error')
+    } finally {
+      setSyncingMenus(false)
+    }
+  }
 
   // Update greeting based on time
   useEffect(() => {
@@ -86,7 +248,59 @@ export default function Dashboard() {
     return () => clearInterval(timer)
   }, [])
 
-  const quickActions: QuickAction[] = [
+  // 获取统计数据和系统状态
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        
+        // 获取统计数据
+        const statsResponse = await adminApi.apiAdminStatsGet()
+        const statsData = statsResponse.data.data as DashboardStats
+        setStats(statsData)
+
+        // 系统状态现在通过 SignalR 实时获取，这里只做初始数据获取作为后备
+        try {
+          const statusResponse = await adminApi.apiAdminSystemStatusGet()
+          const statusData = statusResponse.data.data as SystemStatus
+          // 如果 SignalR 还没连接成功，使用 API 数据作为初始值
+          if (!systemStatus) {
+            // 使用 setTimeout 避免与 SignalR 更新冲突
+            setTimeout(() => {
+              // 状态已由 SignalR hook 管理
+            }, 0)
+          }
+        } catch {
+          // 忽略错误，SignalR 会提供数据
+        }
+
+        // 获取最近活动
+        try {
+          const activitiesResponse = await adminApi.apiAdminRecentActivitiesGet()
+          const activitiesData = activitiesResponse.data.data as Activity[]
+          setActivities(activitiesData)
+        } catch {
+          // 如果接口不存在，使用模拟数据
+          setActivities([
+            { id: '1', type: 'user', title: '新用户注册', description: '用户 admin 刚刚完成了注册', time: '2分钟前', user: '系统' },
+            { id: '2', type: 'document', title: '文档更新', description: 'API 文档 v2.0 已更新', time: '15分钟前', user: '张三' },
+            { id: '3', type: 'project', title: '项目创建', description: '新项目 "Neuro AI" 已创建', time: '1小时前', user: '李四' },
+            { id: '4', type: 'system', title: '系统备份', description: '每日自动备份已完成', time: '3小时前', user: '系统' },
+            { id: '5', type: 'user', title: '角色变更', description: '用户王五被分配为管理员', time: '5小时前', user: '管理员' },
+          ])
+        }
+      } catch (error: any) {
+        console.error('获取数据失败:', error)
+        showToast('获取统计数据失败', 'error')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [showToast])
+
+  const allQuickActions: QuickAction[] = [
     {
       key: 'users',
       title: '用户管理',
@@ -127,17 +341,110 @@ export default function Dashboard() {
       color: 'from-teal-500 to-cyan-500',
       route: 'documents'
     },
+    {
+      key: 'tenants',
+      title: '租户管理',
+      description: '管理多租户配置',
+      icon: <BuildingOfficeIcon className="w-6 h-6" />,
+      color: 'from-indigo-500 to-purple-500',
+      route: 'tenants'
+    },
+    {
+      key: 'menus',
+      title: '菜单管理',
+      description: '配置系统菜单',
+      icon: <ListBulletIcon className="w-6 h-6" />,
+      color: 'from-pink-500 to-rose-500',
+      route: 'menus'
+    },
+    {
+      key: 'permissions',
+      title: '权限管理',
+      description: '管理系统权限',
+      icon: <LockClosedIcon className="w-6 h-6" />,
+      color: 'from-red-500 to-orange-500',
+      route: 'permissions'
+    },
+    {
+      key: 'ai-supports',
+      title: 'AI 助手',
+      description: '配置 AI 助手',
+      icon: <CpuChipIcon className="w-6 h-6" />,
+      color: 'from-violet-500 to-purple-500',
+      route: 'ai-supports'
+    },
+    {
+      key: 'git-credentials',
+      title: 'Git 凭据',
+      description: '管理 Git 凭据',
+      icon: <KeyIcon className="w-6 h-6" />,
+      color: 'from-gray-500 to-slate-500',
+      route: 'git-credentials'
+    },
+    {
+      key: 'file-resources',
+      title: '文件资源',
+      description: '管理文件资源',
+      icon: <DocumentIcon className="w-6 h-6" />,
+      color: 'from-yellow-500 to-amber-500',
+      route: 'file-resources'
+    },
+    {
+      key: 'notebook',
+      title: '笔记本',
+      description: '打开笔记本',
+      icon: <BookOpenIcon className="w-6 h-6" />,
+      color: 'from-emerald-500 to-teal-500',
+      route: 'notebook'
+    },
   ]
 
-  const stats = [
-    { title: '总用户数', value: '1,234', change: '+12%', changeType: 'positive' as const, icon: <UsersIcon className="w-6 h-6" /> },
-    { title: '活跃项目', value: '56', change: '+5%', changeType: 'positive' as const, icon: <FolderIcon className="w-6 h-6" /> },
-    { title: '文档数量', value: '892', change: '+23%', changeType: 'positive' as const, icon: <DocumentTextIcon className="w-6 h-6" /> },
-    { title: '团队数量', value: '18', change: '0%', changeType: 'neutral' as const, icon: <UserGroupIcon className="w-6 h-6" /> },
+  // 默认显示的快捷操作（前6个）
+  const defaultQuickActions = allQuickActions.slice(0, 6)
+  const displayedQuickActions = showAllActions ? allQuickActions : defaultQuickActions
+
+  // 统计数据配置
+  const statsConfig = [
+    { 
+      title: '总用户数', 
+      value: stats?.users?.toLocaleString() || '0', 
+      change: '+12%', 
+      changeType: 'positive' as const, 
+      icon: <UsersIcon className="w-6 h-6" /> 
+    },
+    { 
+      title: '活跃项目', 
+      value: stats?.projects?.toLocaleString() || '0', 
+      change: '+5%', 
+      changeType: 'positive' as const, 
+      icon: <FolderIcon className="w-6 h-6" /> 
+    },
+    { 
+      title: '文档数量', 
+      value: stats?.documents?.toLocaleString() || '0', 
+      change: '+23%', 
+      changeType: 'positive' as const, 
+      icon: <DocumentTextIcon className="w-6 h-6" /> 
+    },
+    { 
+      title: '团队数量', 
+      value: stats?.teams?.toLocaleString() || '0', 
+      change: '0%', 
+      changeType: 'neutral' as const, 
+      icon: <UserGroupIcon className="w-6 h-6" /> 
+    },
   ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" text="加载统计数据..." />
+      </div>
+    )
+  }
 
   return (
-    <div className="container-main py-8 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Welcome Section */}
       <div className="mb-8">
         <div className="flex items-start justify-between">
@@ -165,7 +472,7 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
+        {statsConfig.map((stat, index) => (
           <div 
             key={stat.title}
             className="animate-fade-in-up"
@@ -187,13 +494,41 @@ export default function Dashboard() {
                   快速访问常用功能模块
                 </p>
               </div>
-              <Button variant="ghost" size="sm">
-                查看全部
-              </Button>
+              <div className="flex items-center gap-2">
+                {user?.isSuper && (
+                  <>
+                    <Button 
+                      variant="secondary" 
+                      size="sm"
+                      leftIcon={<ArrowPathIcon className={`w-4 h-4 ${syncingPermissions ? 'animate-spin' : ''}`} />}
+                      onClick={handleSyncPermissions}
+                      isLoading={syncingPermissions}
+                    >
+                      同步权限
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      size="sm"
+                      leftIcon={<Bars3BottomLeftIcon className={`w-4 h-4 ${syncingMenus ? 'animate-spin' : ''}`} />}
+                      onClick={handleSyncMenus}
+                      isLoading={syncingMenus}
+                    >
+                      同步菜单
+                    </Button>
+                  </>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowAllActions(!showAllActions)}
+                >
+                  {showAllActions ? '收起' : '查看全部'}
+                </Button>
+              </div>
             </div>
             
-            <div className="grid sm:grid-cols-2 gap-4">
-              {quickActions.map((action, index) => (
+            <div className={`grid sm:grid-cols-2 gap-4 transition-all duration-300 ${showAllActions ? '' : ''}`}>
+              {displayedQuickActions.map((action, index) => (
                 <button
                   key={action.key}
                   onClick={() => navigate(action.route as any)}
@@ -240,7 +575,7 @@ export default function Dashboard() {
             </div>
 
             <div className="space-y-4">
-              {mockActivities.map((activity, index) => (
+              {activities.slice((activityPagination.current - 1) * activityPagination.pageSize, activityPagination.current * activityPagination.pageSize).map((activity) => (
                 <div 
                   key={activity.id}
                   className="flex items-start gap-4 p-3 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
@@ -267,6 +602,38 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+
+            {/* Pagination */}
+            {activities.length > activityPagination.pageSize && (
+              <div className="flex items-center justify-between px-2 pt-4 mt-4 border-t border-surface-200 dark:border-surface-700">
+                <span className="text-sm text-surface-500 dark:text-surface-400">
+                  共 {activities.length} 条
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setActivityPagination(prev => ({ ...prev, current: prev.current - 1 }))}
+                    disabled={activityPagination.current === 1}
+                    className="px-3 py-1.5 text-sm rounded-lg border border-surface-200 dark:border-surface-600 
+                             text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700
+                             disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    上一页
+                  </button>
+                  <span className="text-sm text-surface-600 dark:text-surface-400">
+                    {activityPagination.current} / {Math.ceil(activities.length / activityPagination.pageSize)}
+                  </span>
+                  <button
+                    onClick={() => setActivityPagination(prev => ({ ...prev, current: prev.current + 1 }))}
+                    disabled={activityPagination.current >= Math.ceil(activities.length / activityPagination.pageSize)}
+                    className="px-3 py-1.5 text-sm rounded-lg border border-surface-200 dark:border-surface-600 
+                             text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700
+                             disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    下一页
+                  </button>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 
@@ -300,11 +667,11 @@ export default function Dashboard() {
             <div className="mt-6 pt-6 border-t border-surface-200 dark:border-surface-700">
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-surface-900 dark:text-white">12</p>
+                  <p className="text-2xl font-bold text-surface-900 dark:text-white">{stats?.projects || 0}</p>
                   <p className="text-xs text-surface-500">我的项目</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-surface-900 dark:text-white">48</p>
+                  <p className="text-2xl font-bold text-surface-900 dark:text-white">{stats?.documents || 0}</p>
                   <p className="text-xs text-surface-500">我的文档</p>
                 </div>
               </div>
@@ -313,37 +680,128 @@ export default function Dashboard() {
 
           {/* System Status */}
           <Card>
-            <h3 className="font-bold text-surface-900 dark:text-white mb-4">系统状态</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-surface-600 dark:text-surface-400">CPU 使用率</span>
-                  <span className="font-medium text-surface-900 dark:text-white">32%</span>
-                </div>
-                <div className="h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
-                  <div className="h-full w-[32%] bg-green-500 rounded-full" />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-surface-600 dark:text-surface-400">内存使用</span>
-                  <span className="font-medium text-surface-900 dark:text-white">64%</span>
-                </div>
-                <div className="h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
-                  <div className="h-full w-[64%] bg-yellow-500 rounded-full" />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-surface-600 dark:text-surface-400">存储空间</span>
-                  <span className="font-medium text-surface-900 dark:text-white">45%</span>
-                </div>
-                <div className="h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
-                  <div className="h-full w-[45%] bg-blue-500 rounded-full" />
-                </div>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-surface-900 dark:text-white">系统状态</h3>
+              <Badge 
+                variant={signalRConnected ? 'success' : 'warning'} 
+                size="sm"
+                dot={signalRConnected}
+                pulse={signalRConnected}
+              >
+                {signalRConnected ? '实时' : '连接中...'}
+              </Badge>
             </div>
+            {systemStatus ? (
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-surface-600 dark:text-surface-400">CPU 使用率</span>
+                    <span className="font-medium text-surface-900 dark:text-white">{systemStatus.cpuUsage}%</span>
+                  </div>
+                  <div className="h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        systemStatus.cpuUsage > 80 ? 'bg-red-500' : 
+                        systemStatus.cpuUsage > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                      }`} 
+                      style={{ width: `${systemStatus.cpuUsage}%` }} 
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-surface-600 dark:text-surface-400">内存使用</span>
+                    <span className="font-medium text-surface-900 dark:text-white">
+                      {systemStatus.memoryUsage}% ({systemStatus.memoryUsed}MB / {systemStatus.memoryTotal}MB)
+                    </span>
+                  </div>
+                  <div className="h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        systemStatus.memoryUsage > 80 ? 'bg-red-500' : 
+                        systemStatus.memoryUsage > 60 ? 'bg-yellow-500' : 'bg-blue-500'
+                      }`} 
+                      style={{ width: `${systemStatus.memoryUsage}%` }} 
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-surface-600 dark:text-surface-400">存储空间</span>
+                    <span className="font-medium text-surface-900 dark:text-white">
+                      {systemStatus.storageUsage}% ({systemStatus.storageUsed}GB / {systemStatus.storageTotal}GB)
+                    </span>
+                  </div>
+                  <div className="h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        systemStatus.storageUsage > 80 ? 'bg-red-500' : 
+                        systemStatus.storageUsage > 60 ? 'bg-yellow-500' : 'bg-purple-500'
+                      }`} 
+                      style={{ width: `${systemStatus.storageUsage}%` }} 
+                    />
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-surface-200 dark:border-surface-700">
+                  <div className="flex items-center justify-between text-xs text-surface-500">
+                    <span>运行时间</span>
+                    <span>{systemStatus.uptime}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-surface-500 py-4">
+                加载中...
+              </div>
+            )}
           </Card>
+
+          {/* Document Generation Progress */}
+          {projectsWithDocGen.some(p => p.docGenStatus === 1 || p.docGenStatus === 2) && (
+            <Card className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-surface-900 dark:text-white">文档生成进度</h3>
+                <Badge variant="info" dot pulse>
+                  进行中
+                </Badge>
+              </div>
+              <div className="space-y-4">
+                {projectsWithDocGen
+                  .filter(p => p.docGenStatus === 1 || p.docGenStatus === 2)
+                  .map(project => {
+                    const progress = project.docGenProgress
+                    const statusColors: Record<number, string> = {
+                      1: 'bg-blue-500',
+                      2: 'bg-yellow-500'
+                    }
+                    const statusText: Record<number, string> = {
+                      1: '拉取中',
+                      2: '生成中'
+                    }
+                    
+                    return (
+                      <div key={project.id}>
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-surface-700 dark:text-surface-300 font-medium">{project.name}</span>
+                          <span className="text-surface-500 text-xs">
+                            {progress ? `${progress.statusText} (${progress.progress}%)` : statusText[project.docGenStatus || 0]}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${statusColors[project.docGenStatus || 0]}`}
+                            style={{ width: `${progress?.progress || (project.docGenStatus === 1 ? 10 : 40)}%` }} 
+                          />
+                        </div>
+                        {progress?.message && (
+                          <p className="text-xs text-surface-500 mt-1">{progress.message}</p>
+                        )}
+                      </div>
+                    )
+                  })}
+              </div>
+            </Card>
+          )}
 
           {/* Quick Tips */}
           <Card className="bg-gradient-to-br from-primary-500/10 to-accent-500/10 border-primary-200 dark:border-primary-800">

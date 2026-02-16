@@ -45,6 +45,13 @@ export default function RoleManagement() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { show: showToast } = useToast()
 
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
+
   const fetchRoles = async () => {
     setLoading(true)
     try {
@@ -73,19 +80,26 @@ export default function RoleManagement() {
     fetchPermissions()
   }, [])
 
+  // Filter roles based on search query and pagination
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredRoles(roles)
-      return
+    let filtered = roles
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = roles.filter(role => 
+        role.name.toLowerCase().includes(query) ||
+        role.code.toLowerCase().includes(query) ||
+        role.description?.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = roles.filter(role => 
-      role.name.toLowerCase().includes(query) ||
-      role.code.toLowerCase().includes(query) ||
-      role.description?.toLowerCase().includes(query)
-    )
-    setFilteredRoles(filtered)
-  }, [searchQuery, roles])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredRoles(filtered.slice(start, end))
+  }, [searchQuery, roles, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -235,7 +249,7 @@ export default function RoleManagement() {
   ]
 
   return (
-    <div className="container-main py-8 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -273,7 +287,7 @@ export default function RoleManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredRoles.length === 0 ? (
@@ -287,6 +301,13 @@ export default function RoleManagement() {
             columns={columns}
             dataSource={filteredRoles}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>

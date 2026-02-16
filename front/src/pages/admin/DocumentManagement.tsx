@@ -117,6 +117,13 @@ export default function DocumentManagement() {
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set())
   const [selectedProject, setSelectedProject] = useState<string>('')
   
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
+  
   // Modals
   const [showModal, setShowModal] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
@@ -195,17 +202,23 @@ export default function DocumentManagement() {
 
   // 搜索过滤 - 始终返回扁平数组供列表视图使用
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredDocuments(flattenDocuments(documents))
-      return
+    let filtered = flattenDocuments(documents)
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(doc => 
+        doc.title.toLowerCase().includes(query) ||
+        doc.content.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = flattenDocuments(documents).filter(doc => 
-      doc.title.toLowerCase().includes(query) ||
-      doc.content.toLowerCase().includes(query)
-    )
-    setFilteredDocuments(filtered)
-  }, [searchQuery, documents])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredDocuments(filtered.slice(start, end))
+  }, [searchQuery, documents, pagination.current, pagination.pageSize])
 
   // 扁平化文档树
   const flattenDocuments = (docs: Document[]): Document[] => {
@@ -999,7 +1012,7 @@ export default function DocumentManagement() {
   ]
 
   return (
-    <div className="container-main py-8 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -1066,7 +1079,7 @@ export default function DocumentManagement() {
       </Card>
 
       {/* Content */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : viewMode === 'list' ? (
@@ -1077,7 +1090,18 @@ export default function DocumentManagement() {
               action={!searchQuery ? { label: '新增文档', onClick: openCreateModal } : undefined}
             />
           ) : (
-            <Table columns={columns} dataSource={filteredDocuments} rowKey="id" />
+            <Table
+              columns={columns}
+              dataSource={filteredDocuments}
+              rowKey="id"
+              noBorder
+              pagination={{
+                current: pagination.current,
+                pageSize: pagination.pageSize,
+                total: pagination.total,
+                onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+              }}
+            />
           )
         ) : (
           <div className="p-4">

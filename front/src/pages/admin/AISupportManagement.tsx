@@ -72,6 +72,13 @@ export default function AISupportManagement() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { show: showToast } = useToast()
 
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
+
   const fetchAiSupports = async () => {
     setLoading(true)
     try {
@@ -90,19 +97,26 @@ export default function AISupportManagement() {
     fetchAiSupports()
   }, [])
 
+  // Filter AI supports based on search query and pagination
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredAiSupports(aiSupports)
-      return
+    let filtered = aiSupports
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = aiSupports.filter(ai => 
+        ai.name.toLowerCase().includes(query) ||
+        ai.modelName.toLowerCase().includes(query) ||
+        ai.description?.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = aiSupports.filter(ai => 
-      ai.name.toLowerCase().includes(query) ||
-      ai.modelName.toLowerCase().includes(query) ||
-      ai.description?.toLowerCase().includes(query)
-    )
-    setFilteredAiSupports(filtered)
-  }, [searchQuery, aiSupports])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredAiSupports(filtered.slice(start, end))
+  }, [searchQuery, aiSupports, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -315,7 +329,7 @@ export default function AISupportManagement() {
   ]
 
   return (
-    <div className="container-main py-8 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -353,7 +367,7 @@ export default function AISupportManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredAiSupports.length === 0 ? (
@@ -367,6 +381,13 @@ export default function AISupportManagement() {
             columns={columns}
             dataSource={filteredAiSupports}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>

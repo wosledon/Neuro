@@ -19,4 +19,13 @@ public class ProjectUpsertRequest
     public string? HomepageUrl { get; set; }
     public string? DocsUrl { get; set; }
     public int? Sort { get; set; }
+
+    #region Git 集成
+    public Guid? GitCredentialId { get; set; }
+    #endregion
+
+    #region AI 文档生成
+    public Guid? AISupportId { get; set; }
+    public bool? EnableAIDocs { get; set; }
+    #endregion
 }

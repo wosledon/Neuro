@@ -46,6 +46,13 @@ export default function TeamManagement() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { show: showToast } = useToast()
 
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
+
   const fetchTeams = async () => {
     setLoading(true)
     try {
@@ -74,19 +81,26 @@ export default function TeamManagement() {
     fetchUsers()
   }, [])
 
+  // Filter teams based on search query and pagination
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredTeams(teams)
-      return
+    let filtered = teams
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = teams.filter(team => 
+        team.name.toLowerCase().includes(query) ||
+        team.code.toLowerCase().includes(query) ||
+        team.description?.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = teams.filter(team => 
-      team.name.toLowerCase().includes(query) ||
-      team.code.toLowerCase().includes(query) ||
-      team.description?.toLowerCase().includes(query)
-    )
-    setFilteredTeams(filtered)
-  }, [searchQuery, teams])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredTeams(filtered.slice(start, end))
+  }, [searchQuery, teams, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -256,7 +270,7 @@ export default function TeamManagement() {
   ]
 
   return (
-    <div className="container-main py-8 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -294,7 +308,7 @@ export default function TeamManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredTeams.length === 0 ? (
@@ -308,6 +322,13 @@ export default function TeamManagement() {
             columns={columns}
             dataSource={filteredTeams}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>

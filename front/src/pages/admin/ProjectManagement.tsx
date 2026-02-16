@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
-import { projectsApi, teamsApi, teamProjectApi } from '../../services/auth'
+import { projectsApi, teamsApi, teamProjectApi, gitCredentialApi, aiSupportApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
+import { useRouter } from '../../router'
+import { useProjectDocSignalR, DocGenProgress } from '../../hooks/useProjectDocSignalR'
 import { 
   PlusIcon, 
   PencilIcon, 
@@ -10,7 +12,11 @@ import {
   FolderIcon,
   UserGroupIcon,
   ArrowPathIcon,
-  CalendarIcon
+  CalendarIcon,
+  KeyIcon,
+  CpuChipIcon,
+  CodeBracketIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/solid'
 
 // 后端返回的项目数据
@@ -29,6 +35,11 @@ interface ProjectDetail {
   homepageUrl?: string
   docsUrl?: string
   sort?: number
+  gitCredentialId?: string
+  gitCredentialName?: string
+  aiSupportId?: string
+  aiSupportName?: string
+  enableAIDocs?: boolean
 }
 
 // 前端使用的项目数据
@@ -41,6 +52,26 @@ interface Project {
   status: 'active' | 'inactive' | 'archived'
   startDate?: string
   endDate?: string
+  repositoryUrl?: string
+  gitCredentialId?: string
+  gitCredentialName?: string
+  aiSupportId?: string
+  aiSupportName?: string
+  enableAIDocs?: boolean
+  docGenStatus?: number  // 0=Pending, 1=Pulling, 2=Generating, 3=Completed, 4=Failed
+  lastDocGenAt?: string
+}
+
+interface GitCredential {
+  id: string
+  name: string
+  type: number
+}
+
+interface AISupport {
+  id: string
+  name: string
+  modelName?: string
 }
 
 interface Team {
@@ -83,7 +114,13 @@ const mapProjectDetailToProject = (detail: ProjectDetail): Project => ({
   code: detail.code,
   description: detail.description,
   isEnabled: detail.isEnabled,
-  status: mapStatusToString(detail.status)
+  status: mapStatusToString(detail.status),
+  repositoryUrl: detail.repositoryUrl,
+  gitCredentialId: detail.gitCredentialId,
+  gitCredentialName: detail.gitCredentialName,
+  aiSupportId: detail.aiSupportId,
+  aiSupportName: detail.aiSupportName,
+  enableAIDocs: detail.enableAIDocs
 })
 
 export default function ProjectManagement() {
@@ -101,10 +138,57 @@ export default function ProjectManagement() {
     code: '',
     description: '',
     status: 'active' as 'active' | 'inactive' | 'archived',
+    repositoryUrl: '',
+    gitCredentialId: '',
+    aiSupportId: '',
+    enableAIDocs: false,
   })
   const [selectedTeams, setSelectedTeams] = useState<string[]>([])
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [gitCredentials, setGitCredentials] = useState<GitCredential[]>([])
+  const [aiSupports, setAiSupports] = useState<AISupport[]>([])
+  const [docGenProgress, setDocGenProgress] = useState<Record<string, DocGenProgress>>({})
   const { show: showToast } = useToast()
+  const { navigate } = useRouter()
+
+  // SignalR 文档生成进度
+  const handleDocGenProgress = useCallback((progress: DocGenProgress) => {
+    setDocGenProgress(prev => ({
+      ...prev,
+      [progress.projectId]: progress
+    }))
+    
+    // 如果完成了，刷新项目列表以获取最新状态
+    if (progress.status === 3 || progress.status === 4) {
+      setTimeout(() => fetchProjects(), 1000)
+    }
+  }, [])
+
+  const { isConnected: docHubConnected, subscribeProject, unsubscribeProject } = useProjectDocSignalR({
+    onProgress: handleDocGenProgress
+  })
+
+  // 订阅所有项目的文档生成进度
+  useEffect(() => {
+    if (docHubConnected) {
+      projects.forEach(project => {
+        subscribeProject(project.id)
+      })
+    }
+    
+    return () => {
+      projects.forEach(project => {
+        unsubscribeProject(project.id)
+      })
+    }
+  }, [docHubConnected, projects])
+
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
 
   const fetchProjects = async () => {
     setLoading(true)
@@ -129,24 +213,51 @@ export default function ProjectManagement() {
     }
   }
 
+  const fetchGitCredentials = async () => {
+    try {
+      const response = await gitCredentialApi.apiGitCredentialListGet()
+      setGitCredentials((response.data.data as GitCredential[]) || [])
+    } catch (error) {
+      console.error('Failed to fetch git credentials:', error)
+    }
+  }
+
+  const fetchAiSupports = async () => {
+    try {
+      const response = await aiSupportApi.apiAISupportListGet()
+      setAiSupports((response.data.data as AISupport[]) || [])
+    } catch (error) {
+      console.error('Failed to fetch AI supports:', error)
+    }
+  }
+
   useEffect(() => {
     fetchProjects()
     fetchTeams()
+    fetchGitCredentials()
+    fetchAiSupports()
   }, [])
 
+  // Filter projects based on search query and pagination
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredProjects(projects)
-      return
+    let filtered = projects
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = projects.filter(project => 
+        project.name.toLowerCase().includes(query) ||
+        project.code.toLowerCase().includes(query) ||
+        project.description?.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = projects.filter(project => 
-      project.name.toLowerCase().includes(query) ||
-      project.code.toLowerCase().includes(query) ||
-      project.description?.toLowerCase().includes(query)
-    )
-    setFilteredProjects(filtered)
-  }, [searchQuery, projects])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredProjects(filtered.slice(start, end))
+  }, [searchQuery, projects, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -217,12 +328,21 @@ export default function ProjectManagement() {
       const statusNumber = mapStatusToNumber(formData.status)
       
       if (editingProject) {
+        // 根据是否有仓库地址判断项目类型：1=Github, 2=Gitlab, 3=Gitee, 4=Gitea, 0=Document(文档)
+        // 有仓库地址默认使用 Github(1)，没有则为文档(0)
+        const projectType = formData.repositoryUrl ? 1 : 0
+        
         await projectsApi.apiProjectUpsertPost({
           id: editingProject.id,
           name: formData.name,
           code: formData.code,
           description: formData.description,
           status: statusNumber,
+          type: projectType,
+          repositoryUrl: formData.repositoryUrl,
+          gitCredentialId: formData.gitCredentialId || undefined,
+          aiSupportId: formData.aiSupportId || undefined,
+          enableAIDocs: formData.enableAIDocs,
         })
         
         // 分配团队
@@ -230,11 +350,20 @@ export default function ProjectManagement() {
         
         showToast('项目更新成功', 'success')
       } else {
+        // 根据是否有仓库地址判断项目类型：1=Github, 2=Gitlab, 3=Gitee, 4=Gitea, 0=Document(文档)
+        // 有仓库地址默认使用 Github(1)，没有则为文档(0)
+        const projectType = formData.repositoryUrl ? 1 : 0
+        
         const response = await projectsApi.apiProjectUpsertPost({
           name: formData.name,
           code: formData.code,
           description: formData.description,
           status: statusNumber,
+          type: projectType,
+          repositoryUrl: formData.repositoryUrl,
+          gitCredentialId: formData.gitCredentialId || undefined,
+          aiSupportId: formData.aiSupportId || undefined,
+          enableAIDocs: formData.enableAIDocs,
         })
         const newProjectId = (response.data.data as any)?.id
         if (newProjectId && selectedTeams.length > 0) {
@@ -257,6 +386,10 @@ export default function ProjectManagement() {
       code: project.code,
       description: project.description || '',
       status: project.status,
+      repositoryUrl: project.repositoryUrl || '',
+      gitCredentialId: project.gitCredentialId || '',
+      aiSupportId: project.aiSupportId || '',
+      enableAIDocs: project.enableAIDocs || false,
     })
     
     // 获取项目当前关联的团队
@@ -288,14 +421,32 @@ export default function ProjectManagement() {
   const closeModal = () => {
     setShowModal(false)
     setEditingProject(null)
-    setFormData({ name: '', code: '', description: '', status: 'active' })
+    setFormData({ 
+      name: '', 
+      code: '', 
+      description: '', 
+      status: 'active',
+      repositoryUrl: '',
+      gitCredentialId: '',
+      aiSupportId: '',
+      enableAIDocs: false,
+    })
     setSelectedTeams([])
     setFormErrors({})
   }
 
   const openCreateModal = () => {
     setEditingProject(null)
-    setFormData({ name: '', code: '', description: '', status: 'active' })
+    setFormData({ 
+      name: '', 
+      code: '', 
+      description: '', 
+      status: 'active',
+      repositoryUrl: '',
+      gitCredentialId: '',
+      aiSupportId: '',
+      enableAIDocs: false,
+    })
     setSelectedTeams([])
     setFormErrors({})
     setShowModal(true)
@@ -311,6 +462,64 @@ export default function ProjectManagement() {
         return <Badge variant="default" size="sm">已归档</Badge>
       default:
         return <Badge variant="default" size="sm">未知</Badge>
+    }
+  }
+
+  // 获取文档生成状态显示
+  const getDocGenStatusDisplay = (project: Project) => {
+    const progress = docGenProgress[project.id]
+    
+    // 优先使用实时进度
+    if (progress) {
+      const statusColors: Record<number, string> = {
+        0: 'bg-surface-400', // Pending
+        1: 'bg-blue-500',    // Pulling
+        2: 'bg-yellow-500',  // Generating
+        3: 'bg-green-500',   // Completed
+        4: 'bg-red-500'      // Failed
+      }
+      
+      return (
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-[100px]">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-surface-600 dark:text-surface-400">{progress.statusText}</span>
+              <span className="text-surface-500">{progress.progress}%</span>
+            </div>
+            <div className="h-1.5 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-300 ${statusColors[progress.status] || 'bg-surface-400'}`}
+                style={{ width: `${progress.progress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )
+    }
+    
+    // 使用项目状态
+    const statusMap: Record<number, { text: string; variant: 'default' | 'success' | 'warning' | 'danger' }> = {
+      0: { text: '待处理', variant: 'default' },
+      1: { text: '拉取中', variant: 'warning' },
+      2: { text: '生成中', variant: 'warning' },
+      3: { text: '已完成', variant: 'success' },
+      4: { text: '失败', variant: 'danger' }
+    }
+    
+    const status = project.docGenStatus ?? 0
+    const { text, variant } = statusMap[status] || { text: '待处理', variant: 'default' }
+    
+    return <Badge variant={variant} size="sm">{text}</Badge>
+  }
+
+  // 触发文档生成
+  const triggerDocGeneration = async (project: Project) => {
+    try {
+      // 调用后端 API 触发文档生成
+      await projectsApi.apiProjectGenerateDocsGenerateDocsPost(project.id)
+      showToast('文档生成已触发', 'success')
+    } catch (error) {
+      showToast('触发文档生成失败', 'error')
     }
   }
 
@@ -340,6 +549,11 @@ export default function ProjectManagement() {
       )
     },
     {
+      key: 'docGenStatus',
+      title: '文档生成',
+      render: (project: Project) => getDocGenStatusDisplay(project)
+    },
+    {
       key: 'status',
       title: '状态',
       render: (project: Project) => getStatusBadge(project.status)
@@ -350,6 +564,14 @@ export default function ProjectManagement() {
       align: 'right' as const,
       render: (project: Project) => (
         <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={() => triggerDocGeneration(project)}
+            disabled={docGenProgress[project.id]?.status === 1 || docGenProgress[project.id]?.status === 2}
+            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="生成文档"
+          >
+            <DocumentTextIcon className="w-4 h-4" />
+          </button>
           <button
             onClick={() => handleEdit(project)}
             className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
@@ -370,7 +592,7 @@ export default function ProjectManagement() {
   ]
 
   return (
-    <div className="container-main py-8 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -408,7 +630,7 @@ export default function ProjectManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredProjects.length === 0 ? (
@@ -422,6 +644,13 @@ export default function ProjectManagement() {
             columns={columns}
             dataSource={filteredProjects}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>
@@ -493,6 +722,84 @@ export default function ProjectManagement() {
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
+
+          {/* Git 集成配置 */}
+          <div className="border border-surface-200 dark:border-surface-700 rounded-xl p-4 space-y-4 bg-surface-50/50 dark:bg-surface-800/30">
+            <div className="flex items-center gap-2 text-surface-900 dark:text-white font-medium">
+              <CodeBracketIcon className="w-5 h-5 text-primary-500" />
+              <span>Git 集成配置</span>
+            </div>
+            
+            <Input
+              label="Git 仓库地址"
+              placeholder="https://github.com/username/repo.git"
+              value={formData.repositoryUrl}
+              onChange={(e) => setFormData({ ...formData, repositoryUrl: e.target.value })}
+            />
+
+            <div>
+              <label className="form-label">Git 凭据</label>
+              <select
+                value={formData.gitCredentialId}
+                onChange={(e) => setFormData({ ...formData, gitCredentialId: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+              >
+                <option value="">-- 选择 Git 凭据 --</option>
+                {gitCredentials.map(cred => (
+                  <option key={cred.id} value={cred.id}>
+                    {cred.name} ({cred.type === 0 ? '密码' : cred.type === 1 ? 'SSH 密钥' : 'PAT'})
+                  </option>
+                ))}
+              </select>
+              {gitCredentials.length === 0 && (
+                <p className="text-xs text-surface-500 mt-1">
+                  暂无可用凭据，请先前往 <a href="#" onClick={() => navigate('git-credentials')} className="text-primary-600 hover:underline">Git 凭据管理</a> 创建
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* AI 文档生成配置 */}
+          <div className="border border-surface-200 dark:border-surface-700 rounded-xl p-4 space-y-4 bg-surface-50/50 dark:bg-surface-800/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-surface-900 dark:text-white font-medium">
+                <CpuChipIcon className="w-5 h-5 text-accent-500" />
+                <span>AI 文档生成</span>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.enableAIDocs}
+                  onChange={(e) => setFormData({ ...formData, enableAIDocs: e.target.checked })}
+                  className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500"
+                />
+                <span className="text-sm text-surface-700 dark:text-surface-300">启用 AI 文档生成</span>
+              </label>
+            </div>
+
+            {formData.enableAIDocs && (
+              <div>
+                <label className="form-label">AI 模型</label>
+                <select
+                  value={formData.aiSupportId}
+                  onChange={(e) => setFormData({ ...formData, aiSupportId: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                >
+                  <option value="">-- 选择 AI 模型 --</option>
+                  {aiSupports.map(ai => (
+                    <option key={ai.id} value={ai.id}>
+                      {ai.name} {ai.modelName ? `(${ai.modelName})` : ''}
+                    </option>
+                  ))}
+                </select>
+                {aiSupports.length === 0 && (
+                  <p className="text-xs text-surface-500 mt-1">
+                    暂无可用模型，请先前往 <a href="#" onClick={() => navigate('ai-supports')} className="text-primary-600 hover:underline">AI 助手管理</a> 创建
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           <div>
             <label className="form-label">关联团队</label>

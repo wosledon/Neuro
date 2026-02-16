@@ -45,6 +45,13 @@ export default function MenuManagement() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { show: showToast } = useToast()
 
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
+
   const fetchMenus = async () => {
     setLoading(true)
     try {
@@ -63,19 +70,26 @@ export default function MenuManagement() {
     fetchMenus()
   }, [])
 
+  // Filter menus based on search query and pagination
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredMenus(menus)
-      return
+    let filtered = menus
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = menus.filter(menu => 
+        menu.name.toLowerCase().includes(query) ||
+        menu.code.toLowerCase().includes(query) ||
+        menu.description?.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = menus.filter(menu => 
-      menu.name.toLowerCase().includes(query) ||
-      menu.code.toLowerCase().includes(query) ||
-      menu.description?.toLowerCase().includes(query)
-    )
-    setFilteredMenus(filtered)
-  }, [searchQuery, menus])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredMenus(filtered.slice(start, end))
+  }, [searchQuery, menus, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -275,7 +289,7 @@ export default function MenuManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredMenus.length === 0 ? (
@@ -289,6 +303,13 @@ export default function MenuManagement() {
             columns={columns}
             dataSource={filteredMenus}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>

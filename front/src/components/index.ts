@@ -38,3 +38,6 @@ export type { LoadingSpinnerProps } from './LoadingSpinner'
 
 export { default as Breadcrumb } from './Breadcrumb'
 export type { BreadcrumbProps, BreadcrumbItem } from './Breadcrumb'
+
+export { default as Tooltip } from './Tooltip'
+export type { TooltipProps } from './Tooltip'

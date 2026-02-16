@@ -10,8 +10,12 @@ docs/AISupportUpsertRequestMaxTokens.md
 docs/AISupportUpsertRequestTemperature.md
 docs/AdminApi.md
 docs/ApiAISupportListGetPageParameter.md
+docs/ApiAdminRecentActivitiesGetCountParameter.md
 docs/AuthApi.md
 docs/BatchDeleteRequest.md
+docs/ChatApi.md
+docs/ChatAskRequest.md
+docs/ChatSearchRequest.md
 docs/DocumentApi.md
 docs/DocumentAttachmentApi.md
 docs/DocumentAttachmentUpdateRequest.md
@@ -20,6 +24,7 @@ docs/DocumentMoveRequest.md
 docs/DocumentUpsertRequest.md
 docs/FileResourceApi.md
 docs/FileResourceUpsertRequest.md
+docs/FrontendMenuItem.md
 docs/GitCredentialApi.md
 docs/GitCredentialUpsertRequest.md
 docs/LoginRequest.md

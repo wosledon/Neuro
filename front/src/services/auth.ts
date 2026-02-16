@@ -23,6 +23,7 @@ import {
   ProjectAISupportApi,
   ProjectGitCredentialApi,
   UserGitCredentialApi,
+  AdminApi,
 } from './api'
 import globalAxios from 'axios'
 
@@ -66,6 +67,9 @@ export const userGitCredentialApi = new UserGitCredentialApi(config)
 // 新功能模块 API
 export const aiSupportApi = new AISupportApi(config)
 export const gitCredentialApi = new GitCredentialApi(config)
+
+// Admin API
+export const adminApi = new AdminApi(config)
 
 // 文档附件 API（自定义实现）
 export const documentAttachmentsApi = {
@@ -256,3 +260,6 @@ export async function checkPermission(code: string) {
   const response = await authApi.apiAuthCheckPermissionGet(code)
   return (response.data.data as any)?.hasPermission as boolean
 }
+
+// 重新导出权限同步相关函数
+export * from './permissionSync'

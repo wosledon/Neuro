@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Neuro.Api.Entity;
+using DocumentEntity = Neuro.Api.Entity.MyDocument;
 using Neuro.EntityFrameworkCore.Services;
 using Neuro.Storage.Abstractions;
 using Neuro.Storage.Enums;
@@ -63,7 +64,7 @@ public class DocumentAttachmentController : ApiControllerBase
             return Failure("请选择要上传的文件");
 
         // 检查文档是否存在
-        var documentExists = await _db.Q<Document>().AnyAsync(d => d.Id == request.DocumentId);
+        var documentExists = await _db.Q<DocumentEntity>().AnyAsync(d => d.Id == request.DocumentId);
         if (!documentExists)
             return Failure("文档不存在", 404);
 
@@ -114,7 +115,7 @@ public class DocumentAttachmentController : ApiControllerBase
             return Failure("请选择要上传的文件");
 
         // 检查文档是否存在
-        var documentExists = await _db.Q<Document>().AnyAsync(d => d.Id == request.DocumentId);
+        var documentExists = await _db.Q<DocumentEntity>().AnyAsync(d => d.Id == request.DocumentId);
         if (!documentExists)
             return Failure("文档不存在", 404);
 

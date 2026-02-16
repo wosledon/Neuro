@@ -48,6 +48,13 @@ export default function PermissionManagement() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { show: showToast } = useToast()
 
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
+
   const fetchPermissions = async () => {
     setLoading(true)
     try {
@@ -76,19 +83,26 @@ export default function PermissionManagement() {
     fetchMenus()
   }, [])
 
+  // Filter permissions based on search query and pagination
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredPermissions(permissions)
-      return
+    let filtered = permissions
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = permissions.filter(perm => 
+        perm.name.toLowerCase().includes(query) ||
+        perm.code.toLowerCase().includes(query) ||
+        perm.description?.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = permissions.filter(perm => 
-      perm.name.toLowerCase().includes(query) ||
-      perm.code.toLowerCase().includes(query) ||
-      perm.description?.toLowerCase().includes(query)
-    )
-    setFilteredPermissions(filtered)
-  }, [searchQuery, permissions])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredPermissions(filtered.slice(start, end))
+  }, [searchQuery, permissions, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -282,7 +296,7 @@ export default function PermissionManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredPermissions.length === 0 ? (
@@ -296,6 +310,13 @@ export default function PermissionManagement() {
             columns={columns}
             dataSource={filteredPermissions}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>

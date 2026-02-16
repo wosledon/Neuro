@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.ML.OnnxRuntime;
@@ -17,18 +18,53 @@ public class VectorizerOptions
 
 public class OnnxVectorizer : IVectorizer, System.IDisposable
 {
-    private readonly InferenceSession _session;
+    private readonly InferenceSession? _session;
+    private readonly string _modelPath;
+    private readonly bool _modelExists;
 
     public OnnxVectorizer(VectorizerOptions opts)
     {
         if (opts == null) throw new System.ArgumentNullException(nameof(opts));
-        _session = new InferenceSession(opts.ModelPath);
+        
+        // 尝试多个候选路径查找模型文件
+        var candidates = new List<string>
+        {
+            opts.ModelPath,  // 配置的路径
+            Path.Combine(AppContext.BaseDirectory, opts.ModelPath),  // 运行时目录
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", opts.ModelPath),  // 项目根目录
+            Path.Combine(Directory.GetCurrentDirectory(), opts.ModelPath),  // 当前工作目录
+        };
+        
+        foreach (var path in candidates)
+        {
+            var fullPath = Path.GetFullPath(path);
+            if (System.IO.File.Exists(fullPath))
+            {
+                _modelPath = fullPath;
+                _modelExists = true;
+                _session = new InferenceSession(fullPath);
+                System.Console.WriteLine($"向量模型已加载: {fullPath}");
+                return;
+            }
+        }
+        
+        // 没有找到模型
+        _modelPath = opts.ModelPath;
+        _modelExists = false;
+        _session = null;
+        System.Console.WriteLine($"警告: 未找到向量模型文件，已尝试路径: {string.Join(", ", candidates.Select(p => Path.GetFullPath(p)))}");
     }
 
     public async System.Threading.Tasks.Task<float[]> EmbedAsync(int[] inputIds, CancellationToken cancellationToken = default)
     {
         if (inputIds == null) throw new System.ArgumentNullException(nameof(inputIds));
         if (inputIds.Length == 0) return System.Array.Empty<float>();
+        
+        // 如果模型不存在，抛出异常提示用户
+        if (!_modelExists || _session == null)
+        {
+            throw new System.InvalidOperationException($"向量模型文件不存在: {_modelPath}。请运行 'git lfs pull' 拉取模型文件，或从其他渠道获取 BERT ONNX 模型。");
+        }
 
         // 构建常见 BERT 类模型的输入（根据模型的输入元素类型创建张量）
         var seqLen = inputIds.Length;
@@ -271,6 +307,16 @@ public class OnnxVectorizer : IVectorizer, System.IDisposable
 
         return System.Array.Empty<float>();
     }
+
+    /// <summary>
+    /// 检查模型文件是否存在
+    /// </summary>
+    public bool IsModelLoaded => _modelExists && _session != null;
+    
+    /// <summary>
+    /// 获取模型路径
+    /// </summary>
+    public string ModelPath => _modelPath;
 
     public void Dispose()
     {

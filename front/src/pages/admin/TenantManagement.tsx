@@ -44,6 +44,13 @@ export default function TenantManagement() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { show: showToast } = useToast()
 
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
+
   const fetchTenants = async () => {
     setLoading(true)
     try {
@@ -62,19 +69,26 @@ export default function TenantManagement() {
     fetchTenants()
   }, [])
 
+  // Filter tenants based on search query and pagination
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredTenants(tenants)
-      return
+    let filtered = tenants
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = tenants.filter(tenant => 
+        tenant.name.toLowerCase().includes(query) ||
+        tenant.code.toLowerCase().includes(query) ||
+        tenant.description?.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = tenants.filter(tenant => 
-      tenant.name.toLowerCase().includes(query) ||
-      tenant.code.toLowerCase().includes(query) ||
-      tenant.description?.toLowerCase().includes(query)
-    )
-    setFilteredTenants(filtered)
-  }, [searchQuery, tenants])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredTenants(filtered.slice(start, end))
+  }, [searchQuery, tenants, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -272,7 +286,7 @@ export default function TenantManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredTenants.length === 0 ? (
@@ -286,6 +300,13 @@ export default function TenantManagement() {
             columns={columns}
             dataSource={filteredTenants}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>

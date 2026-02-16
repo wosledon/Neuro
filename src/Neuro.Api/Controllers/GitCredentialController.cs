@@ -25,7 +25,6 @@ public class GitCredentialController : ApiControllerBase
         var paged = await q.Select(g => new GitCredentialDetail
         {
             Id = g.Id,
-            GitAccountId = g.GitAccountId,
             Type = g.Type,
             Name = g.Name,
             EncryptedSecret = g.EncryptedSecret,
@@ -47,7 +46,6 @@ public class GitCredentialController : ApiControllerBase
         return Success(new GitCredentialDetail
         {
             Id = g.Id,
-            GitAccountId = g.GitAccountId,
             Type = g.Type,
             Name = g.Name,
             EncryptedSecret = g.EncryptedSecret,
@@ -67,7 +65,7 @@ public class GitCredentialController : ApiControllerBase
         {
             var ent = await _db.Q<GitCredential>().FirstOrDefaultAsync(x => x.Id == req.Id.Value);
             if (ent is null) return Failure("Git Credential not found.", 404);
-            if (req.GitAccountId.HasValue) ent.GitAccountId = req.GitAccountId.Value;
+
             if (req.Type.HasValue) ent.Type = req.Type.Value;
             if (!string.IsNullOrWhiteSpace(req.Name)) ent.Name = req.Name;
             if (!string.IsNullOrWhiteSpace(req.EncryptedSecret)) ent.EncryptedSecret = req.EncryptedSecret;
@@ -82,11 +80,10 @@ public class GitCredentialController : ApiControllerBase
         }
 
         if (string.IsNullOrWhiteSpace(req.Name)) return Failure("Name required.");
-        if (!req.GitAccountId.HasValue) return Failure("GitAccountId required.");
+        // GitAccountId 是可选的，特别是对于 SSH 类型的凭据
 
         var ng = new GitCredential
         {
-            GitAccountId = req.GitAccountId.Value,
             Type = req.Type ?? GitCredentialTypeEnum.Password,
             Name = req.Name!,
             EncryptedSecret = req.EncryptedSecret ?? string.Empty,

@@ -38,4 +38,9 @@ public interface IVectorStore
     /// 可选：从磁盘加载存储（由具体实现决定）
     /// </summary>
     System.Threading.Tasks.Task LoadAsync(string? path = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取存储中的记录数量
+    /// </summary>
+    int Count { get; }
 }

@@ -15,6 +15,11 @@ public class LockFreeVectorStore : IVectorStore
     // 可选：上次使用的持久化文件路径
     private string? _lastPath;
 
+    /// <summary>
+    /// 获取存储中的记录数量
+    /// </summary>
+    public int Count => _map.Count;
+
     public Task UpsertAsync(IEnumerable<VectorRecord> records, CancellationToken cancellationToken = default)
     {
         if (records == null) throw new ArgumentNullException(nameof(records));

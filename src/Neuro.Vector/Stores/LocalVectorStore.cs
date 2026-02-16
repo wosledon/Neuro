@@ -30,6 +30,11 @@ public class LocalVectorStore : IVectorStore
     // 可选：上次使用的持久化文件路径
     private string? _lastPath;
 
+    /// <summary>
+    /// 获取存储中的记录数量
+    /// </summary>
+    public int Count => _store.Count;
+
     public LocalVectorStore(LocalVectorStoreOptions? options = null)
     {
         _options = options ?? new LocalVectorStoreOptions();

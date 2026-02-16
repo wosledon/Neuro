@@ -11,6 +11,13 @@ function AppContent(){
     if (saved) return saved === 'dark'
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
+
+  // 亚克力效果状态
+  const [acrylicEnabled, setAcrylicEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('acrylic')
+    // 默认开启亚克力效果
+    return saved !== null ? saved === 'true' : true
+  })
   
   const [isLoading, setIsLoading] = useState(true)
   
@@ -23,6 +30,17 @@ function AppContent(){
     }
     localStorage.setItem('theme', darkMode ? 'dark' : 'light')
   }, [darkMode])
+
+  // 亚克力效果切换时更新 body 类名
+  useEffect(() => {
+    const root = document.documentElement
+    if (acrylicEnabled) {
+      root.classList.add('acrylic-mode')
+    } else {
+      root.classList.remove('acrylic-mode')
+    }
+    localStorage.setItem('acrylic', acrylicEnabled ? 'true' : 'false')
+  }, [acrylicEnabled])
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 500)
@@ -45,29 +63,42 @@ function AppContent(){
   return (
     <AuthProvider>
       <RouterProvider>
-        <AppInner darkMode={darkMode} setDarkMode={setDarkMode} />
+        <AppInner 
+          darkMode={darkMode} 
+          setDarkMode={setDarkMode}
+          acrylicEnabled={acrylicEnabled}
+          setAcrylicEnabled={setAcrylicEnabled}
+        />
       </RouterProvider>
     </AuthProvider>
   )
 }
 
-function AppInner({ darkMode, setDarkMode }: { darkMode: boolean, setDarkMode: (v: boolean) => void }) {
+interface AppInnerProps {
+  darkMode: boolean
+  setDarkMode: (v: boolean) => void
+  acrylicEnabled: boolean
+  setAcrylicEnabled: (v: boolean) => void
+}
+
+function AppInner({ darkMode, setDarkMode, acrylicEnabled, setAcrylicEnabled }: AppInnerProps) {
   const { route, navigate } = useRouter()
   const { isAuthenticated, user, logout, isLoading } = useAuth()
   const { show: showToast } = useToast()
   const isLoginPage = route === 'login'
+  const isLandingPage = route === 'landing'
 
   const handleLogout = async () => {
     try {
       await logout()
       showToast('已退出登录', 'success')
-      navigate('login')
+      navigate('landing')
     } catch (error) {
       showToast('退出失败', 'error')
     }
   }
 
-  if (isLoading && !isLoginPage) {
+  if (isLoading && !isLoginPage && !isLandingPage) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-50 dark:bg-surface-950">
         <LoadingSpinner text="验证身份..." />
@@ -75,8 +106,8 @@ function AppInner({ darkMode, setDarkMode }: { darkMode: boolean, setDarkMode: (
     )
   }
 
-  // Login page without layout
-  if (isLoginPage) {
+  // Login page and landing page without layout
+  if (isLoginPage || isLandingPage) {
     return (
       <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
         <RouteRenderer />
@@ -93,6 +124,8 @@ function AppInner({ darkMode, setDarkMode }: { darkMode: boolean, setDarkMode: (
       isAuthenticated={isAuthenticated}
       user={user}
       onLogout={handleLogout}
+      acrylicEnabled={acrylicEnabled}
+      onToggleAcrylic={() => setAcrylicEnabled(!acrylicEnabled)}
     >
       <RouteRenderer />
     </Layout>

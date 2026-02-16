@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Neuro.Api.Entity;
+using DocumentEntity = Neuro.Api.Entity.MyDocument;
 using Neuro.EntityFrameworkCore.Services;
 
 namespace Neuro.Api.Services;
@@ -50,7 +51,7 @@ public class PermissionService : IPermissionService
     public async Task<IReadOnlyList<MenuInfo>> GetUserMenusAsync(Guid userId)
     {
         var user = await _db.Q<User>().FirstOrDefaultAsync(u => u.Id == userId);
-        
+
         List<Menu> menus;
         if (user?.IsSuper == true)
         {
@@ -138,7 +139,7 @@ public class PermissionService : IPermissionService
         if (user?.IsSuper == true)
         {
             // 超级管理员可以访问所有文档
-            return await _db.Q<Document>()
+            return await _db.Q<DocumentEntity>()
                 .Select(d => d.Id)
                 .ToListAsync();
         }

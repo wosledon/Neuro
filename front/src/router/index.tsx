@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext'
 import Login from '../pages/Login'
 import Chat from '../pages/Chat'
 import Dashboard from '../pages/Dashboard'
+import LandingPage from '../pages/LandingPage'
+import Profile from '../pages/Profile'
 import UserManagement from '../pages/admin/UserManagement'
 import RoleManagement from '../pages/admin/RoleManagement'
 import PermissionManagement from '../pages/admin/PermissionManagement'
@@ -24,7 +26,9 @@ import { LoadingSpinner } from '../components'
 export type Route = 
   | 'home'
   | 'login'
+  | 'landing'
   | 'dashboard'
+  | 'profile'
   | 'users'
   | 'roles'
   | 'permissions'
@@ -49,7 +53,8 @@ const RouterContext = React.createContext<RouterContextType | undefined>(undefin
 export function RouterProvider({ children }: { children: React.ReactNode }) {
   const [route, setRoute] = React.useState<Route>(() => {
     const saved = localStorage.getItem('current_route')
-    return (saved as Route) || 'home'
+    // 默认显示介绍页
+    return (saved as Route) || 'landing'
   })
   
   const navigate = React.useCallback((newRoute: Route) => {
@@ -75,10 +80,11 @@ export function useRouter() {
 // 路由守卫组件
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
-  const { navigate } = useRouter()
+  const router = useRouter()
+  const navigate = router?.navigate
 
   React.useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (navigate && !isLoading && !isAuthenticated) {
       navigate('login')
     }
   }, [isAuthenticated, isLoading, navigate])
@@ -101,10 +107,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // 公开路由守卫 - 已登录用户访问登录页时重定向
 function PublicRoute({ children, redirectTo = 'home' }: { children: React.ReactNode; redirectTo?: Route }) {
   const { isAuthenticated, isLoading } = useAuth()
-  const { navigate } = useRouter()
+  const router = useRouter()
+  const navigate = router?.navigate
 
   React.useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (navigate && !isLoading && isAuthenticated) {
       navigate(redirectTo)
     }
   }, [isAuthenticated, isLoading, navigate, redirectTo])
@@ -143,15 +150,23 @@ export function RouteRenderer() {
       return (
         <PublicRoute>
           <Login 
-            onBack={() => navigate('home')} 
+            onBack={() => navigate('landing')} 
             onLogin={() => navigate('home')} 
           />
         </PublicRoute>
       )
+    case 'landing':
+      return <LandingPage />
     case 'dashboard':
       return (
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      )
+    case 'profile':
+      return (
+        <ProtectedRoute>
+          <Profile />
         </ProtectedRoute>
       )
     case 'users':

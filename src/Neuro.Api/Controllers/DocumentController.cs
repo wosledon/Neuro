@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Neuro.Api.Entity;
+using DocumentEntity = Neuro.Api.Entity.MyDocument;
 using Neuro.Api.Services;
 using Neuro.EntityFrameworkCore.Extensions;
 using Neuro.EntityFrameworkCore.Services;
@@ -24,7 +25,7 @@ public class DocumentController : ApiControllerBase
         if (accessibleIds.Count == 0)
             return Success(new PagedList<DocumentDetail>(new List<DocumentDetail>(), 0, request.Page, request.PageSize));
 
-        var q = _db.Q<Document>().AsNoTracking()
+        var q = _db.Q<Entity.MyDocument>().AsNoTracking()
             .Where(d => accessibleIds.Contains(d.Id))
             .WhereNotNullOrWhiteSpace(request.Keyword, (src, k) => src.Where(d => EF.Functions.Like(d.Title, $"%{k}%")))
             .OrderByDescending(d => d.CreatedAt);
@@ -53,7 +54,7 @@ public class DocumentController : ApiControllerBase
         if (accessibleIds.Count == 0)
             return Success(new List<DocumentTreeNode>());
 
-        var query = _db.Q<Document>().AsNoTracking()
+        var query = _db.Q<Entity.MyDocument>().AsNoTracking()
             .Where(d => accessibleIds.Contains(d.Id));
 
         if (projectId.HasValue)
@@ -69,13 +70,13 @@ public class DocumentController : ApiControllerBase
                 ProjectId = d.ProjectId,
                 Title = d.Title,
                 // 只取内容前100字符作为预览，减少数据传输
-                Content = d.Content != null && d.Content.Length > 100 
-                    ? d.Content.Substring(0, 100) + "..." 
-                    : d.Content,
+                Content = d.Content != null && d.Content.Length > 100
+                    ? d.Content.Substring(0, 100) + "..."
+                    : d.Content ?? string.Empty,
                 ParentId = d.ParentId,
                 TreePath = d.TreePath,
                 Sort = d.Sort,
-                HasChildren = _db.Q<Document>().Any(x => x.ParentId == d.Id),
+                HasChildren = _db.Q<Entity.MyDocument>().Any(x => x.ParentId == d.Id),
                 CreatedAt = d.CreatedAt,
                 UpdatedAt = d.UpdatedAt ?? d.CreatedAt
             })
@@ -92,12 +93,12 @@ public class DocumentController : ApiControllerBase
     [HttpGet("breadcrumb")]
     public async Task<IActionResult> GetBreadcrumb([FromQuery] Guid id)
     {
-        var document = await _db.Q<Document>().AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
+        var document = await _db.Q<Entity.MyDocument>().AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
         if (document == null)
             return Failure("文档不存在", 404);
 
         var breadcrumb = new List<DocumentBreadcrumbItem>();
-        
+
         // 添加当前文档
         breadcrumb.Add(new DocumentBreadcrumbItem
         {
@@ -110,7 +111,7 @@ public class DocumentController : ApiControllerBase
         var currentId = document.ParentId;
         while (currentId.HasValue)
         {
-            var parent = await _db.Q<Document>().AsNoTracking().FirstOrDefaultAsync(d => d.Id == currentId.Value);
+            var parent = await _db.Q<Entity.MyDocument>().AsNoTracking().FirstOrDefaultAsync(d => d.Id == currentId.Value);
             if (parent == null) break;
 
             breadcrumb.Insert(0, new DocumentBreadcrumbItem
@@ -131,7 +132,7 @@ public class DocumentController : ApiControllerBase
     [HttpPost("move")]
     public async Task<IActionResult> Move([FromBody] DocumentMoveRequest request)
     {
-        var document = await _db.Q<Document>().FirstOrDefaultAsync(d => d.Id == request.Id);
+        var document = await _db.Q<Entity.MyDocument>().FirstOrDefaultAsync(d => d.Id == request.Id);
         if (document == null)
             return Failure("文档不存在", 404);
 
@@ -172,7 +173,7 @@ public class DocumentController : ApiControllerBase
         int sort = request.StartSort ?? 0;
         foreach (var docId in request.DocumentIds)
         {
-            var document = await _db.Q<Document>().FirstOrDefaultAsync(d => d.Id == docId);
+            var document = await _db.Q<Entity.MyDocument>().FirstOrDefaultAsync(d => d.Id == docId);
             if (document == null) continue;
 
             // 检查循环引用
@@ -201,19 +202,19 @@ public class DocumentController : ApiControllerBase
         if (!canAccess)
             return Failure("无权访问该文档。", 403);
 
-        var d = await _db.Q<Document>().FirstOrDefaultAsync(x => x.Id == id);
+        var d = await _db.Q<Entity.MyDocument>().FirstOrDefaultAsync(x => x.Id == id);
         if (d is null) return Failure("Document not found.", 404);
         var dto = new DocumentDetail { Id = d.Id, ProjectId = d.ProjectId, Title = d.Title, Content = d.Content, ParentId = d.ParentId, TreePath = d.TreePath, Sort = d.Sort };
         return Success(dto);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Upsert([FromBody] DocumentUpsertRequest req)
+    public async Task<IActionResult> Upsert([FromBody] DocumentUpsertRequest req, [FromServices] DocumentVectorizationService vectorizationService)
     {
         if (req == null) return Failure("Invalid request.");
         if (req.Id.HasValue && req.Id != Guid.Empty)
         {
-            var ent = await _db.Q<Document>().FirstOrDefaultAsync(x => x.Id == req.Id.Value);
+            var ent = await _db.Q<Entity.MyDocument>().FirstOrDefaultAsync(x => x.Id == req.Id.Value);
             if (ent is null) return Failure("Document not found.", 404);
             if (req.ProjectId.HasValue) ent.ProjectId = req.ProjectId.Value;
             if (!string.IsNullOrWhiteSpace(req.Title)) ent.Title = req.Title;
@@ -224,19 +225,23 @@ public class DocumentController : ApiControllerBase
 
             await _db.UpdateAsync(ent);
             await _db.SaveChangesAsync();
+
+            // 触发文档向量化
+            vectorizationService.EnqueueDocument(ent.Id);
+
             return Success(new UpsertResponse { Id = ent.Id });
         }
 
         if (!req.ProjectId.HasValue || string.IsNullOrWhiteSpace(req.Title)) return Failure("ProjectId and Title required.");
-        
-        var nd = new Document 
-        { 
-            ProjectId = req.ProjectId.Value, 
-            Title = req.Title!, 
-            Content = req.Content ?? string.Empty, 
-            ParentId = req.ParentId, 
-            TreePath = req.TreePath ?? string.Empty, 
-            Sort = req.Sort ?? 0 
+
+        var nd = new DocumentEntity
+        {
+            ProjectId = req.ProjectId.Value,
+            Title = req.Title!,
+            Content = req.Content ?? string.Empty,
+            ParentId = req.ParentId,
+            TreePath = req.TreePath ?? string.Empty,
+            Sort = req.Sort ?? 0
         };
 
         // 设置初始树路径
@@ -244,6 +249,10 @@ public class DocumentController : ApiControllerBase
 
         await _db.AddAsync(nd);
         await _db.SaveChangesAsync();
+
+        // 触发文档向量化
+        vectorizationService.EnqueueDocument(nd.Id);
+
         return Success(new UpsertResponse { Id = nd.Id });
     }
 
@@ -260,7 +269,7 @@ public class DocumentController : ApiControllerBase
             await CollectChildIdsAsync(id, allIds);
         }
 
-        await _db.RemoveByIdsAsync<Document>(allIds.Distinct().ToArray());
+        await _db.RemoveByIdsAsync<DocumentEntity>(allIds.Distinct().ToArray());
         await _db.SaveChangesAsync();
         return Success();
     }
@@ -310,7 +319,7 @@ public class DocumentController : ApiControllerBase
 
     private async Task CollectChildIdsAsync(Guid parentId, List<Guid> result)
     {
-        var children = await _db.Q<Document>().AsNoTracking()
+        var children = await _db.Q<Entity.MyDocument>().AsNoTracking()
             .Where(d => d.ParentId == parentId)
             .Select(d => d.Id)
             .ToListAsync();
@@ -327,7 +336,7 @@ public class DocumentController : ApiControllerBase
         var currentId = potentialChildId;
         while (true)
         {
-            var doc = await _db.Q<Document>().AsNoTracking()
+            var doc = await _db.Q<Entity.MyDocument>().AsNoTracking()
                 .FirstOrDefaultAsync(d => d.Id == currentId);
             if (doc?.ParentId == null) return false;
             if (doc.ParentId == parentId) return true;
@@ -335,7 +344,7 @@ public class DocumentController : ApiControllerBase
         }
     }
 
-    private async Task UpdateTreePathAsync(Document document)
+    private async Task UpdateTreePathAsync(Entity.MyDocument document)
     {
         if (!document.ParentId.HasValue)
         {
@@ -343,9 +352,9 @@ public class DocumentController : ApiControllerBase
             return;
         }
 
-        var parent = await _db.Q<Document>().AsNoTracking()
+        var parent = await _db.Q<Entity.MyDocument>().AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == document.ParentId.Value);
-        
+
         if (parent != null)
         {
             document.TreePath = parent.TreePath + "/" + document.Id;

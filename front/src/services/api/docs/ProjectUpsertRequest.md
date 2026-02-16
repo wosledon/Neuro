@@ -19,6 +19,9 @@ Name | Type | Description | Notes
 **homepageUrl** | **string** |  | [optional] [default to undefined]
 **docsUrl** | **string** |  | [optional] [default to undefined]
 **sort** | [**AISupportUpsertRequestMaxTokens**](AISupportUpsertRequestMaxTokens.md) |  | [optional] [default to undefined]
+**gitCredentialId** | **string** |  | [optional] [default to undefined]
+**aiSupportId** | **string** |  | [optional] [default to undefined]
+**enableAIDocs** | **boolean** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -40,6 +43,9 @@ const instance: ProjectUpsertRequest = {
     homepageUrl,
     docsUrl,
     sort,
+    gitCredentialId,
+    aiSupportId,
+    enableAIDocs,
 };
 ```
 
