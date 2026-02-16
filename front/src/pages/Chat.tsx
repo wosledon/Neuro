@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Button, Badge } from '../components'
+import { Button, Badge, Tooltip } from '../components'
 import { useToast } from '../components/ToastProvider'
 import { 
   PaperAirplaneIcon, 
@@ -489,13 +489,14 @@ export default function Chat() {
                   {isConnected ? '实时' : '连接中'}
                 </Badge>
               </div>
-              <button
-                onClick={clearCurrentSession}
-                className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-500 transition-colors"
-                title="清空对话"
-              >
-                <TrashIcon className="w-4 h-4" />
-              </button>
+              <Tooltip content="清空对话" placement="top">
+                <button
+                  onClick={clearCurrentSession}
+                  className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-500 transition-colors"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              </Tooltip>
             </div>
 
             {/* Messages */}

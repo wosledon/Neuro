@@ -135,7 +135,7 @@ function CollapsedSubMenu({ item, isActive, isGroupActive, onNavigate, isAuthent
   // 如果没有子菜单，直接渲染带 Tooltip 的按钮
   if (!item.children || item.children.length === 0) {
     return (
-      <Tooltip content={item.label} placement="right">
+      <Tooltip content={item.label} placement="left">
         <button
           onClick={() => onNavigate(item.route)}
           className={`w-full flex items-center justify-center p-2 rounded-lg transition-colors ${
@@ -159,7 +159,7 @@ function CollapsedSubMenu({ item, isActive, isGroupActive, onNavigate, isAuthent
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <Tooltip content={item.label} placement="right">
+      <Tooltip content={item.label} placement="left">
         <button
           className={`w-full flex items-center justify-center p-2 rounded-lg transition-colors ${
             groupActive
@@ -475,13 +475,14 @@ export default function Layout({
                 </div>
                 <span className="font-bold text-surface-900 dark:text-white">Neuro</span>
               </div>
-              <button
-                onClick={() => setSidebarCollapsed(true)}
-                className="hidden lg:flex p-1.5 rounded-lg hover:bg-surface-100/50 dark:hover:bg-surface-800/50 text-surface-500 transition-colors"
-                title="折叠菜单"
-              >
-                <Bars3Icon className="w-5 h-5" />
-              </button>
+              <Tooltip content="折叠菜单" placement="bottom">
+                <button
+                  onClick={() => setSidebarCollapsed(true)}
+                  className="hidden lg:flex p-1.5 rounded-lg hover:bg-surface-100/50 dark:hover:bg-surface-800/50 text-surface-500 transition-colors"
+                >
+                  <Bars3Icon className="w-5 h-5" />
+                </button>
+              </Tooltip>
             </>
           ) : (
             <div className="flex items-center justify-center">

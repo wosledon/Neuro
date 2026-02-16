@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Button, Modal, EmptyState, LoadingSpinner } from '../components'
+import { Button, Modal, EmptyState, LoadingSpinner, Select, Tooltip } from '../components'
 import { documentsApi, projectsApi, documentAttachmentsApi } from '../services/auth'
 import { useToast } from '../components/ToastProvider'
 import MarkdownIt from 'markdown-it'
@@ -567,12 +567,26 @@ export default function Notebook() {
     }
   }
 
-  // 选择文档 - 同时自动展开子节点
-  const handleSelectDoc = (doc: Document) => {
+  // 选择文档 - 同时自动展开子节点（按需加载）
+  const handleSelectDoc = async (doc: Document) => {
     fetchDocumentDetail(doc.id)
-    // 如果有子节点，自动展开
+    // 如果有子节点，自动展开并加载
     if (doc.hasChildren || (doc.children && doc.children.length > 0)) {
-      setExpandedDocs(prev => new Set([...prev, doc.id]))
+      const newExpanded = new Set(expandedDocs)
+      const isAlreadyExpanded = newExpanded.has(doc.id)
+      newExpanded.add(doc.id)
+      setExpandedDocs(newExpanded)
+      
+      // 如果节点有 hasChildren 标记但没有 children 数据，则按需加载
+      if (!isAlreadyExpanded && doc.hasChildren && (!doc.children || doc.children.length === 0)) {
+        setLoadingChildren(prev => new Set(prev).add(doc.id))
+        await fetchChildren(doc.id)
+        setLoadingChildren(prev => {
+          const next = new Set(prev)
+          next.delete(doc.id)
+          return next
+        })
+      }
     }
   }
 
@@ -903,27 +917,30 @@ export default function Notebook() {
             {/* 操作按钮组 */}
             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
               {/* 添加子文档按钮 */}
-              <button
-                onClick={(e) => handleCreateChild(node, e)}
-                className="p-1 rounded hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-600"
-                title="添加子文档"
-              >
-                <PlusIcon className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={(e) => handleEditMeta(node, e)}
-                className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
-                title="重命名"
-              >
-                <PencilIcon className="w-3 h-3" />
-              </button>
-              <button
-                onClick={(e) => handleDelete(node, e)}
-                className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
-                title="删除"
-              >
-                <TrashIcon className="w-3 h-3" />
-              </button>
+              <Tooltip content="添加子文档" placement="top">
+                <button
+                  onClick={(e) => handleCreateChild(node, e)}
+                  className="p-1 rounded hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-600"
+                >
+                  <PlusIcon className="w-3.5 h-3.5" />
+                </button>
+              </Tooltip>
+              <Tooltip content="重命名" placement="top">
+                <button
+                  onClick={(e) => handleEditMeta(node, e)}
+                  className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+                >
+                  <PencilIcon className="w-3 h-3" />
+                </button>
+              </Tooltip>
+              <Tooltip content="删除" placement="top">
+                <button
+                  onClick={(e) => handleDelete(node, e)}
+                  className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+                >
+                  <TrashIcon className="w-3 h-3" />
+                </button>
+              </Tooltip>
             </div>
           </div>
           
@@ -955,16 +972,15 @@ export default function Notebook() {
           </div>
           
           {/* 项目筛选 */}
-          <select
+          <Select
             value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-          >
-            <option value="">所有项目</option>
-            {projects.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+            onChange={(value) => setSelectedProject(value)}
+            options={[
+              { value: '', label: '所有项目' },
+              ...projects.map(p => ({ value: p.id, label: p.name }))
+            ]}
+            size="sm"
+          />
           
           {/* 搜索 */}
           <div className="relative mt-3">
@@ -1258,20 +1274,16 @@ export default function Notebook() {
           )}
           
           <div>
-            <label className="form-label">所属项目</label>
-            <select
+            <Select
+              label="所属项目"
               value={formData.projectId}
-              onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-              className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 ${
-                formErrors.projectId ? 'border-red-500' : 'border-surface-300 dark:border-surface-600'
-              }`}
-            >
-              <option value="">请选择项目</option>
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-            {formErrors.projectId && <p className="mt-1 text-sm text-red-600">{formErrors.projectId}</p>}
+              onChange={(value) => setFormData({ ...formData, projectId: value })}
+              options={[
+                { value: '', label: '请选择项目' },
+                ...projects.map(p => ({ value: p.id, label: p.name }))
+              ]}
+              error={formErrors.projectId}
+            />
           </div>
           
           <div>

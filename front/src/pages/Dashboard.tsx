@@ -408,29 +408,21 @@ export default function Dashboard() {
     { 
       title: '总用户数', 
       value: stats?.users?.toLocaleString() || '0', 
-      change: '+12%', 
-      changeType: 'positive' as const, 
       icon: <UsersIcon className="w-6 h-6" /> 
     },
     { 
       title: '活跃项目', 
       value: stats?.projects?.toLocaleString() || '0', 
-      change: '+5%', 
-      changeType: 'positive' as const, 
       icon: <FolderIcon className="w-6 h-6" /> 
     },
     { 
       title: '文档数量', 
       value: stats?.documents?.toLocaleString() || '0', 
-      change: '+23%', 
-      changeType: 'positive' as const, 
       icon: <DocumentTextIcon className="w-6 h-6" /> 
     },
     { 
       title: '团队数量', 
       value: stats?.teams?.toLocaleString() || '0', 
-      change: '0%', 
-      changeType: 'neutral' as const, 
       icon: <UserGroupIcon className="w-6 h-6" /> 
     },
   ]

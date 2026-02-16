@@ -7,8 +7,11 @@ export type { BadgeProps, BadgeVariant, BadgeSize, StatusBadgeProps } from './Ba
 export { default as Card, CardHeader, CardFooter, StatCard } from './Card'
 export type { CardProps } from './Card'
 
-export { default as Input, TextArea, Select } from './Input'
-export type { InputProps, TextAreaProps, SelectProps } from './Input'
+export { default as Input, TextArea } from './Input'
+export type { InputProps, TextAreaProps } from './Input'
+
+export { default as Select } from './Select'
+export type { SelectProps } from './Select'
 
 export { default as Modal, ConfirmModal } from './Modal'
 export type { ModalProps, ModalSize, ConfirmModalProps } from './Modal'

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
+import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner, Select, Tooltip } from '../../components'
 import { documentsApi, projectsApi, documentAttachmentsApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
 import MarkdownIt from 'markdown-it'
@@ -964,34 +964,38 @@ export default function DocumentManagement() {
             </span>
             
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={() => handleView(node)}
-                className="p-1.5 rounded text-surface-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                title="查看"
-              >
-                <EyeIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleEdit(node)}
-                className="p-1.5 rounded text-surface-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20"
-                title="编辑"
-              >
-                <PencilIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleMove(node)}
-                className="p-1.5 rounded text-surface-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                title="移动"
-              >
-                <FolderArrowDownIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleDelete(node)}
-                className="p-1.5 rounded text-surface-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                title="删除"
-              >
-                <TrashIcon className="w-4 h-4" />
-              </button>
+              <Tooltip content="查看" placement="top">
+                <button
+                  onClick={() => handleView(node)}
+                  className="p-1.5 rounded text-surface-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                >
+                  <EyeIcon className="w-4 h-4" />
+                </button>
+              </Tooltip>
+              <Tooltip content="编辑" placement="top">
+                <button
+                  onClick={() => handleEdit(node)}
+                  className="p-1.5 rounded text-surface-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+                >
+                  <PencilIcon className="w-4 h-4" />
+                </button>
+              </Tooltip>
+              <Tooltip content="移动" placement="top">
+                <button
+                  onClick={() => handleMove(node)}
+                  className="p-1.5 rounded text-surface-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                >
+                  <FolderArrowDownIcon className="w-4 h-4" />
+                </button>
+              </Tooltip>
+              <Tooltip content="删除" placement="top">
+                <button
+                  onClick={() => handleDelete(node)}
+                  className="p-1.5 rounded text-surface-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              </Tooltip>
             </div>
           </div>
           
@@ -1049,35 +1053,39 @@ export default function DocumentManagement() {
                 </div>
               </div>
               <div className="flex items-center gap-1 mt-2 pt-2 border-t border-surface-100 dark:border-surface-800">
-                <button
-                  onClick={() => insertToEditor(attachment)}
-                  className="flex-1 px-2 py-1 text-xs rounded bg-primary-50 dark:bg-primary-900/20 text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-900/40"
-                  title="插入到编辑器"
-                >
-                  插入
-                </button>
-                <button
-                  onClick={() => copyMarkdownLink(attachment)}
-                  className="p-1 text-xs rounded hover:bg-surface-100 dark:hover:bg-surface-700"
-                  title="复制链接"
-                >
-                  {copiedLink === attachment.id ? <CheckIcon className="w-4 h-4 text-green-500" /> : <ClipboardIcon className="w-4 h-4" />}
-                </button>
-                <a
-                  href={`/api/documentattachment/download?id=${attachment.id}`}
-                  download
-                  className="p-1 text-xs rounded hover:bg-surface-100 dark:hover:bg-surface-700"
-                  title="下载"
-                >
-                  <DocumentArrowUpIcon className="w-4 h-4" />
-                </a>
-                <button
-                  onClick={() => handleDeleteAttachment(attachment.id)}
-                  className="p-1 text-xs rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"
-                  title="删除"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </button>
+                <Tooltip content="插入到编辑器" placement="top">
+                  <button
+                    onClick={() => insertToEditor(attachment)}
+                    className="flex-1 px-2 py-1 text-xs rounded bg-primary-50 dark:bg-primary-900/20 text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-900/40"
+                  >
+                    插入
+                  </button>
+                </Tooltip>
+                <Tooltip content="复制链接" placement="top">
+                  <button
+                    onClick={() => copyMarkdownLink(attachment)}
+                    className="p-1 text-xs rounded hover:bg-surface-100 dark:hover:bg-surface-700"
+                  >
+                    {copiedLink === attachment.id ? <CheckIcon className="w-4 h-4 text-green-500" /> : <ClipboardIcon className="w-4 h-4" />}
+                  </button>
+                </Tooltip>
+                <Tooltip content="下载" placement="top">
+                  <a
+                    href={`/api/documentattachment/download?id=${attachment.id}`}
+                    download
+                    className="p-1 text-xs rounded hover:bg-surface-100 dark:hover:bg-surface-700"
+                  >
+                    <DocumentArrowUpIcon className="w-4 h-4" />
+                  </a>
+                </Tooltip>
+                <Tooltip content="删除" placement="top">
+                  <button
+                    onClick={() => handleDeleteAttachment(attachment.id)}
+                    className="p-1 text-xs rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                </Tooltip>
               </div>
             </div>
           ))}
@@ -1162,34 +1170,38 @@ export default function DocumentManagement() {
       align: 'right' as const,
       render: (doc: Document) => (
         <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => handleView(doc)}
-            className="p-2 rounded-lg text-surface-600 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-            title="查看"
-          >
-            <EyeIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleEdit(doc)}
-            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-            title="编辑"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleMove(doc)}
-            className="p-2 rounded-lg text-surface-600 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
-            title="移动"
-          >
-            <FolderArrowDownIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(doc)}
-            className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            title="删除"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          <Tooltip content="查看" placement="top">
+            <button
+              onClick={() => handleView(doc)}
+              className="p-2 rounded-lg text-surface-600 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            >
+              <EyeIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="编辑" placement="top">
+            <button
+              onClick={() => handleEdit(doc)}
+              className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+            >
+              <PencilIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="移动" placement="top">
+            <button
+              onClick={() => handleMove(doc)}
+              className="p-2 rounded-lg text-surface-600 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
+            >
+              <FolderArrowDownIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="删除" placement="top">
+            <button
+              onClick={() => handleDelete(doc)}
+              className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
       )
     },
@@ -1212,7 +1224,7 @@ export default function DocumentManagement() {
 
       {/* Filters & View Toggle */}
       <Card className="mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
             <input
@@ -1220,42 +1232,38 @@ export default function DocumentManagement() {
               placeholder="搜索文档标题或内容..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+              className="w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
             />
           </div>
-          <div className="relative">
-            <select
+          <div className="flex gap-2 items-center">
+            <Select
               value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="appearance-none px-4 py-2.5 pr-10 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-            >
-              <option value="">所有项目</option>
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-            <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 pointer-events-none" />
-          </div>
-          <div className="flex gap-2">
-            <div className="flex bg-surface-100 dark:bg-surface-800 rounded-lg p-1">
-              <button 
-                onClick={() => setViewMode('list')} 
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${viewMode === 'list' ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm' : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'}`}
-                title="列表视图"
-              >
-                <Bars3Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">列表</span>
-              </button>
-              <button 
-                onClick={() => setViewMode('tree')} 
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${viewMode === 'tree' ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm' : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'}`}
-                title="树状视图"
-              >
-                <FolderIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">树状</span>
-              </button>
+              onChange={(value) => setSelectedProject(value)}
+              options={[{ value: '', label: '所有项目' }, ...projects.map(p => ({ value: p.id, label: p.name }))]}
+              size="md"
+              className="w-48"
+            />
+            <div className="flex bg-surface-100 dark:bg-surface-800 rounded-lg p-1 flex-shrink-0 min-h-[44px]">
+              <Tooltip content="列表视图" placement="top">
+                <button 
+                  onClick={() => setViewMode('list')} 
+                  className={`px-3 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${viewMode === 'list' ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm' : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'}`}
+                >
+                  <Bars3Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">列表</span>
+                </button>
+              </Tooltip>
+              <Tooltip content="树状视图" placement="top">
+                <button 
+                  onClick={() => setViewMode('tree')} 
+                  className={`px-3 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${viewMode === 'tree' ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm' : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'}`}
+                >
+                  <FolderIcon className="w-4 h-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">树状</span>
+                </button>
+              </Tooltip>
             </div>
-            <Button variant="secondary" leftIcon={<ArrowPathIcon className="w-4 h-4" />} onClick={fetchDocuments}>
+            <Button variant="secondary" leftIcon={<ArrowPathIcon className="w-4 h-4 flex-shrink-0" />} onClick={fetchDocuments} className="flex-shrink-0 whitespace-nowrap min-h-[44px]">
               刷新
             </Button>
           </div>
@@ -1346,36 +1354,26 @@ export default function DocumentManagement() {
           {/* Form Header */}
           <div className="flex flex-col sm:flex-row gap-4 mb-4 flex-shrink-0">
             <div className="sm:w-1/3">
-              <label className="form-label">所属项目</label>
-              <select
+              <Select
+                label="所属项目"
                 value={formData.projectId}
-                onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-                className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 ${formErrors.projectId ? 'border-red-500' : 'border-surface-300 dark:border-surface-600'}`}
-              >
-                <option value="">请选择项目</option>
-                {projects.map(project => (
-                  <option key={project.id} value={project.id}>{project.name}</option>
-                ))}
-              </select>
-              {formErrors.projectId && <p className="mt-1 text-sm text-red-600">{formErrors.projectId}</p>}
+                onChange={(value) => setFormData({ ...formData, projectId: value })}
+                options={[{ value: '', label: '请选择项目' }, ...projects.map(project => ({ value: project.id, label: project.name }))]}
+                error={formErrors.projectId}
+              />
             </div>
             <div className="flex-1">
               <Input label="文档标题" placeholder="请输入文档标题" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} error={formErrors.title} required />
             </div>
             <div className="sm:w-48">
-              <label className="form-label">父文档</label>
-              <select
+              <Select
+                label="父文档"
                 value={formData.parentId}
-                onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-              >
-                <option value="">-- 无父文档 --</option>
-                {flattenDocuments(documents)
+                onChange={(value) => setFormData({ ...formData, parentId: value })}
+                options={[{ value: '', label: '-- 无父文档 --' }, ...flattenDocuments(documents)
                   .filter(d => d.id !== editingDocument?.id)
-                  .map(doc => (
-                    <option key={doc.id} value={doc.id}>{doc.title}</option>
-                  ))}
-              </select>
+                  .map(doc => ({ value: doc.id, label: doc.title }))]}
+              />
             </div>
             <div className="sm:w-24">
               <Input label="排序" type="number" placeholder="排序" value={formData.sort.toString()} onChange={(e) => setFormData({ ...formData, sort: parseInt(e.target.value) || 0 })} />
@@ -1615,21 +1613,14 @@ export default function DocumentManagement() {
               <span className="font-medium">{movingDoc?.title}</span>
             </div>
           </div>
-          <div>
-            <label className="form-label">目标位置（留空设为根文档）</label>
-            <select
-              value={targetParentId}
-              onChange={(e) => setTargetParentId(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-            >
-              <option value="">-- 设为根文档 --</option>
-              {flattenDocuments(documents)
-                .filter(d => d.id !== movingDoc?.id)
-                .map(doc => (
-                  <option key={doc.id} value={doc.id}>{doc.title}</option>
-                ))}
-            </select>
-          </div>
+          <Select
+            label="目标位置（留空设为根文档）"
+            value={targetParentId}
+            onChange={(value) => setTargetParentId(value)}
+            options={[{ value: '', label: '-- 设为根文档 --' }, ...flattenDocuments(documents)
+              .filter(d => d.id !== movingDoc?.id)
+              .map(doc => ({ value: doc.id, label: doc.title }))]}
+          />
         </div>
       </Modal>
 

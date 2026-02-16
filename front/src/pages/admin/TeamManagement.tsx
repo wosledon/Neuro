@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
+import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner, Select, Tooltip } from '../../components'
 import { teamsApi, usersApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
 import { 
@@ -250,20 +250,22 @@ export default function TeamManagement() {
       align: 'right' as const,
       render: (team: Team) => (
         <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => handleEdit(team)}
-            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-            title="编辑"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(team)}
-            className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            title="删除"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          <Tooltip content="编辑" placement="top">
+            <button
+              onClick={() => handleEdit(team)}
+              className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+            >
+              <PencilIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="删除" placement="top">
+            <button
+              onClick={() => handleDelete(team)}
+              className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
       )
     },
@@ -371,21 +373,15 @@ export default function TeamManagement() {
             />
           </div>
 
-          <div>
-            <label className="form-label">负责人</label>
-            <select
-              value={formData.leaderId}
-              onChange={(e) => setFormData({ ...formData, leaderId: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-            >
-              <option value="">请选择负责人</option>
-              {users.map(user => (
-                <option key={user.id} value={user.id}>
-                  {user.name || user.account}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="负责人"
+            value={formData.leaderId}
+            onChange={(value) => setFormData({ ...formData, leaderId: value })}
+            options={[{ value: '', label: '请选择负责人' }, ...users.map(user => ({
+              value: user.id,
+              label: user.name || user.account
+            }))]}
+          />
 
           <Input
             label="描述"

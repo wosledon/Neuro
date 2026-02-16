@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
+import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner, Select, Tooltip } from '../../components'
 import { projectsApi, teamsApi, teamProjectApi, gitCredentialApi, aiSupportApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
 import { useRouter } from '../../router'
@@ -564,28 +564,31 @@ export default function ProjectManagement() {
       align: 'right' as const,
       render: (project: Project) => (
         <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => triggerDocGeneration(project)}
-            disabled={docGenProgress[project.id]?.status === 1 || docGenProgress[project.id]?.status === 2}
-            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="生成文档"
-          >
-            <DocumentTextIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleEdit(project)}
-            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-            title="编辑"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(project)}
-            className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            title="删除"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          <Tooltip content="生成文档" placement="top">
+            <button
+              onClick={() => triggerDocGeneration(project)}
+              disabled={docGenProgress[project.id]?.status === 1 || docGenProgress[project.id]?.status === 2}
+              className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <DocumentTextIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="编辑" placement="top">
+            <button
+              onClick={() => handleEdit(project)}
+              className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+            >
+              <PencilIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="删除" placement="top">
+            <button
+              onClick={() => handleDelete(project)}
+              className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
       )
     },
@@ -738,19 +741,15 @@ export default function ProjectManagement() {
             />
 
             <div>
-              <label className="form-label">Git 凭据</label>
-              <select
+              <Select
+                label="Git 凭据"
                 value={formData.gitCredentialId}
-                onChange={(e) => setFormData({ ...formData, gitCredentialId: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-              >
-                <option value="">-- 选择 Git 凭据 --</option>
-                {gitCredentials.map(cred => (
-                  <option key={cred.id} value={cred.id}>
-                    {cred.name} ({cred.type === 0 ? '密码' : cred.type === 1 ? 'SSH 密钥' : 'PAT'})
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => setFormData({ ...formData, gitCredentialId: value })}
+                options={[{ value: '', label: '-- 选择 Git 凭据 --' }, ...gitCredentials.map(cred => ({
+                  value: cred.id,
+                  label: `${cred.name} (${cred.type === 0 ? '密码' : cred.type === 1 ? 'SSH 密钥' : 'PAT'})`
+                }))]}
+              />
               {gitCredentials.length === 0 && (
                 <p className="text-xs text-surface-500 mt-1">
                   暂无可用凭据，请先前往 <a href="#" onClick={() => navigate('git-credentials')} className="text-primary-600 hover:underline">Git 凭据管理</a> 创建
@@ -779,19 +778,15 @@ export default function ProjectManagement() {
 
             {formData.enableAIDocs && (
               <div>
-                <label className="form-label">AI 模型</label>
-                <select
+                <Select
+                  label="AI 模型"
                   value={formData.aiSupportId}
-                  onChange={(e) => setFormData({ ...formData, aiSupportId: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-                >
-                  <option value="">-- 选择 AI 模型 --</option>
-                  {aiSupports.map(ai => (
-                    <option key={ai.id} value={ai.id}>
-                      {ai.name} {ai.modelName ? `(${ai.modelName})` : ''}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setFormData({ ...formData, aiSupportId: value })}
+                  options={[{ value: '', label: '-- 选择 AI 模型 --' }, ...aiSupports.map(ai => ({
+                    value: ai.id,
+                    label: `${ai.name} ${ai.modelName ? `(${ai.modelName})` : ''}`
+                  }))]}
+                />
                 {aiSupports.length === 0 && (
                   <p className="text-xs text-surface-500 mt-1">
                     暂无可用模型，请先前往 <a href="#" onClick={() => navigate('ai-supports')} className="text-primary-600 hover:underline">AI 助手管理</a> 创建
