@@ -23,6 +23,7 @@ interface Message {
   content: string
   timestamp: Date
   sources?: ChatSource[]
+  isStreaming?: boolean
 }
 
 
@@ -550,10 +551,35 @@ export default function Chat() {
                           {message.timestamp.toLocaleTimeString()}
                         </span>
                       </div>
-                      <div className="text-surface-700 dark:text-surface-300 prose prose-sm dark:prose-invert max-w-none break-words overflow-hidden">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {message.content}
-                        </ReactMarkdown>
+                      <div className="text-surface-700 dark:text-surface-300 prose prose-sm dark:prose-invert max-w-none break-words overflow-hidden" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                        {message.isStreaming && !message.content ? (
+                          // 加载中状态
+                          <div className="flex items-center gap-2 text-surface-400 py-2">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+                            </span>
+                            <span className="text-sm">思考中...</span>
+                          </div>
+                        ) : (
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              pre: ({ children }) => (
+                                <pre className="overflow-x-auto max-w-full">{children}</pre>
+                              ),
+                              code: ({ children }) => (
+                                <code className="break-words whitespace-pre-wrap">{children}</code>
+                              )
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        )}
+                        {/* 流式输出时的闪烁光标 */}
+                        {message.isStreaming && message.content && (
+                          <span className="inline-block w-2 h-4 ml-0.5 bg-primary-500 animate-pulse align-middle"></span>
+                        )}
                       </div>
                       
                       {/* Sources */}

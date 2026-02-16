@@ -38,10 +38,12 @@ public class DocumentVectorizationService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("文档向量化服务已启动");
+        _logger.LogInformation("文档向量化服务已启动（按需模式）");
 
-        // 启动时检查是否有未向量化的文档
-        await ProcessPendingDocumentsAsync(stoppingToken);
+        // 注意：启动时不再自动处理所有未向量化的文档
+        // 向量化仅在以下情况触发：
+        // 1. 通过 TriggerVectorization API 手动触发
+        // 2. 文档保存时通过 EnqueueDocument 加入队列
 
         while (!stoppingToken.IsCancellationRequested)
         {

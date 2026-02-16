@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
-import { extendedDocumentsApi as documentsApi, projectsApi, documentAttachmentsApi } from '../../services/auth'
+import { documentsApi, projectsApi, documentAttachmentsApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
 import MarkdownIt from 'markdown-it'
 import { 
@@ -66,6 +66,15 @@ interface Project {
   name: string
 }
 
+// 以项目为主节点的文档树节点
+interface ProjectDocumentNode {
+  id: string
+  name: string
+  code: string
+  description: string
+  documents: Document[]
+}
+
 interface DocumentAttachment {
   id: string
   documentId: string
@@ -109,12 +118,14 @@ export default function DocumentManagement() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [projectDocTree, setProjectDocTree] = useState<ProjectDocumentNode[]>([])
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('tree')
   const [editMode, setEditMode] = useState<EditMode>('split')
   const [fileViewMode, setFileViewMode] = useState<FileViewMode>('grid')
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set())
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
   const [selectedProject, setSelectedProject] = useState<string>('')
   
   // 分页状态
@@ -161,18 +172,77 @@ export default function DocumentManagement() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isSyncing = useRef(false)
 
-  // 获取文档树
+  // 获取以项目为主节点的文档树
   const fetchDocuments = async () => {
     setLoading(true)
     try {
-      const response = await documentsApi.apiDocumentTreeGet(selectedProject || undefined)
-      const data = (response.data.data as Document[]) || []
-      setDocuments(data)
-      setFilteredDocuments(flattenDocuments(data))
+      const response = await documentsApi.apiDocumentGetTreeByProjectsTreeByProjectsGet()
+      const data = (response.data.data as ProjectDocumentNode[]) || []
+      setProjectDocTree(data)
+      
+      // 同时更新 projects 列表（用于下拉选择等）
+      const projectList = data.map(p => ({ id: p.id, name: p.name }))
+      setProjects(projectList)
+      
+      // 默认展开所有项目
+      setExpandedProjects(new Set(projectList.map(p => p.id)))
+      
+      // 扁平化所有文档用于列表视图
+      const allDocs: Document[] = []
+      data.forEach(project => {
+        allDocs.push(...flattenDocuments(project.documents))
+      })
+      setDocuments(allDocs)
+      setFilteredDocuments(allDocs)
     } catch (error) {
       showToast('获取文档列表失败', 'error')
     } finally {
       setLoading(false)
+    }
+  }
+  
+  // 按需加载子节点
+  const fetchChildren = async (parentId: string) => {
+    try {
+      const response = await documentsApi.apiDocumentGetChildrenChildrenGet(parentId)
+      const children = (response.data.data as Document[]) || []
+      
+      // 递归更新项目文档树，将子节点添加到对应的父节点
+      const updateProjectTreeWithChildren = (projects: ProjectDocumentNode[]): ProjectDocumentNode[] => {
+        return projects.map(project => ({
+          ...project,
+          documents: updateDocTreeWithChildren(project.documents)
+        }))
+      }
+      
+      const updateDocTreeWithChildren = (nodes: Document[]): Document[] => {
+        return nodes.map(node => {
+          if (node.id === parentId) {
+            return { ...node, children }
+          }
+          if (node.children) {
+            return { ...node, children: updateDocTreeWithChildren(node.children) }
+          }
+          return node
+        })
+      }
+      
+      setProjectDocTree(prev => updateProjectTreeWithChildren(prev))
+      
+      // 同时更新扁平化的文档列表
+      setDocuments(prev => {
+        const updated = updateDocTreeWithChildren(prev)
+        return flattenDocuments(updated)
+      })
+      setFilteredDocuments(prev => {
+        const updated = updateDocTreeWithChildren(prev)
+        return flattenDocuments(updated)
+      })
+      
+      return children
+    } catch (error) {
+      showToast('加载子文档失败', 'error')
+      return []
     }
   }
 
@@ -188,7 +258,7 @@ export default function DocumentManagement() {
   // 获取文档附件
   const fetchAttachments = async (documentId: string) => {
     try {
-      const response = await documentAttachmentsApi.apiDocumentattachmentListGet(documentId)
+      const response = await documentAttachmentsApi.apiDocumentAttachmentListGet(documentId)
       setAttachments((response.data.data as DocumentAttachment[]) || [])
     } catch (error) {
       console.error('Failed to fetch attachments:', error)
@@ -197,8 +267,7 @@ export default function DocumentManagement() {
 
   useEffect(() => {
     fetchDocuments()
-    fetchProjects()
-  }, [selectedProject])
+  }, [])
 
   // 搜索过滤 - 始终返回扁平数组供列表视图使用
   useEffect(() => {
@@ -235,7 +304,7 @@ export default function DocumentManagement() {
 
   // 重建树结构
   const rebuildTree = (flatDocs: Document[]): Document[] => {
-    const nodeMap = new Map(flatDocs.map(d => [d.id, { ...d, children: [] }]))
+    const nodeMap = new Map<string, Document>(flatDocs.map(d => [d.id, { ...d, children: [] as Document[] }]))
     const roots: Document[] = []
     
     flatDocs.forEach(doc => {
@@ -486,12 +555,7 @@ export default function DocumentManagement() {
         const file = item.getAsFile()
         if (!file) continue
 
-        const formData = new FormData()
-        formData.append('documentId', editingDocument.id)
-        formData.append('file', file)
-        formData.append('isInline', 'true')
-
-        await documentAttachmentsApi.apiDocumentattachmentUploadPost(formData)
+        await documentAttachmentsApi.apiDocumentAttachmentUploadPost(editingDocument.id, file, true)
       }
       
       showToast('图片上传成功', 'success')
@@ -513,13 +577,7 @@ export default function DocumentManagement() {
 
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('documentId', editingDocument.id)
-      Array.from(files).forEach(file => {
-        formData.append('files', file)
-      })
-
-      await documentAttachmentsApi.apiDocumentattachmentBatchUploadPost(formData)
+      await documentAttachmentsApi.apiDocumentAttachmentBatchUploadPost(editingDocument.id, Array.from(files))
       showToast('文件上传成功', 'success')
       fetchAttachments(editingDocument.id)
     } catch (error) {
@@ -549,7 +607,7 @@ export default function DocumentManagement() {
   // 删除附件
   const handleDeleteAttachment = async (attachmentId: string) => {
     try {
-      await documentAttachmentsApi.apiDocumentattachmentDeletePost({ ids: [attachmentId] })
+      await documentAttachmentsApi.apiDocumentAttachmentDeletePost({ ids: [attachmentId] })
       showToast('附件已删除', 'success')
       if (editingDocument?.id) {
         fetchAttachments(editingDocument.id)
@@ -562,7 +620,7 @@ export default function DocumentManagement() {
   // 复制Markdown链接
   const copyMarkdownLink = async (attachment: DocumentAttachment) => {
     try {
-      const response = await documentAttachmentsApi.apiDocumentattachmentMarkdownLinkGet(attachment.id)
+      const response = await documentAttachmentsApi.apiDocumentAttachmentMarkdownLinkGet(attachment.id)
       const markdown = response.data.data?.markdown || ''
       await navigator.clipboard.writeText(markdown)
       setCopiedLink(attachment.id)
@@ -576,7 +634,7 @@ export default function DocumentManagement() {
   // 插入到编辑器
   const insertToEditor = async (attachment: DocumentAttachment) => {
     try {
-      const response = await documentAttachmentsApi.apiDocumentattachmentMarkdownLinkGet(attachment.id)
+      const response = await documentAttachmentsApi.apiDocumentAttachmentMarkdownLinkGet(attachment.id)
       const markdown = response.data.data?.markdown || ''
       
       const textarea = textareaRef.current
@@ -634,24 +692,56 @@ export default function DocumentManagement() {
     }
   }
 
-  const handleEdit = (doc: Document) => {
-    setEditingDocument(doc)
-    setFormData({
-      projectId: doc.projectId,
-      title: doc.title,
-      content: doc.content,
-      parentId: doc.parentId || '',
-      sort: doc.sort,
-    })
-    setFormErrors({})
-    setEditMode('split')
-    fetchAttachments(doc.id)
-    setShowModal(true)
+  const handleEdit = async (doc: Document) => {
+    try {
+      // 获取完整文档详情（树状接口可能不包含 content）
+      const response = await documentsApi.apiDocumentGetDetailGet(doc.id)
+      const fullDoc = response.data.data as Document
+      const targetDoc = fullDoc || doc
+      
+      setEditingDocument(targetDoc)
+      setFormData({
+        projectId: targetDoc.projectId,
+        title: targetDoc.title,
+        content: targetDoc.content || '',
+        parentId: targetDoc.parentId || '',
+        sort: targetDoc.sort,
+      })
+      setFormErrors({})
+      setEditMode('split')
+      fetchAttachments(targetDoc.id)
+      setShowModal(true)
+    } catch (error) {
+      showToast('获取文档详情失败', 'error')
+      // 如果获取失败，仍然使用现有数据
+      setEditingDocument(doc)
+      setFormData({
+        projectId: doc.projectId,
+        title: doc.title,
+        content: doc.content || '',
+        parentId: doc.parentId || '',
+        sort: doc.sort,
+      })
+      setFormErrors({})
+      setEditMode('split')
+      fetchAttachments(doc.id)
+      setShowModal(true)
+    }
   }
 
-  const handleView = (doc: Document) => {
-    setViewingDocument(doc)
-    setShowViewModal(true)
+  const handleView = async (doc: Document) => {
+    try {
+      // 获取完整文档详情（树状接口可能不包含 content）
+      const response = await documentsApi.apiDocumentGetDetailGet(doc.id)
+      const fullDoc = response.data.data as Document
+      setViewingDocument(fullDoc || doc)
+      setShowViewModal(true)
+    } catch (error) {
+      showToast('获取文档详情失败', 'error')
+      // 如果获取失败，仍然显示基本信息
+      setViewingDocument(doc)
+      setShowViewModal(true)
+    }
   }
 
   const handleDelete = (doc: Document) => {
@@ -682,11 +772,11 @@ export default function DocumentManagement() {
   const confirmMove = async () => {
     if (!movingDoc) return
     try {
-      await documentsApi.apiDocumentMovePost({
+      await documentsApi.apiDocumentMoveMovePost({
         id: movingDoc.id,
         newParentId: targetParentId || null,
         newSort: movingDoc.sort
-      })
+      } as any)
       showToast('移动成功', 'success')
       fetchDocuments()
       setShowMoveModal(false)
@@ -713,22 +803,48 @@ export default function DocumentManagement() {
     setShowModal(true)
   }
 
-  const toggleExpand = (docId: string) => {
+  // 切换展开/折叠状态，支持按需加载子节点
+  const [loadingChildren, setLoadingChildren] = useState<Set<string>>(new Set())
+  
+  const toggleExpand = async (docId: string, node?: Document) => {
     const newExpanded = new Set(expandedDocs)
+    
     if (newExpanded.has(docId)) {
+      // 折叠
       newExpanded.delete(docId)
+      setExpandedDocs(newExpanded)
     } else {
+      // 展开 - 检查是否需要按需加载子节点
       newExpanded.add(docId)
+      setExpandedDocs(newExpanded)
+      
+      // 如果节点有 hasChildren 标记但没有 children 数据，则按需加载
+      if (node && node.hasChildren && (!node.children || node.children.length === 0)) {
+        setLoadingChildren(prev => new Set(prev).add(docId))
+        await fetchChildren(docId)
+        setLoadingChildren(prev => {
+          const next = new Set(prev)
+          next.delete(docId)
+          return next
+        })
+      }
     }
-    setExpandedDocs(newExpanded)
   }
 
   const expandAll = () => {
-    const allIds = new Set(flattenDocuments(documents).map(d => d.id))
-    setExpandedDocs(allIds)
+    // 展开所有项目
+    const allProjectIds = new Set(projectDocTree.map(p => p.id))
+    setExpandedProjects(allProjectIds)
+    
+    // 按需加载模式下，只展开已加载的文档节点
+    const loadedDocIds = new Set(flattenDocuments(documents).map(d => d.id))
+    setExpandedDocs(loadedDocIds)
+    
+    showToast('已展开所有项目和当前加载的文档节点', 'info')
   }
 
   const collapseAll = () => {
+    setExpandedProjects(new Set())
     setExpandedDocs(new Set())
   }
 
@@ -742,11 +858,78 @@ export default function DocumentManagement() {
     return colors[index % colors.length]
   }
 
+  // 切换项目展开/折叠
+  const toggleProjectExpand = (projectId: string) => {
+    const newExpanded = new Set(expandedProjects)
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId)
+    } else {
+      newExpanded.add(projectId)
+    }
+    setExpandedProjects(newExpanded)
+  }
+
+  // 渲染项目文档树（项目作为主节点）
+  const renderProjectDocTree = () => {
+    return projectDocTree.map(project => {
+      const isProjectExpanded = expandedProjects.has(project.id)
+      const hasDocuments = project.documents && project.documents.length > 0
+      
+      return (
+        <div key={project.id} className="mb-2">
+          {/* 项目节点 */}
+          <div 
+            className="flex items-center gap-2 p-2 rounded-lg bg-surface-100 dark:bg-surface-800/50 hover:bg-surface-200 dark:hover:bg-surface-800 group"
+          >
+            {hasDocuments ? (
+              <button 
+                onClick={() => toggleProjectExpand(project.id)}
+                className="p-1 rounded hover:bg-surface-300 dark:hover:bg-surface-700 flex items-center justify-center w-6 h-6"
+              >
+                {isProjectExpanded ? (
+                  <ChevronDownIcon className="w-4 h-4 text-surface-600" />
+                ) : (
+                  <ChevronRightIcon className="w-4 h-4 text-surface-600" />
+                )}
+              </button>
+            ) : (
+              <span className="w-6" />
+            )}
+            
+            <FolderIcon className="w-5 h-5 text-primary-500 flex-shrink-0" />
+            
+            <span className="flex-1 font-semibold text-surface-900 dark:text-white truncate text-sm">
+              {project.name}
+            </span>
+            
+            {project.code && (
+              <Badge variant="secondary" size="sm" className="text-xs">{project.code}</Badge>
+            )}
+            
+            <span className="text-xs text-surface-500">
+              {project.documents?.length || 0} 个文档
+            </span>
+          </div>
+          
+          {/* 项目下的文档树 */}
+          {isProjectExpanded && hasDocuments && (
+            <div className="mt-1 ml-2">
+              {renderDocTree(project.documents, 0)}
+            </div>
+          )}
+        </div>
+      )
+    })
+  }
+
   // 渲染文档树
   const renderDocTree = (nodes: Document[], level = 0) => {
     return nodes.map(node => {
       const isExpanded = expandedDocs.has(node.id)
-      const hasChildren = node.children && node.children.length > 0
+      const isLoadingChildren = loadingChildren.has(node.id)
+      // 按需加载模式下，使用 hasChildren 标记来判断是否有子节点
+      const hasChildren = node.hasChildren || (node.children && node.children.length > 0)
+      const hasLoadedChildren = node.children && node.children.length > 0
       
       return (
         <div key={node.id} className={level > 0 ? 'ml-4 border-l-2 border-surface-200 dark:border-surface-700' : ''}>
@@ -758,10 +941,13 @@ export default function DocumentManagement() {
           >
             {hasChildren ? (
               <button 
-                onClick={() => toggleExpand(node.id)}
-                className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+                onClick={() => toggleExpand(node.id, node)}
+                className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 flex items-center justify-center w-6 h-6"
+                disabled={isLoadingChildren}
               >
-                {isExpanded ? (
+                {isLoadingChildren ? (
+                  <div className="w-3 h-3 border-2 border-surface-300 border-t-primary-500 rounded-full animate-spin" />
+                ) : isExpanded ? (
                   <ChevronDownIcon className="w-4 h-4 text-surface-500" />
                 ) : (
                   <ChevronRightIcon className="w-4 h-4 text-surface-500" />
@@ -776,8 +962,6 @@ export default function DocumentManagement() {
             <span className="flex-1 font-medium text-surface-900 dark:text-white truncate text-sm">
               {node.title}
             </span>
-            
-            <Badge variant="primary" size="sm" className="text-xs">{getProjectName(node.projectId)}</Badge>
             
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
@@ -811,7 +995,7 @@ export default function DocumentManagement() {
             </div>
           </div>
           
-          {hasChildren && isExpanded && (
+          {isExpanded && hasLoadedChildren && (
             <div className="mt-1">
               {renderDocTree(node.children!, level + 1)}
             </div>
@@ -1106,7 +1290,9 @@ export default function DocumentManagement() {
         ) : (
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-surface-500">共 {flattenDocuments(documents).length} 个文档</span>
+              <span className="text-sm text-surface-500">
+                共 {projectDocTree.length} 个项目，{flattenDocuments(documents).length} 个文档
+              </span>
               <div className="flex gap-2">
                 <button onClick={expandAll} className="text-xs px-2 py-1 rounded bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700">
                   展开全部
@@ -1116,14 +1302,14 @@ export default function DocumentManagement() {
                 </button>
               </div>
             </div>
-            {documents.length === 0 ? (
+            {projectDocTree.length === 0 ? (
               <EmptyState
-                title="暂无文档"
+                title="暂无项目或文档"
                 description="点击上方按钮添加第一个文档"
                 action={{ label: '新增文档', onClick: openCreateModal }}
               />
             ) : (
-              renderDocTree(documents)
+              renderProjectDocTree()
             )}
           </div>
         )}

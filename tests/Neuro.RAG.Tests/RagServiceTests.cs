@@ -37,10 +37,10 @@ public class RagServiceTests
         var search = sp.GetRequiredService<ISearchService>();
         var rag = sp.GetRequiredService<IRagService>();
 
-        var ids = await ingest.IndexTextAsync("hello world");
+        var ids = await ingest.IndexTextAsync("The quick brown fox jumps over the lazy dog and runs through the forest");
         Assert.NotEmpty(ids);
 
-        var results = (await search.QueryAsync("hello")).ToArray();
+        var results = (await search.QueryAsync("quick brown fox")).ToArray();
         Assert.NotEmpty(results);
 
         var answer = await rag.AnswerAsync("what is hello?", async prompt => "LLM-REPLY");

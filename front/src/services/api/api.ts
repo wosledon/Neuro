@@ -85,6 +85,7 @@ export interface DocumentUpsertRequest {
     'parentId'?: string | null;
     'treePath'?: string | null;
     'sort'?: AISupportUpsertRequestMaxTokens | null;
+    'isFolder'?: boolean | null;
 }
 export interface FileResourceUpsertRequest {
     'id'?: string | null;
@@ -1846,12 +1847,45 @@ export const DocumentApiAxiosParamCreator = function (configuration?: Configurat
         },
         /**
          * 
+         * @param {string} [parentId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentGetChildrenChildrenGet: async (parentId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Document/GetChildren/children`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (parentId !== undefined) {
+                localVarQueryParameter['parentId'] = parentId;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {string} [id] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiDocumentGetGet: async (id?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/Document/Get`;
+        apiDocumentGetDetailGet: async (id?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Document/Get/detail`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -1879,11 +1913,40 @@ export const DocumentApiAxiosParamCreator = function (configuration?: Configurat
         },
         /**
          * 
-         * @param {string} [projectId] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiDocumentGetTreeTreeGet: async (projectId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiDocumentGetTreeByProjectsTreeByProjectsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Document/GetTreeByProjects/tree-by-projects`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [projectId] 
+         * @param {string} [parentId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentGetTreeTreeGet: async (projectId?: string, parentId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/Document/GetTree/tree`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1898,6 +1961,10 @@ export const DocumentApiAxiosParamCreator = function (configuration?: Configurat
 
             if (projectId !== undefined) {
                 localVarQueryParameter['projectId'] = projectId;
+            }
+
+            if (parentId !== undefined) {
+                localVarQueryParameter['parentId'] = parentId;
             }
 
 
@@ -1988,6 +2055,72 @@ export const DocumentApiAxiosParamCreator = function (configuration?: Configurat
         },
         /**
          * 
+         * @param {string} [projectId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentTriggerProjectVectorizationVectorizeProjectPost: async (projectId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Document/TriggerProjectVectorization/vectorize-project`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (projectId !== undefined) {
+                localVarQueryParameter['projectId'] = projectId;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentTriggerVectorizationVectorizePost: async (id?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Document/TriggerVectorization/vectorize`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (id !== undefined) {
+                localVarQueryParameter['id'] = id;
+            }
+
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {DocumentUpsertRequest} documentUpsertRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2066,24 +2199,48 @@ export const DocumentApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {string} [parentId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentGetChildrenChildrenGet(parentId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentGetChildrenChildrenGet(parentId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentGetChildrenChildrenGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {string} [id] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiDocumentGetGet(id?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentGetGet(id, options);
+        async apiDocumentGetDetailGet(id?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentGetDetailGet(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentGetGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentGetDetailGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentGetTreeByProjectsTreeByProjectsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentGetTreeByProjectsTreeByProjectsGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentGetTreeByProjectsTreeByProjectsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
          * @param {string} [projectId] 
+         * @param {string} [parentId] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiDocumentGetTreeTreeGet(projectId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentGetTreeTreeGet(projectId, options);
+        async apiDocumentGetTreeTreeGet(projectId?: string, parentId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentGetTreeTreeGet(projectId, parentId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentGetTreeTreeGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -2112,6 +2269,30 @@ export const DocumentApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentMoveMovePost(documentMoveRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentMoveMovePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [projectId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentTriggerProjectVectorizationVectorizeProjectPost(projectId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentTriggerProjectVectorizationVectorizeProjectPost(projectId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentTriggerProjectVectorizationVectorizeProjectPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiDocumentTriggerVectorizationVectorizePost(id?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDocumentTriggerVectorizationVectorizePost(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentApi.apiDocumentTriggerVectorizationVectorizePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -2164,21 +2345,39 @@ export const DocumentApiFactory = function (configuration?: Configuration, baseP
         },
         /**
          * 
+         * @param {string} [parentId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentGetChildrenChildrenGet(parentId?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentGetChildrenChildrenGet(parentId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {string} [id] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiDocumentGetGet(id?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiDocumentGetGet(id, options).then((request) => request(axios, basePath));
+        apiDocumentGetDetailGet(id?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentGetDetailGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentGetTreeByProjectsTreeByProjectsGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentGetTreeByProjectsTreeByProjectsGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {string} [projectId] 
+         * @param {string} [parentId] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiDocumentGetTreeTreeGet(projectId?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiDocumentGetTreeTreeGet(projectId, options).then((request) => request(axios, basePath));
+        apiDocumentGetTreeTreeGet(projectId?: string, parentId?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentGetTreeTreeGet(projectId, parentId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2199,6 +2398,24 @@ export const DocumentApiFactory = function (configuration?: Configuration, baseP
          */
         apiDocumentMoveMovePost(documentMoveRequest: DocumentMoveRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiDocumentMoveMovePost(documentMoveRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [projectId] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentTriggerProjectVectorizationVectorizeProjectPost(projectId?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentTriggerProjectVectorizationVectorizeProjectPost(projectId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} [id] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiDocumentTriggerVectorizationVectorizePost(id?: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiDocumentTriggerVectorizationVectorizePost(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2248,22 +2465,42 @@ export class DocumentApi extends BaseAPI {
 
     /**
      * 
+     * @param {string} [parentId] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentGetChildrenChildrenGet(parentId?: string, options?: RawAxiosRequestConfig) {
+        return DocumentApiFp(this.configuration).apiDocumentGetChildrenChildrenGet(parentId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {string} [id] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiDocumentGetGet(id?: string, options?: RawAxiosRequestConfig) {
-        return DocumentApiFp(this.configuration).apiDocumentGetGet(id, options).then((request) => request(this.axios, this.basePath));
+    public apiDocumentGetDetailGet(id?: string, options?: RawAxiosRequestConfig) {
+        return DocumentApiFp(this.configuration).apiDocumentGetDetailGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentGetTreeByProjectsTreeByProjectsGet(options?: RawAxiosRequestConfig) {
+        return DocumentApiFp(this.configuration).apiDocumentGetTreeByProjectsTreeByProjectsGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
      * @param {string} [projectId] 
+     * @param {string} [parentId] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiDocumentGetTreeTreeGet(projectId?: string, options?: RawAxiosRequestConfig) {
-        return DocumentApiFp(this.configuration).apiDocumentGetTreeTreeGet(projectId, options).then((request) => request(this.axios, this.basePath));
+    public apiDocumentGetTreeTreeGet(projectId?: string, parentId?: string, options?: RawAxiosRequestConfig) {
+        return DocumentApiFp(this.configuration).apiDocumentGetTreeTreeGet(projectId, parentId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -2286,6 +2523,26 @@ export class DocumentApi extends BaseAPI {
      */
     public apiDocumentMoveMovePost(documentMoveRequest: DocumentMoveRequest, options?: RawAxiosRequestConfig) {
         return DocumentApiFp(this.configuration).apiDocumentMoveMovePost(documentMoveRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [projectId] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentTriggerProjectVectorizationVectorizeProjectPost(projectId?: string, options?: RawAxiosRequestConfig) {
+        return DocumentApiFp(this.configuration).apiDocumentTriggerProjectVectorizationVectorizeProjectPost(projectId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} [id] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public apiDocumentTriggerVectorizationVectorizePost(id?: string, options?: RawAxiosRequestConfig) {
+        return DocumentApiFp(this.configuration).apiDocumentTriggerVectorizationVectorizePost(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

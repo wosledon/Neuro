@@ -43,7 +43,15 @@ public static class NeuroRagExtensions
         {
             var tokenizer = sp.GetService<Neuro.Tokenizer.ITokenizer>();
             var options = sp.GetService<IOptions<RagOptions>>()?.Value ?? new RagOptions();
-            return new TextChunker(tokenizer, options.ChunkSize, options.ChunkOverlap);
+            return new TextChunker(
+                tokenizer,
+                options.ChunkSize,
+                options.ChunkOverlap,
+                options.EnableAdaptiveChunking,
+                options.CodeChunkSizeRatio,
+                options.CodeChunkOverlapRatio,
+                options.MixedChunkSizeRatio,
+                options.MixedChunkOverlapRatio);
         });
 
         services.AddScoped<IIngestService, IngestService>();

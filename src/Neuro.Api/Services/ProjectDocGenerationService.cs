@@ -123,8 +123,8 @@ public class ProjectDocGenerationService : BackgroundService
             }
             else
             {
-                // 展平代码文件为文档
-                await GenerateDocsFlattenAsync(project, db, hubContext, cancellationToken);
+                // 按照树状结构生成文档
+                await GenerateDocsTreeAsync(project, db, hubContext, cancellationToken);
             }
 
             project.LastDocGenAt = DateTime.UtcNow;
@@ -398,11 +398,11 @@ public class ProjectDocGenerationService : BackgroundService
     }
 
     /// <summary>
-    /// 展平代码文件为文档（无 AI）- 项目作为根文档，文件作为子文档
+    /// 按照树状结构生成文档 - 项目作为根节点，文件夹作为文档节点，文件作为叶子节点
     /// </summary>
-    private async Task GenerateDocsFlattenAsync(Project project, NeuroDbContext db, IHubContext<ProjectDocHub> hubContext, CancellationToken cancellationToken)
+    private async Task GenerateDocsTreeAsync(Project project, NeuroDbContext db, IHubContext<ProjectDocHub> hubContext, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("项目 {ProjectId} 展平代码文件为文档", project.Id);
+        _logger.LogInformation("项目 {ProjectId} 按照树状结构生成文档", project.Id);
 
         if (string.IsNullOrEmpty(project.LocalRepositoryPath) || !Directory.Exists(project.LocalRepositoryPath))
         {
@@ -412,11 +412,6 @@ public class ProjectDocGenerationService : BackgroundService
 
         var includePatterns = project.IncludePatterns.Split(',', StringSplitOptions.RemoveEmptyEntries);
         var excludePatterns = project.ExcludePatterns.Split(',', StringSplitOptions.RemoveEmptyEntries);
-
-        // 获取所有匹配的文件
-        var files = GetMatchingFiles(project.LocalRepositoryPath, includePatterns, excludePatterns);
-
-        await BroadcastProgressAsync(hubContext, project.Id, ProjectDocGenStatus.Generating, 50, $"正在处理 {files.Count} 个文件...");
 
         // 1. 创建或获取项目根文档
         var rootDoc = await db.Set<Entity.MyDocument>()
@@ -440,67 +435,273 @@ public class ProjectDocGenerationService : BackgroundService
         else
         {
             // 更新根文档内容
+            rootDoc.Title = project.Name;
             rootDoc.Content = $"# {project.Name}\n\n> 项目代码文档\n\n- 仓库地址: {project.RepositoryUrl}\n- 生成时间: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}\n";
             rootDoc.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        // 2. 为每个文件创建子文档
+        // 2. 扫描目录结构并生成文档树
+        var fileEntries = ScanDirectoryStructure(project.LocalRepositoryPath, includePatterns, excludePatterns);
+        
+        await BroadcastProgressAsync(hubContext, project.Id, ProjectDocGenStatus.Generating, 50, 
+            $"正在处理 {fileEntries.Count} 个文件和文件夹...");
+
+        // 3. 构建文档树
+        var docMap = new Dictionary<string, Guid>(); // 路径 -> 文档ID映射
+        docMap["/"] = rootDoc.Id; // 根路径映射到根文档
+
+        // 先处理所有文件夹，创建文件夹文档
+        var folders = fileEntries.Where(e => e.IsDirectory).OrderBy(e => e.RelativePath).ToList();
         int processedCount = 0;
+        
+        foreach (var folder in folders)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            var folderDoc = await GetOrCreateFolderDocumentAsync(db, project.Id, folder, docMap, cancellationToken);
+            docMap[folder.RelativePath] = folderDoc.Id;
+            
+            processedCount++;
+            if (processedCount % 10 == 0)
+            {
+                var progress = 50 + (int)((double)processedCount / fileEntries.Count * 25);
+                await BroadcastProgressAsync(hubContext, project.Id, ProjectDocGenStatus.Generating, progress, 
+                    $"已处理 {processedCount}/{fileEntries.Count} 个文件夹...");
+            }
+        }
+
+        // 4. 处理所有文件
+        var files = fileEntries.Where(e => !e.IsDirectory).ToList();
+        processedCount = 0;
+        
         foreach (var file in files)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
+            
             try
             {
-                var relativePath = Path.GetRelativePath(project.LocalRepositoryPath, file);
-                var content = await File.ReadAllTextAsync(file, cancellationToken);
-                var extension = Path.GetExtension(file).TrimStart('.');
-
-                // 检查是否已存圩该文件对应的文档（通过 TreePath 匹配）
-                var fileTreePath = $"/{project.Id}/{relativePath.Replace(Path.DirectorySeparatorChar, '/')}";
-                var existingDoc = await db.Set<Entity.MyDocument>()
-                    .FirstOrDefaultAsync(d => d.ProjectId == project.Id && d.TreePath == fileTreePath, cancellationToken);
-
-                if (existingDoc != null)
-                {
-                    // 更新现有文档
-                    existingDoc.Content = $"# {relativePath}\n\n```{extension}\n{content}\n```";
-                    existingDoc.UpdatedAt = DateTime.UtcNow;
-                }
-                else
-                {
-                    // 创建新文档，作为项目根文档的子文档
-                    var doc = new Entity.MyDocument
-                    {
-                        Id = Guid.NewGuid(),
-                        ProjectId = project.Id,
-                        ParentId = rootDoc.Id,  // 设置父文档为项目根文档
-                        Title = Path.GetFileName(relativePath),
-                        Content = $"# {relativePath}\n\n```{extension}\n{content}\n```",
-                        TreePath = fileTreePath,
-                        Sort = processedCount
-                    };
-                    await db.AddAsync(doc, cancellationToken);
-                }
-
+                await GetOrCreateFileDocumentAsync(db, project.Id, file, docMap, cancellationToken);
+                
                 processedCount++;
-                // 每处理 10 个文件更新一次进度
                 if (processedCount % 10 == 0)
                 {
-                    var progress = 50 + (int)((double)processedCount / files.Count * 40);
-                    await BroadcastProgressAsync(hubContext, project.Id, ProjectDocGenStatus.Generating, progress, $"已处理 {processedCount}/{files.Count} 个文件...");
+                    var progress = 75 + (int)((double)processedCount / files.Count * 20);
+                    await BroadcastProgressAsync(hubContext, project.Id, ProjectDocGenStatus.Generating, progress, 
+                        $"已处理 {processedCount}/{files.Count} 个文件...");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "处理文件 {File} 失败", file);
+                _logger.LogError(ex, "处理文件 {File} 失败", file.FullPath);
             }
         }
 
+        // 5. 清理已不存在的文档
+        await CleanupDeletedDocumentsAsync(db, project.Id, fileEntries, cancellationToken);
+
         await db.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("项目 {ProjectId} 展平完成，根文档: {RootDocId}, 处理了 {Count} 个文件",
-            project.Id, rootDoc.Id, files.Count);
+        _logger.LogInformation("项目 {ProjectId} 文档树生成完成，根文档: {RootDocId}, 处理了 {Count} 个条目",
+            project.Id, rootDoc.Id, fileEntries.Count);
+    }
+
+    /// <summary>
+    /// 扫描目录结构，返回所有文件和文件夹
+    /// </summary>
+    private List<FileSystemEntry> ScanDirectoryStructure(string basePath, string[] includePatterns, string[] excludePatterns)
+    {
+        var entries = new List<FileSystemEntry>();
+        
+        if (!Directory.Exists(basePath))
+            return entries;
+
+        // 递归扫描目录
+        ScanDirectoryRecursive(basePath, "", includePatterns, excludePatterns, entries);
+        
+        return entries;
+    }
+
+    private void ScanDirectoryRecursive(string basePath, string relativePath, string[] includePatterns, string[] excludePatterns, List<FileSystemEntry> entries)
+    {
+        var currentFullPath = Path.Combine(basePath, relativePath);
+        if (!Directory.Exists(currentFullPath))
+            return;
+
+        // 获取所有文件
+        var files = Directory.GetFiles(currentFullPath);
+        foreach (var file in files)
+        {
+            var fileName = Path.GetFileName(file);
+            var fileRelativePath = string.IsNullOrEmpty(relativePath) ? fileName : Path.Combine(relativePath, fileName);
+            var normalizedRelativePath = fileRelativePath.Replace('\\', '/');
+
+            // 检查排除模式
+            if (excludePatterns.Any(pattern => MatchesPattern(normalizedRelativePath, pattern.Trim())))
+                continue;
+
+            // 检查包含模式
+            if (includePatterns.Any(pattern => MatchesPattern(normalizedRelativePath, pattern.Trim())))
+            {
+                entries.Add(new FileSystemEntry
+                {
+                    FullPath = file,
+                    RelativePath = normalizedRelativePath,
+                    Name = fileName,
+                    IsDirectory = false
+                });
+            }
+        }
+
+        // 获取所有子目录
+        var directories = Directory.GetDirectories(currentFullPath);
+        foreach (var dir in directories)
+        {
+            var dirName = Path.GetFileName(dir);
+            var dirRelativePath = string.IsNullOrEmpty(relativePath) ? dirName : Path.Combine(relativePath, dirName);
+            var normalizedRelativePath = dirRelativePath.Replace('\\', '/');
+
+            // 检查排除模式（跳过整个目录）
+            if (excludePatterns.Any(pattern => MatchesPattern(normalizedRelativePath + "/", pattern.Trim())))
+                continue;
+
+            // 添加文件夹条目
+            entries.Add(new FileSystemEntry
+            {
+                FullPath = dir,
+                RelativePath = normalizedRelativePath,
+                Name = dirName,
+                IsDirectory = true
+            });
+
+            // 递归扫描子目录
+            ScanDirectoryRecursive(basePath, dirRelativePath, includePatterns, excludePatterns, entries);
+        }
+    }
+
+    /// <summary>
+    /// 获取或创建文件夹文档
+    /// </summary>
+    private async Task<Entity.MyDocument> GetOrCreateFolderDocumentAsync(NeuroDbContext db, Guid projectId, 
+        FileSystemEntry folder, Dictionary<string, Guid> docMap, CancellationToken cancellationToken)
+    {
+        // 计算父路径
+        var parentPath = GetParentPath(folder.RelativePath);
+        var parentId = docMap.TryGetValue(parentPath, out var pid) ? pid : (Guid?)null;
+        var treePath = $"/{projectId}/{folder.RelativePath}";
+
+        // 查找现有文档
+        var existingDoc = await db.Set<Entity.MyDocument>()
+            .FirstOrDefaultAsync(d => d.ProjectId == projectId && d.TreePath == treePath, cancellationToken);
+
+        if (existingDoc != null)
+        {
+            // 更新现有文档
+            existingDoc.Title = folder.Name;
+            existingDoc.ParentId = parentId;
+            existingDoc.UpdatedAt = DateTime.UtcNow;
+            return existingDoc;
+        }
+
+        // 创建新文档
+        var newDoc = new Entity.MyDocument
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = projectId,
+            ParentId = parentId,
+            Title = folder.Name,
+            Content = $"# {folder.Name}\n\n> 文件夹\n\n路径: `{folder.RelativePath}`\n",
+            TreePath = treePath,
+            Sort = 0
+        };
+        await db.AddAsync(newDoc, cancellationToken);
+        return newDoc;
+    }
+
+    /// <summary>
+    /// 获取或创建文件文档
+    /// </summary>
+    private async Task<Entity.MyDocument> GetOrCreateFileDocumentAsync(NeuroDbContext db, Guid projectId, 
+        FileSystemEntry file, Dictionary<string, Guid> docMap, CancellationToken cancellationToken)
+    {
+        // 计算父路径
+        var parentPath = GetParentPath(file.RelativePath);
+        var parentId = docMap.TryGetValue(parentPath, out var pid) ? pid : (Guid?)null;
+        var treePath = $"/{projectId}/{file.RelativePath}";
+
+        // 读取文件内容
+        string content;
+        try
+        {
+            content = await File.ReadAllTextAsync(file.FullPath, cancellationToken);
+        }
+        catch
+        {
+            content = "[无法读取文件内容]";
+        }
+
+        var extension = Path.GetExtension(file.FullPath).TrimStart('.');
+
+        // 查找现有文档
+        var existingDoc = await db.Set<Entity.MyDocument>()
+            .FirstOrDefaultAsync(d => d.ProjectId == projectId && d.TreePath == treePath, cancellationToken);
+
+        if (existingDoc != null)
+        {
+            // 更新现有文档
+            existingDoc.Title = file.Name;
+            existingDoc.Content = $"# {file.RelativePath}\n\n```{extension}\n{content}\n```";
+            existingDoc.ParentId = parentId;
+            existingDoc.UpdatedAt = DateTime.UtcNow;
+            return existingDoc;
+        }
+
+        // 创建新文档
+        var newDoc = new Entity.MyDocument
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = projectId,
+            ParentId = parentId,
+            Title = file.Name,
+            Content = $"# {file.RelativePath}\n\n```{extension}\n{content}\n```",
+            TreePath = treePath,
+            Sort = 0
+        };
+        await db.AddAsync(newDoc, cancellationToken);
+        return newDoc;
+    }
+
+    /// <summary>
+    /// 获取父路径
+    /// </summary>
+    private string GetParentPath(string relativePath)
+    {
+        var lastSlashIndex = relativePath.LastIndexOf('/');
+        if (lastSlashIndex < 0)
+            return "/";
+        return relativePath.Substring(0, lastSlashIndex);
+    }
+
+    /// <summary>
+    /// 清理已删除的文档
+    /// </summary>
+    private async Task CleanupDeletedDocumentsAsync(NeuroDbContext db, Guid projectId, 
+        List<FileSystemEntry> currentEntries, CancellationToken cancellationToken)
+    {
+        var currentPaths = new HashSet<string>(currentEntries.Select(e => $"/{projectId}/{e.RelativePath}"));
+        currentPaths.Add($"/{projectId}"); // 保留根路径
+
+        // 获取该项目下所有文档
+        var allDocs = await db.Set<Entity.MyDocument>()
+            .Where(d => d.ProjectId == projectId && d.ParentId != null) // 排除根文档
+            .ToListAsync(cancellationToken);
+
+        var docsToDelete = allDocs.Where(d => !currentPaths.Contains(d.TreePath)).ToList();
+        
+        if (docsToDelete.Count > 0)
+        {
+            _logger.LogInformation("清理 {Count} 个已不存在的文档", docsToDelete.Count);
+            db.RemoveRange(docsToDelete);
+        }
     }
 
     /// <summary>
@@ -512,35 +713,6 @@ public class ProjectDocGenerationService : BackgroundService
         project.DocGenStatus = ProjectDocGenStatus.Completed;
         await db.SaveChangesAsync(cancellationToken);
         await BroadcastProgressAsync(hubContext, project.Id, ProjectDocGenStatus.Completed, 100, "文档生成完成", DateTime.UtcNow);
-    }
-
-    /// <summary>
-    /// 获取匹配的文件列表
-    /// </summary>
-    private List<string> GetMatchingFiles(string basePath, string[] includePatterns, string[] excludePatterns)
-    {
-        var files = new List<string>();
-        var allFiles = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories);
-
-        foreach (var file in allFiles)
-        {
-            var relativePath = Path.GetRelativePath(basePath, file);
-
-            // 检查排除模式
-            bool isExcluded = excludePatterns.Any(pattern =>
-                MatchesPattern(relativePath, pattern.Trim()));
-            if (isExcluded) continue;
-
-            // 检查包含模式
-            bool isIncluded = includePatterns.Any(pattern =>
-                MatchesPattern(relativePath, pattern.Trim()));
-            if (isIncluded)
-            {
-                files.Add(file);
-            }
-        }
-
-        return files;
     }
 
     /// <summary>
@@ -557,6 +729,17 @@ public class ProjectDocGenerationService : BackgroundService
         }
         return path.Equals(pattern, StringComparison.OrdinalIgnoreCase);
     }
+}
+
+/// <summary>
+/// 文件系统条目
+/// </summary>
+internal sealed record FileSystemEntry
+{
+    public string FullPath { get; set; } = string.Empty;
+    public string RelativePath { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public bool IsDirectory { get; set; }
 }
 
 internal sealed record GitCommandResult(bool Success, string Output, string Error, int ExitCode);

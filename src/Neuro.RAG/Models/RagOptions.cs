@@ -61,4 +61,29 @@ public class RagOptions
     /// RAG提示词模板
     /// </summary>
     public string? PromptTemplate { get; set; }
+
+    /// <summary>
+    /// 是否启用自适应分块（代码段与文档段采用不同分块策略）
+    /// </summary>
+    public bool EnableAdaptiveChunking { get; set; } = true;
+
+    /// <summary>
+    /// 代码段分块大小比例（相对于 ChunkSize）
+    /// </summary>
+    public float CodeChunkSizeRatio { get; set; } = 0.7f;
+
+    /// <summary>
+    /// 代码段重叠比例（相对于 ChunkOverlap）
+    /// </summary>
+    public float CodeChunkOverlapRatio { get; set; } = 0.5f;
+
+    /// <summary>
+    /// 混合内容（中英文+代码符号）分块大小比例（相对于 ChunkSize）
+    /// </summary>
+    public float MixedChunkSizeRatio { get; set; } = 0.85f;
+
+    /// <summary>
+    /// 混合内容重叠比例（相对于 ChunkOverlap）
+    /// </summary>
+    public float MixedChunkOverlapRatio { get; set; } = 0.8f;
 }

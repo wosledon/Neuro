@@ -181,6 +181,32 @@ public class PermissionService : IPermissionService
         return accessibleIds.ToList();
     }
 
+    public async Task<IReadOnlyList<Guid>> GetAccessibleProjectIdsAsync(Guid userId)
+    {
+        var user = await _db.Q<User>().FirstOrDefaultAsync(u => u.Id == userId);
+        if (user?.IsSuper == true)
+        {
+            // 超级管理员可以访问所有项目
+            return await _db.Q<Project>()
+                .Select(p => p.Id)
+                .ToListAsync();
+        }
+
+        // 通过团队获取可访问的项目ID
+        var userTeamIds = await _db.Q<UserTeam>()
+            .Where(ut => ut.UserId == userId)
+            .Select(ut => ut.TeamId)
+            .ToListAsync();
+
+        var projectIds = await _db.Q<TeamProject>()
+            .Where(tp => userTeamIds.Contains(tp.TeamId))
+            .Select(tp => tp.ProjectId)
+            .Distinct()
+            .ToListAsync();
+
+        return projectIds;
+    }
+
     private static List<MenuInfo> BuildMenuTree(List<Menu> menus)
     {
         var menuDict = menus.ToDictionary(

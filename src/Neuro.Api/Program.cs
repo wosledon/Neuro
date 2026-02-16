@@ -18,7 +18,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -135,13 +140,26 @@ builder.Services.AddVectorizer(options =>
 // 注册 RAG 服务
 builder.Services.AddNeuroRAG(options =>
 {
-    options.ChunkSize = 256;        // 更小的分块提升检索精度
-    options.ChunkOverlap = 50;      // 保持上下文连续性
-    options.MinScore = 0.3f;        // 过滤低质量结果
-    options.MinKeywordScore = 0f;
-    options.EnableLexicalFallback = false;  // 向量检索质量足够时不需要词法回退
+    // 基础检索参数
     options.TopK = 10;
+    options.MinScore = 0.2f;
+    options.MinKeywordScore = 0f;
     options.VectorizeBatchSize = 16;
+
+    // 混合 Markdown（中英文 + 代码）分块参数
+    options.ChunkSize = 220;
+    options.ChunkOverlap = 40;
+
+    // 自适应分块：代码段更细，混合段折中
+    options.EnableAdaptiveChunking = true;
+    options.CodeChunkSizeRatio = 0.65f;
+    options.CodeChunkOverlapRatio = 0.75f;
+    options.MixedChunkSizeRatio = 0.85f;
+    options.MixedChunkOverlapRatio = 0.9f;
+
+    // 代码问答通常受益于词法回退
+    options.EnableLexicalFallback = true;
+    options.LexicalCandidateLimit = 400;
 });
 
 // 注册文档向量化后台服务
