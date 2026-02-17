@@ -10,6 +10,7 @@ import {
   HomeIcon
 } from '@heroicons/react/24/solid'
 import { Button } from './Button'
+import { Tooltip } from './Tooltip'
 import { Route } from '../router'
 
 interface User {

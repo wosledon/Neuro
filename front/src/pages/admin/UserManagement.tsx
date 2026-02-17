@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
+import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner, Tooltip } from '../../components'
 import { usersApi, rolesApi, userRoleApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
 import { 
@@ -48,6 +48,13 @@ export default function UserManagement() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { show: showToast } = useToast()
 
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
+
   const fetchUsers = async () => {
     setLoading(true)
     try {
@@ -76,21 +83,27 @@ export default function UserManagement() {
     fetchRoles()
   }, [])
 
-  // Filter users based on search query
+  // Filter users based on search query and pagination
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredUsers(users)
-      return
+    let filtered = users
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = users.filter(user => 
+        user.account.toLowerCase().includes(query) ||
+        user.name?.toLowerCase().includes(query) ||
+        user.email?.toLowerCase().includes(query) ||
+        user.phone?.includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = users.filter(user => 
-      user.account.toLowerCase().includes(query) ||
-      user.name?.toLowerCase().includes(query) ||
-      user.email?.toLowerCase().includes(query) ||
-      user.phone?.includes(query)
-    )
-    setFilteredUsers(filtered)
-  }, [searchQuery, users])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredUsers(filtered.slice(start, end))
+  }, [searchQuery, users, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -250,27 +263,29 @@ export default function UserManagement() {
       align: 'right' as const,
       render: (user: User) => (
         <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => handleEdit(user)}
-            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-            title="编辑"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(user)}
-            className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            title="删除"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          <Tooltip content="编辑" placement="top">
+            <button
+              onClick={() => handleEdit(user)}
+              className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+            >
+              <PencilIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="删除" placement="top">
+            <button
+              onClick={() => handleDelete(user)}
+              className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
       )
     },
   ]
 
   return (
-    <div className="container-main py-8 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -313,7 +328,7 @@ export default function UserManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredUsers.length === 0 ? (
@@ -327,6 +342,13 @@ export default function UserManagement() {
             columns={columns}
             dataSource={filteredUsers}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>

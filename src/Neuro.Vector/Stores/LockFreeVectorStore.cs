@@ -15,6 +15,11 @@ public class LockFreeVectorStore : IVectorStore
     // 可选：上次使用的持久化文件路径
     private string? _lastPath;
 
+    /// <summary>
+    /// 获取存储中的记录数量
+    /// </summary>
+    public int Count => _map.Count;
+
     public Task UpsertAsync(IEnumerable<VectorRecord> records, CancellationToken cancellationToken = default)
     {
         if (records == null) throw new ArgumentNullException(nameof(records));
@@ -74,6 +79,16 @@ public class LockFreeVectorStore : IVectorStore
 
             if (cancellationToken.IsCancellationRequested) return Task.FromCanceled(cancellationToken);
         }
+    }
+
+    public Task<IEnumerable<string>> ListIdsByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
+    {
+        var snapshot = _map;
+        var ids = snapshot.Keys
+            .Where(k => string.IsNullOrEmpty(prefix) || k.StartsWith(prefix, StringComparison.Ordinal))
+            .ToArray();
+
+        return Task.FromResult((IEnumerable<string>)ids);
     }
 
     public Task<IEnumerable<(VectorRecord Record, float Score)>> QueryAsync(float[] queryEmbedding, int topK = 10, float minScore = -1f, CancellationToken cancellationToken = default)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
+import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner, Tooltip } from '../../components'
 import { fileResourcesApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
 import { 
@@ -27,6 +27,11 @@ export default function FileResourceManagement() {
   const [filteredFileResources, setFilteredFileResources] = useState<FileResource[]>([])
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
   const [showModal, setShowModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [editingFileResource, setEditingFileResource] = useState<FileResource | null>(null)
@@ -59,18 +64,20 @@ export default function FileResourceManagement() {
   }, [])
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredFileResources(fileResources)
-      return
+    let filtered = fileResources
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = fileResources.filter(file => 
+        file.name.toLowerCase().includes(query) ||
+        file.location.toLowerCase().includes(query) ||
+        file.description?.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = fileResources.filter(file => 
-      file.name.toLowerCase().includes(query) ||
-      file.location.toLowerCase().includes(query) ||
-      file.description?.toLowerCase().includes(query)
-    )
-    setFilteredFileResources(filtered)
-  }, [searchQuery, fileResources])
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredFileResources(filtered.slice(start, end))
+  }, [searchQuery, fileResources, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -202,20 +209,22 @@ export default function FileResourceManagement() {
       align: 'right' as const,
       render: (file: FileResource) => (
         <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => handleEdit(file)}
-            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-            title="编辑"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(file)}
-            className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            title="删除"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          <Tooltip content="编辑" placement="top">
+            <button
+              onClick={() => handleEdit(file)}
+              className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+            >
+              <PencilIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="删除" placement="top">
+            <button
+              onClick={() => handleDelete(file)}
+              className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
       )
     },
@@ -260,7 +269,7 @@ export default function FileResourceManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredFileResources.length === 0 ? (
@@ -274,6 +283,13 @@ export default function FileResourceManagement() {
             columns={columns}
             dataSource={filteredFileResources}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>

@@ -7,8 +7,11 @@ export type { BadgeProps, BadgeVariant, BadgeSize, StatusBadgeProps } from './Ba
 export { default as Card, CardHeader, CardFooter, StatCard } from './Card'
 export type { CardProps } from './Card'
 
-export { default as Input, TextArea, Select } from './Input'
-export type { InputProps, TextAreaProps, SelectProps } from './Input'
+export { default as Input, TextArea } from './Input'
+export type { InputProps, TextAreaProps } from './Input'
+
+export { default as Select } from './Select'
+export type { SelectProps } from './Select'
 
 export { default as Modal, ConfirmModal } from './Modal'
 export type { ModalProps, ModalSize, ConfirmModalProps } from './Modal'
@@ -35,3 +38,9 @@ export type { EmptyStateProps } from './EmptyState'
 
 export { default as LoadingSpinner } from './LoadingSpinner'
 export type { LoadingSpinnerProps } from './LoadingSpinner'
+
+export { default as Breadcrumb } from './Breadcrumb'
+export type { BreadcrumbProps, BreadcrumbItem } from './Breadcrumb'
+
+export { default as Tooltip } from './Tooltip'
+export type { TooltipProps } from './Tooltip'

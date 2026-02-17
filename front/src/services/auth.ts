@@ -7,6 +7,7 @@ import {
   TeamApi, 
   ProjectApi, 
   DocumentApi, 
+  DocumentAttachmentApi,
   TeamProjectApi,
   RolePermissionApi,
   RoleMenuApi,
@@ -23,6 +24,7 @@ import {
   ProjectAISupportApi,
   ProjectGitCredentialApi,
   UserGitCredentialApi,
+  AdminApi,
 } from './api'
 import globalAxios from 'axios'
 
@@ -46,6 +48,7 @@ export const permissionsApi = new PermissionApi(config)
 export const teamsApi = new TeamApi(config)
 export const projectsApi = new ProjectApi(config)
 export const documentsApi = new DocumentApi(config)
+export const documentAttachmentsApi = new DocumentAttachmentApi(config)
 export const menusApi = new MenuApi(config)
 export const tenantsApi = new TenantApi(config)
 export const fileResourcesApi = new FileResourceApi(config)
@@ -67,91 +70,8 @@ export const userGitCredentialApi = new UserGitCredentialApi(config)
 export const aiSupportApi = new AISupportApi(config)
 export const gitCredentialApi = new GitCredentialApi(config)
 
-// 文档附件 API（自定义实现）
-export const documentAttachmentsApi = {
-  // 获取文档附件列表
-  apiDocumentattachmentListGet: (documentId: string) => {
-    return globalAxios.get(`/api/documentattachment/list?documentId=${documentId}`)
-  },
-  
-  // 上传单个文件
-  apiDocumentattachmentUploadPost: (formData: FormData) => {
-    return globalAxios.post('/api/documentattachment/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-  },
-  
-  // 批量上传文件
-  apiDocumentattachmentBatchUploadPost: (formData: FormData) => {
-    return globalAxios.post('/api/documentattachment/batch-upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-  },
-  
-  // 下载附件
-  apiDocumentattachmentDownloadGet: (id: string) => {
-    return globalAxios.get(`/api/documentattachment/download?id=${id}`, {
-      responseType: 'blob'
-    })
-  },
-  
-  // 获取文件内容（图片预览等）
-  apiDocumentattachmentContentGet: (id: string) => {
-    return globalAxios.get(`/api/documentattachment/content?id=${id}`)
-  },
-  
-  // 更新附件信息
-  apiDocumentattachmentUpdatePost: (data: any) => {
-    return globalAxios.post('/api/documentattachment/update', data)
-  },
-  
-  // 删除附件
-  apiDocumentattachmentDeletePost: (data: { ids: string[] }) => {
-    return globalAxios.post('/api/documentattachment/delete', data)
-  },
-  
-  // 获取Markdown链接
-  apiDocumentattachmentMarkdownLinkGet: (id: string) => {
-    return globalAxios.get(`/api/documentattachment/markdown-link?id=${id}`)
-  }
-}
-
-// 扩展文档 API - 使用生成的 API 方法
-export const extendedDocumentsApi = {
-  // 原始方法代理
-  apiDocumentListGet: (keyword?: string, page?: any, pageSize?: any) => documentsApi.apiDocumentListGet(keyword, page, pageSize),
-  apiDocumentGetGet: (id?: string) => documentsApi.apiDocumentGetGet(id),
-  apiDocumentUpsertPost: (body?: any) => documentsApi.apiDocumentUpsertPost(body),
-  apiDocumentDeleteDelete: (body?: any) => documentsApi.apiDocumentDeleteDelete(body),
-  
-  // 获取文档树 - 使用生成的 apiDocumentGetTreeTreeGet
-  apiDocumentTreeGet: (projectId?: string) => {
-    return documentsApi.apiDocumentGetTreeTreeGet(projectId)
-  },
-  
-  // 获取面包屑路径 - 使用生成的 apiDocumentGetBreadcrumbBreadcrumbGet
-  apiDocumentBreadcrumbGet: (id: string) => {
-    return documentsApi.apiDocumentGetBreadcrumbBreadcrumbGet(id)
-  },
-  
-  // 移动文档 - 使用生成的 apiDocumentMoveMovePost
-  apiDocumentMovePost: (data: { id: string; newParentId?: string | null; newSort?: number }) => {
-    return documentsApi.apiDocumentMoveMovePost({
-      id: data.id,
-      newParentId: data.newParentId,
-      newSort: data.newSort
-    } as any)
-  },
-  
-  // 批量移动文档 - 使用生成的 apiDocumentBatchMoveBatchMovePost
-  apiDocumentBatchMovePost: (data: { documentIds: string[]; newParentId?: string | null; startSort?: number }) => {
-    return documentsApi.apiDocumentBatchMoveBatchMovePost({
-      documentIds: data.documentIds,
-      newParentId: data.newParentId,
-      startSort: data.startSort
-    } as any)
-  }
-}
+// Admin API
+export const adminApi = new AdminApi(config)
 
 // Axios 请求拦截器：自动添加 token
 globalAxios.interceptors.request.use(
@@ -256,3 +176,6 @@ export async function checkPermission(code: string) {
   const response = await authApi.apiAuthCheckPermissionGet(code)
   return (response.data.data as any)?.hasPermission as boolean
 }
+
+// 重新导出权限同步相关函数
+export * from './permissionSync'

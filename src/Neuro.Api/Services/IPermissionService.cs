@@ -39,6 +39,11 @@ public interface IPermissionService
     /// 获取用户可访问的文档ID列表
     /// </summary>
     Task<IReadOnlyList<Guid>> GetAccessibleDocumentIdsAsync(Guid userId);
+
+    /// <summary>
+    /// 获取用户可访问的项目ID列表
+    /// </summary>
+    Task<IReadOnlyList<Guid>> GetAccessibleProjectIdsAsync(Guid userId);
 }
 
 /// <summary>

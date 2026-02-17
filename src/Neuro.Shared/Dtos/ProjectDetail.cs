@@ -19,4 +19,15 @@ public class ProjectDetail
     public string HomepageUrl { get; set; } = string.Empty;
     public string DocsUrl { get; set; } = string.Empty;
     public int Sort { get; set; }
+
+    #region Git 集成
+    public Guid? GitCredentialId { get; set; }
+    public string? GitCredentialName { get; set; }
+    #endregion
+
+    #region AI 文档生成
+    public Guid? AISupportId { get; set; }
+    public string? AISupportName { get; set; }
+    public bool EnableAIDocs { get; set; }
+    #endregion
 }

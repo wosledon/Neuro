@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Neuro.RAG.Abstractions;
 using Neuro.RAG.Models;
 using Neuro.RAG.Services;
@@ -24,11 +25,11 @@ public static class NeuroRagExtensions
             services.Configure(configure);
         }
 
-        // 如果宿主未注册 ITokenizer，则提供一个基于 Tiktoken 的默认实现（便于快速开始）
+        // 如果宿主未注册 ITokenizer，则提供基于 BERT WordPiece 的默认实现（与 BERT ONNX 模型兼容）
         if (!services.Any(sd => sd.ServiceType == typeof(Neuro.Tokenizer.ITokenizer)))
         {
             services.AddSingleton<Neuro.Tokenizer.TokenizerOptions>();
-            services.AddSingleton<Neuro.Tokenizer.ITokenizer>(sp => new Neuro.Tokenizer.TiktokenTokenizerAdapter(sp.GetRequiredService<Neuro.Tokenizer.TokenizerOptions>()));
+            services.AddSingleton<Neuro.Tokenizer.ITokenizer>(sp => new Neuro.Tokenizer.BertWordPieceTokenizer(sp.GetRequiredService<Neuro.Tokenizer.TokenizerOptions>()));
         }
 
         // 如果宿主未注册 IVectorStore，则将 LockFreeVectorStore 作为默认实现注册
@@ -41,7 +42,16 @@ public static class NeuroRagExtensions
         services.AddSingleton<TextChunker>(sp =>
         {
             var tokenizer = sp.GetService<Neuro.Tokenizer.ITokenizer>();
-            return new TextChunker(tokenizer);
+            var options = sp.GetService<IOptions<RagOptions>>()?.Value ?? new RagOptions();
+            return new TextChunker(
+                tokenizer,
+                options.ChunkSize,
+                options.ChunkOverlap,
+                options.EnableAdaptiveChunking,
+                options.CodeChunkSizeRatio,
+                options.CodeChunkOverlapRatio,
+                options.MixedChunkSizeRatio,
+                options.MixedChunkOverlapRatio);
         });
 
         services.AddScoped<IIngestService, IngestService>();

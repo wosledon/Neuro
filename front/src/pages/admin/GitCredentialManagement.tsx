@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
+import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner, Select, Tooltip } from '../../components'
 import { gitCredentialApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
 import { 
@@ -14,7 +14,6 @@ import {
 
 interface GitCredential {
   id: string
-  gitAccountId: string
   type: number
   name: string
   encryptedSecret: string
@@ -47,7 +46,6 @@ export default function GitCredentialManagement() {
   const [editingCredential, setEditingCredential] = useState<GitCredential | null>(null)
   const [deletingCredential, setDeletingCredential] = useState<GitCredential | null>(null)
   const [formData, setFormData] = useState({
-    gitAccountId: '',
     type: 0,
     name: '',
     encryptedSecret: '',
@@ -58,6 +56,13 @@ export default function GitCredentialManagement() {
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { show: showToast } = useToast()
+
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
 
   const fetchCredentials = async () => {
     setLoading(true)
@@ -77,29 +82,41 @@ export default function GitCredentialManagement() {
     fetchCredentials()
   }, [])
 
+  // Filter credentials based on search query and pagination
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredCredentials(credentials)
-      return
+    let filtered = credentials
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = credentials.filter(cred => 
+        cred.name.toLowerCase().includes(query) ||
+        cred.notes?.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = credentials.filter(cred => 
-      cred.name.toLowerCase().includes(query) ||
-      cred.notes?.toLowerCase().includes(query)
-    )
-    setFilteredCredentials(filtered)
-  }, [searchQuery, credentials])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredCredentials(filtered.slice(start, end))
+  }, [searchQuery, credentials, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
     if (!formData.name.trim()) {
       errors.name = '请输入名称'
     }
-    if (!formData.gitAccountId.trim()) {
-      errors.gitAccountId = '请输入 Git 账号 ID'
-    }
-    if (!formData.encryptedSecret.trim()) {
-      errors.encryptedSecret = '请输入密钥'
+    // SSH 类型只需要公钥，不需要密码
+    if (formData.type === 1) {
+      if (!formData.publicKey.trim()) {
+        errors.publicKey = '请输入 SSH 公钥'
+      }
+    } else {
+      // 密码和令牌类型需要密钥
+      if (!formData.encryptedSecret.trim()) {
+        errors.encryptedSecret = '请输入密钥'
+      }
     }
     setFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -122,15 +139,14 @@ export default function GitCredentialManagement() {
       }
       closeModal()
       fetchCredentials()
-    } catch (error) {
-      showToast('操作失败', 'error')
+    } catch (error: any) {
+      showToast(error.response?.data?.message || '操作失败', 'error')
     }
   }
 
   const handleEdit = (cred: GitCredential) => {
     setEditingCredential(cred)
     setFormData({
-      gitAccountId: cred.gitAccountId,
       type: cred.type,
       name: cred.name,
       encryptedSecret: cred.encryptedSecret,
@@ -166,7 +182,6 @@ export default function GitCredentialManagement() {
     setShowModal(false)
     setEditingCredential(null)
     setFormData({
-      gitAccountId: '',
       type: 0,
       name: '',
       encryptedSecret: '',
@@ -181,7 +196,6 @@ export default function GitCredentialManagement() {
   const openCreateModal = () => {
     setEditingCredential(null)
     setFormData({
-      gitAccountId: '',
       type: 0,
       name: '',
       encryptedSecret: '',
@@ -217,7 +231,7 @@ export default function GitCredentialManagement() {
           </div>
           <div>
             <div className="font-medium text-surface-900 dark:text-white">{cred.name}</div>
-            <div className="text-xs text-surface-500">{cred.gitAccountId}</div>
+            <div className="text-xs text-surface-500">{typeNames[cred.type]}</div>
           </div>
         </div>
       )
@@ -251,27 +265,29 @@ export default function GitCredentialManagement() {
       align: 'right' as const,
       render: (cred: GitCredential) => (
         <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => handleEdit(cred)}
-            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-            title="编辑"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(cred)}
-            className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            title="删除"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          <Tooltip content="编辑" placement="top">
+            <button
+              onClick={() => handleEdit(cred)}
+              className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+            >
+              <PencilIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="删除" placement="top">
+            <button
+              onClick={() => handleDelete(cred)}
+              className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
       )
     },
   ]
 
   return (
-    <div className="container-main py-8 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -309,7 +325,7 @@ export default function GitCredentialManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredCredentials.length === 0 ? (
@@ -323,6 +339,13 @@ export default function GitCredentialManagement() {
             columns={columns}
             dataSource={filteredCredentials}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>
@@ -355,55 +378,52 @@ export default function GitCredentialManagement() {
               error={formErrors.name}
               required
             />
-            <div>
-              <label className="form-label">类型</label>
-              <select
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: parseInt(e.target.value) })}
-                className="w-full px-4 py-3 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-              >
-                {Object.entries(typeNames).map(([key, name]) => (
-                  <option key={key} value={key}>{name}</option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="类型"
+              value={formData.type.toString()}
+              onChange={(value) => setFormData({ ...formData, type: parseInt(value) })}
+              options={Object.entries(typeNames).map(([key, name]) => ({ value: key, label: name }))}
+            />
           </div>
 
-          <Input
-            label="Git 账号 ID"
-            placeholder="请输入 Git 账号 ID"
-            value={formData.gitAccountId}
-            onChange={(e) => setFormData({ ...formData, gitAccountId: e.target.value })}
-            error={formErrors.gitAccountId}
-            required
-          />
 
-          <Input
-            label="密钥 / 密码 / 令牌"
-            type="password"
-            placeholder="请输入密钥"
-            value={formData.encryptedSecret}
-            onChange={(e) => setFormData({ ...formData, encryptedSecret: e.target.value })}
-            error={formErrors.encryptedSecret}
-            required
-          />
 
-          {formData.type === 1 && (
+          {/* SSH 类型显示公钥输入，其他类型显示密钥输入 */}
+          {formData.type === 1 ? (
             <>
               <Input
-                label="公钥"
+                label="SSH 公钥"
                 placeholder="请输入 SSH 公钥"
                 value={formData.publicKey}
                 onChange={(e) => setFormData({ ...formData, publicKey: e.target.value })}
+                error={formErrors.publicKey}
+                required
               />
               <Input
-                label="私钥口令"
+                label="SSH 私钥"
+                type="password"
+                placeholder="请输入 SSH 私钥"
+                value={formData.encryptedSecret}
+                onChange={(e) => setFormData({ ...formData, encryptedSecret: e.target.value })}
+              />
+              <Input
+                label="私钥口令（可选）"
                 type="password"
                 placeholder="如果私钥有口令保护，请输入"
                 value={formData.passphraseEncrypted}
                 onChange={(e) => setFormData({ ...formData, passphraseEncrypted: e.target.value })}
               />
             </>
+          ) : (
+            <Input
+              label={formData.type === 0 ? '密码' : '个人访问令牌'}
+              type="password"
+              placeholder={formData.type === 0 ? '请输入密码' : '请输入个人访问令牌'}
+              value={formData.encryptedSecret}
+              onChange={(e) => setFormData({ ...formData, encryptedSecret: e.target.value })}
+              error={formErrors.encryptedSecret}
+              required
+            />
           )}
 
           <Input

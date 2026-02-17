@@ -66,9 +66,16 @@ namespace Neuro.EntityFrameworkCore.Extensions
                             // Use a property access on the context instance so EF Core can evaluate per-DbContext instance.
                             var contextConst = Expression.Constant(context);
                             var currentTenantProp = Expression.Property(contextConst, nameof(NeuroDbContext.CurrentTenantId));
-
+                            
+                            // 添加对 IsSuperUser 的判断，超管可以看到所有租户数据
+                            var isSuperUserProp = Expression.Property(contextConst, nameof(NeuroDbContext.IsSuperUser));
+                            
+                            // 条件：如果是超管，返回 true；否则检查租户ID
+                            // (IsSuperUser OR TenantId == CurrentTenantId)
                             var tenantEquals = Expression.Equal(tenantProperty, currentTenantProp);
-                            combinedBody = combinedBody is null ? tenantEquals : Expression.AndAlso(combinedBody, tenantEquals);
+                            var condition = Expression.OrElse(isSuperUserProp, tenantEquals);
+                            
+                            combinedBody = combinedBody is null ? condition : Expression.AndAlso(combinedBody, condition);
                         }
                     }
 

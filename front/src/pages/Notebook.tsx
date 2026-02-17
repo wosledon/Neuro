@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Button, Modal, EmptyState, LoadingSpinner } from '../components'
-import { extendedDocumentsApi as documentsApi, projectsApi, documentAttachmentsApi } from '../services/auth'
+import { Button, Modal, EmptyState, LoadingSpinner, Select, Tooltip } from '../components'
+import { documentsApi, projectsApi, documentAttachmentsApi } from '../services/auth'
 import { useToast } from '../components/ToastProvider'
 import MarkdownIt from 'markdown-it'
 import prettier from 'prettier/standalone'
@@ -277,6 +277,84 @@ interface DocumentAttachment {
   createdAt: string
 }
 
+// 兼容后端返回扁平/嵌套两种结构，统一构建为树
+const normalizeDocumentTree = (docs: Document[]): Document[] => {
+  if (!Array.isArray(docs) || docs.length === 0) {
+    return []
+  }
+
+  // 第一步：扁平化所有节点（处理嵌套结构）
+  const flattened: Document[] = []
+  const walk = (items: Document[], parentId?: string) => {
+    items.forEach(item => {
+      const normalizedItem: Document = parentId && !item.parentId
+        ? { ...item, parentId }
+        : item
+
+      flattened.push(normalizedItem)
+      if (item.children && item.children.length > 0) {
+        walk(item.children, item.id)
+      }
+    })
+  }
+  walk(docs)
+
+  // 第二步：去重并保留 hasChildren 标记
+  const uniqueMap = new Map<string, Document>()
+  flattened.forEach(item => {
+    const existing = uniqueMap.get(item.id)
+    // 合并 hasChildren 标记：如果任何一个来源标记有子节点，就保留
+    const mergedHasChildren = Boolean(
+      item.hasChildren || 
+      item.children?.length || 
+      existing?.hasChildren || 
+      existing?.children?.length
+    )
+
+    uniqueMap.set(item.id, {
+      ...(existing || {}),
+      ...item,
+      hasChildren: mergedHasChildren,
+      // 保留已有的 children 或初始化为空数组
+      children: existing?.children || [],
+    })
+  })
+
+  // 第三步：构建树结构
+  const roots: Document[] = []
+  uniqueMap.forEach(node => {
+    if (node.parentId && node.parentId !== node.id && uniqueMap.has(node.parentId)) {
+      const parent = uniqueMap.get(node.parentId)!
+      // 避免重复添加
+      if (!parent.children?.find(child => child.id === node.id)) {
+        parent.children = [...(parent.children || []), node]
+      }
+      parent.hasChildren = true
+    } else {
+      roots.push(node)
+    }
+  })
+
+  // 第四步：排序
+  const sortNodes = (items: Document[]) => {
+    items.sort((a, b) => {
+      const sortDiff = (a.sort || 0) - (b.sort || 0)
+      if (sortDiff !== 0) return sortDiff
+      return (a.title || '').localeCompare(b.title || '', 'zh-CN')
+    })
+
+    items.forEach(item => {
+      if (item.children && item.children.length > 0) {
+        sortNodes(item.children)
+        item.hasChildren = true
+      }
+    })
+  }
+
+  sortNodes(roots)
+  return roots
+}
+
 // 文件大小格式化
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 B'
@@ -314,6 +392,7 @@ export default function Notebook() {
   // 树状结构状态
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
+  const [loadingChildren, setLoadingChildren] = useState<Set<string>>(new Set())
   
   // 附件相关
   const [attachments, setAttachments] = useState<DocumentAttachment[]>([])
@@ -358,17 +437,44 @@ export default function Notebook() {
     }
   }, [activeDocContent, showToast])
 
-  // 获取文档树
+  // 获取文档树（根节点）
   const fetchDocuments = async () => {
     setLoading(true)
     try {
-      const response = await documentsApi.apiDocumentTreeGet(selectedProject || undefined)
+      const response = await documentsApi.apiDocumentGetTreeTreeGet(selectedProject || undefined, undefined)
       const data = (response.data.data as Document[]) || []
-      setDocuments(data)
+      setDocuments(normalizeDocumentTree(data))
     } catch (error) {
       showToast('获取文档列表失败', 'error')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // 按需加载子节点
+  const fetchChildren = async (parentId: string) => {
+    try {
+      const response = await documentsApi.apiDocumentGetTreeTreeGet(selectedProject || undefined, parentId)
+      const children = (response.data.data as Document[]) || []
+      
+      // 更新文档树，将子节点添加到对应的父节点
+      const updateDocTree = (nodes: Document[]): Document[] => {
+        return nodes.map(node => {
+          if (node.id === parentId) {
+            return { ...node, children: normalizeDocumentTree(children) }
+          }
+          if (node.children && node.children.length > 0) {
+            return { ...node, children: updateDocTree(node.children) }
+          }
+          return node
+        })
+      }
+      
+      setDocuments(prev => updateDocTree(prev))
+      return children
+    } catch (error) {
+      showToast('加载子文档失败', 'error')
+      return []
     }
   }
 
@@ -385,7 +491,7 @@ export default function Notebook() {
   // 获取文档详情
   const fetchDocumentDetail = async (docId: string) => {
     try {
-      const response = await documentsApi.apiDocumentGetGet(docId)
+      const response = await documentsApi.apiDocumentGetDetailGet(docId)
       const doc = response.data.data as Document
       if (doc) {
         setActiveDoc(doc)
@@ -400,7 +506,7 @@ export default function Notebook() {
   // 获取附件列表
   const fetchAttachments = async (documentId: string) => {
     try {
-      const response = await documentAttachmentsApi.apiDocumentattachmentListGet(documentId)
+      const response = await documentAttachmentsApi.apiDocumentAttachmentListGet(documentId)
       setAttachments((response.data.data as DocumentAttachment[]) || [])
     } catch (error) {
       console.error('Failed to fetch attachments:', error)
@@ -433,24 +539,54 @@ export default function Notebook() {
     return allDocs.filter(doc => doc.title.toLowerCase().includes(query))
   }, [searchQuery, documents])
 
-  // 切换展开/收起
-  const toggleExpand = (docId: string, e: React.MouseEvent) => {
+  // 切换展开/收起，支持按需加载子节点
+  const toggleExpand = async (docId: string, node: Document, e: React.MouseEvent) => {
+    e.preventDefault()
     e.stopPropagation()
     const newExpanded = new Set(expandedDocs)
+    
     if (newExpanded.has(docId)) {
+      // 折叠
       newExpanded.delete(docId)
+      setExpandedDocs(newExpanded)
     } else {
+      // 展开 - 检查是否需要按需加载子节点
       newExpanded.add(docId)
+      setExpandedDocs(newExpanded)
+      
+      // 如果节点有 hasChildren 标记但没有 children 数据，则按需加载
+      if (node.hasChildren && (!node.children || node.children.length === 0)) {
+        setLoadingChildren(prev => new Set(prev).add(docId))
+        await fetchChildren(docId)
+        setLoadingChildren(prev => {
+          const next = new Set(prev)
+          next.delete(docId)
+          return next
+        })
+      }
     }
-    setExpandedDocs(newExpanded)
   }
 
-  // 选择文档 - 同时自动展开子节点
-  const handleSelectDoc = (doc: Document) => {
+  // 选择文档 - 同时自动展开子节点（按需加载）
+  const handleSelectDoc = async (doc: Document) => {
     fetchDocumentDetail(doc.id)
-    // 如果有子节点，自动展开
+    // 如果有子节点，自动展开并加载
     if (doc.hasChildren || (doc.children && doc.children.length > 0)) {
-      setExpandedDocs(prev => new Set([...prev, doc.id]))
+      const newExpanded = new Set(expandedDocs)
+      const isAlreadyExpanded = newExpanded.has(doc.id)
+      newExpanded.add(doc.id)
+      setExpandedDocs(newExpanded)
+      
+      // 如果节点有 hasChildren 标记但没有 children 数据，则按需加载
+      if (!isAlreadyExpanded && doc.hasChildren && (!doc.children || doc.children.length === 0)) {
+        setLoadingChildren(prev => new Set(prev).add(doc.id))
+        await fetchChildren(doc.id)
+        setLoadingChildren(prev => {
+          const next = new Set(prev)
+          next.delete(doc.id)
+          return next
+        })
+      }
     }
   }
 
@@ -661,12 +797,7 @@ export default function Notebook() {
         const file = item.getAsFile()
         if (!file) continue
 
-        const formData = new FormData()
-        formData.append('documentId', activeDoc.id)
-        formData.append('file', file)
-        formData.append('isInline', 'true')
-
-        await documentAttachmentsApi.apiDocumentattachmentUploadPost(formData)
+        await documentAttachmentsApi.apiDocumentAttachmentUploadPost(activeDoc.id, file, true)
       }
       
       showToast('图片上传成功', 'success')
@@ -684,13 +815,7 @@ export default function Notebook() {
 
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('documentId', activeDoc.id)
-      Array.from(files).forEach(file => {
-        formData.append('files', file)
-      })
-
-      await documentAttachmentsApi.apiDocumentattachmentBatchUploadPost(formData)
+      await documentAttachmentsApi.apiDocumentAttachmentBatchUploadPost(activeDoc.id, Array.from(files))
       showToast('文件上传成功', 'success')
       fetchAttachments(activeDoc.id)
     } catch (error) {
@@ -703,7 +828,7 @@ export default function Notebook() {
   // 复制Markdown链接
   const copyMarkdownLink = async (attachment: DocumentAttachment) => {
     try {
-      const response = await documentAttachmentsApi.apiDocumentattachmentMarkdownLinkGet(attachment.id)
+      const response = await documentAttachmentsApi.apiDocumentAttachmentMarkdownLinkGet(attachment.id)
       const markdown = response.data.data?.markdown || ''
       await navigator.clipboard.writeText(markdown)
       setCopiedLink(attachment.id)
@@ -717,7 +842,7 @@ export default function Notebook() {
   // 插入到编辑器
   const insertToEditor = async (attachment: DocumentAttachment) => {
     try {
-      const response = await documentAttachmentsApi.apiDocumentattachmentMarkdownLinkGet(attachment.id)
+      const response = await documentAttachmentsApi.apiDocumentAttachmentMarkdownLinkGet(attachment.id)
       const markdown = response.data.data?.markdown || ''
       
       const textarea = textareaRef.current
@@ -748,7 +873,9 @@ export default function Notebook() {
   const renderDocTree = (nodes: Document[], level = 0) => {
     return nodes.map(node => {
       const isExpanded = expandedDocs.has(node.id)
-      const hasChildren = node.children && node.children.length > 0
+      const isLoadingChildren = loadingChildren.has(node.id)
+      const hasChildren = Boolean(node.hasChildren || (node.children && node.children.length > 0))
+      const hasLoadedChildren = node.children && node.children.length > 0
       const isActive = activeDoc?.id === node.id
       
       return (
@@ -764,17 +891,21 @@ export default function Notebook() {
           >
             {hasChildren ? (
               <button 
-                onClick={(e) => toggleExpand(node.id, e)}
-                className="p-0.5 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+                type="button"
+                onClick={(e) => toggleExpand(node.id, node, e)}
+                className="p-0.5 rounded hover:bg-surface-200 dark:hover:bg-surface-700 flex-shrink-0 w-5 h-5 flex items-center justify-center"
+                disabled={isLoadingChildren}
               >
-                {isExpanded ? (
+                {isLoadingChildren ? (
+                  <div className="w-3 h-3 border-2 border-surface-300 border-t-primary-500 rounded-full animate-spin" />
+                ) : isExpanded ? (
                   <ChevronDownIcon className="w-3.5 h-3.5" />
                 ) : (
                   <ChevronRightIcon className="w-3.5 h-3.5" />
                 )}
               </button>
             ) : (
-              <span className="w-5" />
+              <span className="w-5 flex-shrink-0" />
             )}
             
             <DocumentTextIcon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary-600' : 'text-surface-400'}`} />
@@ -786,31 +917,34 @@ export default function Notebook() {
             {/* 操作按钮组 */}
             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
               {/* 添加子文档按钮 */}
-              <button
-                onClick={(e) => handleCreateChild(node, e)}
-                className="p-1 rounded hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-600"
-                title="添加子文档"
-              >
-                <PlusIcon className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={(e) => handleEditMeta(node, e)}
-                className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
-                title="重命名"
-              >
-                <PencilIcon className="w-3 h-3" />
-              </button>
-              <button
-                onClick={(e) => handleDelete(node, e)}
-                className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
-                title="删除"
-              >
-                <TrashIcon className="w-3 h-3" />
-              </button>
+              <Tooltip content="添加子文档" placement="top">
+                <button
+                  onClick={(e) => handleCreateChild(node, e)}
+                  className="p-1 rounded hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-600"
+                >
+                  <PlusIcon className="w-3.5 h-3.5" />
+                </button>
+              </Tooltip>
+              <Tooltip content="重命名" placement="top">
+                <button
+                  onClick={(e) => handleEditMeta(node, e)}
+                  className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+                >
+                  <PencilIcon className="w-3 h-3" />
+                </button>
+              </Tooltip>
+              <Tooltip content="删除" placement="top">
+                <button
+                  onClick={(e) => handleDelete(node, e)}
+                  className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+                >
+                  <TrashIcon className="w-3 h-3" />
+                </button>
+              </Tooltip>
             </div>
           </div>
           
-          {hasChildren && isExpanded && (
+          {isExpanded && hasLoadedChildren && (
             <div>
               {renderDocTree(node.children!, level + 1)}
             </div>
@@ -838,16 +972,15 @@ export default function Notebook() {
           </div>
           
           {/* 项目筛选 */}
-          <select
+          <Select
             value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-          >
-            <option value="">所有项目</option>
-            {projects.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+            onChange={(value) => setSelectedProject(value)}
+            options={[
+              { value: '', label: '所有项目' },
+              ...projects.map(p => ({ value: p.id, label: p.name }))
+            ]}
+            size="sm"
+          />
           
           {/* 搜索 */}
           <div className="relative mt-3">
@@ -1141,20 +1274,16 @@ export default function Notebook() {
           )}
           
           <div>
-            <label className="form-label">所属项目</label>
-            <select
+            <Select
+              label="所属项目"
               value={formData.projectId}
-              onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-              className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 ${
-                formErrors.projectId ? 'border-red-500' : 'border-surface-300 dark:border-surface-600'
-              }`}
-            >
-              <option value="">请选择项目</option>
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-            {formErrors.projectId && <p className="mt-1 text-sm text-red-600">{formErrors.projectId}</p>}
+              onChange={(value) => setFormData({ ...formData, projectId: value })}
+              options={[
+                { value: '', label: '请选择项目' },
+                ...projects.map(p => ({ value: p.id, label: p.name }))
+              ]}
+              error={formErrors.projectId}
+            />
           </div>
           
           <div>

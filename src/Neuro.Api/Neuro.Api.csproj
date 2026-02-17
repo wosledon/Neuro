@@ -10,11 +10,13 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.12.24" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.18" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Neuro.Abstractions\Neuro.Abstractions.csproj" />
     <ProjectReference Include="..\Neuro.EntityFrameworkCore.Sqlite\Neuro.EntityFrameworkCore.Sqlite.csproj" />
+    <ProjectReference Include="..\Neuro.RAG\Neuro.RAG.csproj" />
     <ProjectReference Include="..\Neuro.Storage\Neuro.Storage.csproj" />
   </ItemGroup>
 

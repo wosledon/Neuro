@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Neuro.Api.Entity;
+using DocumentEntity = Neuro.Api.Entity.MyDocument;
 using Neuro.EntityFrameworkCore.Extensions;
 using Neuro.EntityFrameworkCore.Services;
 using Neuro.Shared.Dtos;
@@ -25,7 +26,7 @@ public class RoleDocumentController : ApiControllerBase
 
         var paged = await q
             .Join(_db.Q<Role>(), rd => rd.RoleId, r => r.Id, (rd, r) => new { rd, r })
-            .Join(_db.Q<Document>(), x => x.rd.DocumentId, d => d.Id, (x, d) => new { x.rd, x.r, d })
+            .Join(_db.Q<DocumentEntity>(), x => x.rd.DocumentId, d => d.Id, (x, d) => new { x.rd, x.r, d })
             .Select(x => new RoleDocumentDetail
             {
                 Id = x.rd.Id,
@@ -50,7 +51,7 @@ public class RoleDocumentController : ApiControllerBase
         if (role is null) return Failure("角色不存在。", 404);
 
         // 验证所有文档是否存在
-        var existingDocumentIds = await _db.Q<Document>()
+        var existingDocumentIds = await _db.Q<DocumentEntity>()
             .Where(d => request.DocumentIds.Contains(d.Id))
             .Select(d => d.Id)
             .ToListAsync();

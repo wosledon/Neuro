@@ -6,7 +6,6 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **string** |  | [optional] [default to undefined]
-**gitAccountId** | **string** |  | [optional] [default to undefined]
 **type** | **number** |  | [optional] [default to undefined]
 **name** | **string** |  | [optional] [default to undefined]
 **encryptedSecret** | **string** |  | [optional] [default to undefined]
@@ -22,7 +21,6 @@ import { GitCredentialUpsertRequest } from './api';
 
 const instance: GitCredentialUpsertRequest = {
     id,
-    gitAccountId,
     type,
     name,
     encryptedSecret,

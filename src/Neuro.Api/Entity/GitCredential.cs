@@ -9,11 +9,6 @@ namespace Neuro.Api.Entity;
 public class GitCredential : EntityBase
 {
     /// <summary>
-    /// 关联的 Git 账号
-    /// </summary>
-    public Guid GitAccountId { get; set; }
-
-    /// <summary>
     /// 凭据类型
     /// </summary>
     public GitCredentialTypeEnum Type { get; set; } = GitCredentialTypeEnum.Password;

@@ -10,6 +10,7 @@ namespace Neuro.Api.Controllers;
 public class ApiControllerBase : ControllerBase
 {
     private Guid? _userId;
+    private string? _userName;
 
     public Guid UserId
     {
@@ -25,6 +26,16 @@ public class ApiControllerBase : ControllerBase
 
             _userId = Guid.Parse(userIdClaim);
             return _userId.Value;
+        }
+    }
+
+    public string UserName
+    {
+        get
+        {
+            if (_userName is not null) return _userName;
+            _userName = User.FindFirst("user_name")?.Value ?? User.FindFirst("name")?.Value ?? "Unknown";
+            return _userName;
         }
     }
 

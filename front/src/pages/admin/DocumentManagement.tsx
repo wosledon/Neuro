@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
-import { extendedDocumentsApi as documentsApi, projectsApi, documentAttachmentsApi } from '../../services/auth'
+import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner, Select, Tooltip } from '../../components'
+import { documentsApi, projectsApi, documentAttachmentsApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
 import MarkdownIt from 'markdown-it'
 import { 
@@ -66,6 +66,15 @@ interface Project {
   name: string
 }
 
+// 以项目为主节点的文档树节点
+interface ProjectDocumentNode {
+  id: string
+  name: string
+  code: string
+  description: string
+  documents: Document[]
+}
+
 interface DocumentAttachment {
   id: string
   documentId: string
@@ -109,13 +118,22 @@ export default function DocumentManagement() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [projectDocTree, setProjectDocTree] = useState<ProjectDocumentNode[]>([])
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('tree')
   const [editMode, setEditMode] = useState<EditMode>('split')
   const [fileViewMode, setFileViewMode] = useState<FileViewMode>('grid')
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set())
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
   const [selectedProject, setSelectedProject] = useState<string>('')
+  
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
   
   // Modals
   const [showModal, setShowModal] = useState(false)
@@ -154,18 +172,77 @@ export default function DocumentManagement() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isSyncing = useRef(false)
 
-  // 获取文档树
+  // 获取以项目为主节点的文档树
   const fetchDocuments = async () => {
     setLoading(true)
     try {
-      const response = await documentsApi.apiDocumentTreeGet(selectedProject || undefined)
-      const data = (response.data.data as Document[]) || []
-      setDocuments(data)
-      setFilteredDocuments(flattenDocuments(data))
+      const response = await documentsApi.apiDocumentGetTreeByProjectsTreeByProjectsGet()
+      const data = (response.data.data as ProjectDocumentNode[]) || []
+      setProjectDocTree(data)
+      
+      // 同时更新 projects 列表（用于下拉选择等）
+      const projectList = data.map(p => ({ id: p.id, name: p.name }))
+      setProjects(projectList)
+      
+      // 默认展开所有项目
+      setExpandedProjects(new Set(projectList.map(p => p.id)))
+      
+      // 扁平化所有文档用于列表视图
+      const allDocs: Document[] = []
+      data.forEach(project => {
+        allDocs.push(...flattenDocuments(project.documents))
+      })
+      setDocuments(allDocs)
+      setFilteredDocuments(allDocs)
     } catch (error) {
       showToast('获取文档列表失败', 'error')
     } finally {
       setLoading(false)
+    }
+  }
+  
+  // 按需加载子节点
+  const fetchChildren = async (parentId: string) => {
+    try {
+      const response = await documentsApi.apiDocumentGetChildrenChildrenGet(parentId)
+      const children = (response.data.data as Document[]) || []
+      
+      // 递归更新项目文档树，将子节点添加到对应的父节点
+      const updateProjectTreeWithChildren = (projects: ProjectDocumentNode[]): ProjectDocumentNode[] => {
+        return projects.map(project => ({
+          ...project,
+          documents: updateDocTreeWithChildren(project.documents)
+        }))
+      }
+      
+      const updateDocTreeWithChildren = (nodes: Document[]): Document[] => {
+        return nodes.map(node => {
+          if (node.id === parentId) {
+            return { ...node, children }
+          }
+          if (node.children) {
+            return { ...node, children: updateDocTreeWithChildren(node.children) }
+          }
+          return node
+        })
+      }
+      
+      setProjectDocTree(prev => updateProjectTreeWithChildren(prev))
+      
+      // 同时更新扁平化的文档列表
+      setDocuments(prev => {
+        const updated = updateDocTreeWithChildren(prev)
+        return flattenDocuments(updated)
+      })
+      setFilteredDocuments(prev => {
+        const updated = updateDocTreeWithChildren(prev)
+        return flattenDocuments(updated)
+      })
+      
+      return children
+    } catch (error) {
+      showToast('加载子文档失败', 'error')
+      return []
     }
   }
 
@@ -181,7 +258,7 @@ export default function DocumentManagement() {
   // 获取文档附件
   const fetchAttachments = async (documentId: string) => {
     try {
-      const response = await documentAttachmentsApi.apiDocumentattachmentListGet(documentId)
+      const response = await documentAttachmentsApi.apiDocumentAttachmentListGet(documentId)
       setAttachments((response.data.data as DocumentAttachment[]) || [])
     } catch (error) {
       console.error('Failed to fetch attachments:', error)
@@ -190,22 +267,27 @@ export default function DocumentManagement() {
 
   useEffect(() => {
     fetchDocuments()
-    fetchProjects()
-  }, [selectedProject])
+  }, [])
 
   // 搜索过滤 - 始终返回扁平数组供列表视图使用
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredDocuments(flattenDocuments(documents))
-      return
+    let filtered = flattenDocuments(documents)
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(doc => 
+        doc.title.toLowerCase().includes(query) ||
+        doc.content.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = flattenDocuments(documents).filter(doc => 
-      doc.title.toLowerCase().includes(query) ||
-      doc.content.toLowerCase().includes(query)
-    )
-    setFilteredDocuments(filtered)
-  }, [searchQuery, documents])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredDocuments(filtered.slice(start, end))
+  }, [searchQuery, documents, pagination.current, pagination.pageSize])
 
   // 扁平化文档树
   const flattenDocuments = (docs: Document[]): Document[] => {
@@ -222,7 +304,7 @@ export default function DocumentManagement() {
 
   // 重建树结构
   const rebuildTree = (flatDocs: Document[]): Document[] => {
-    const nodeMap = new Map(flatDocs.map(d => [d.id, { ...d, children: [] }]))
+    const nodeMap = new Map<string, Document>(flatDocs.map(d => [d.id, { ...d, children: [] as Document[] }]))
     const roots: Document[] = []
     
     flatDocs.forEach(doc => {
@@ -473,12 +555,7 @@ export default function DocumentManagement() {
         const file = item.getAsFile()
         if (!file) continue
 
-        const formData = new FormData()
-        formData.append('documentId', editingDocument.id)
-        formData.append('file', file)
-        formData.append('isInline', 'true')
-
-        await documentAttachmentsApi.apiDocumentattachmentUploadPost(formData)
+        await documentAttachmentsApi.apiDocumentAttachmentUploadPost(editingDocument.id, file, true)
       }
       
       showToast('图片上传成功', 'success')
@@ -500,13 +577,7 @@ export default function DocumentManagement() {
 
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('documentId', editingDocument.id)
-      Array.from(files).forEach(file => {
-        formData.append('files', file)
-      })
-
-      await documentAttachmentsApi.apiDocumentattachmentBatchUploadPost(formData)
+      await documentAttachmentsApi.apiDocumentAttachmentBatchUploadPost(editingDocument.id, Array.from(files))
       showToast('文件上传成功', 'success')
       fetchAttachments(editingDocument.id)
     } catch (error) {
@@ -536,7 +607,7 @@ export default function DocumentManagement() {
   // 删除附件
   const handleDeleteAttachment = async (attachmentId: string) => {
     try {
-      await documentAttachmentsApi.apiDocumentattachmentDeletePost({ ids: [attachmentId] })
+      await documentAttachmentsApi.apiDocumentAttachmentDeletePost({ ids: [attachmentId] })
       showToast('附件已删除', 'success')
       if (editingDocument?.id) {
         fetchAttachments(editingDocument.id)
@@ -549,7 +620,7 @@ export default function DocumentManagement() {
   // 复制Markdown链接
   const copyMarkdownLink = async (attachment: DocumentAttachment) => {
     try {
-      const response = await documentAttachmentsApi.apiDocumentattachmentMarkdownLinkGet(attachment.id)
+      const response = await documentAttachmentsApi.apiDocumentAttachmentMarkdownLinkGet(attachment.id)
       const markdown = response.data.data?.markdown || ''
       await navigator.clipboard.writeText(markdown)
       setCopiedLink(attachment.id)
@@ -563,7 +634,7 @@ export default function DocumentManagement() {
   // 插入到编辑器
   const insertToEditor = async (attachment: DocumentAttachment) => {
     try {
-      const response = await documentAttachmentsApi.apiDocumentattachmentMarkdownLinkGet(attachment.id)
+      const response = await documentAttachmentsApi.apiDocumentAttachmentMarkdownLinkGet(attachment.id)
       const markdown = response.data.data?.markdown || ''
       
       const textarea = textareaRef.current
@@ -621,24 +692,56 @@ export default function DocumentManagement() {
     }
   }
 
-  const handleEdit = (doc: Document) => {
-    setEditingDocument(doc)
-    setFormData({
-      projectId: doc.projectId,
-      title: doc.title,
-      content: doc.content,
-      parentId: doc.parentId || '',
-      sort: doc.sort,
-    })
-    setFormErrors({})
-    setEditMode('split')
-    fetchAttachments(doc.id)
-    setShowModal(true)
+  const handleEdit = async (doc: Document) => {
+    try {
+      // 获取完整文档详情（树状接口可能不包含 content）
+      const response = await documentsApi.apiDocumentGetDetailGet(doc.id)
+      const fullDoc = response.data.data as Document
+      const targetDoc = fullDoc || doc
+      
+      setEditingDocument(targetDoc)
+      setFormData({
+        projectId: targetDoc.projectId,
+        title: targetDoc.title,
+        content: targetDoc.content || '',
+        parentId: targetDoc.parentId || '',
+        sort: targetDoc.sort,
+      })
+      setFormErrors({})
+      setEditMode('split')
+      fetchAttachments(targetDoc.id)
+      setShowModal(true)
+    } catch (error) {
+      showToast('获取文档详情失败', 'error')
+      // 如果获取失败，仍然使用现有数据
+      setEditingDocument(doc)
+      setFormData({
+        projectId: doc.projectId,
+        title: doc.title,
+        content: doc.content || '',
+        parentId: doc.parentId || '',
+        sort: doc.sort,
+      })
+      setFormErrors({})
+      setEditMode('split')
+      fetchAttachments(doc.id)
+      setShowModal(true)
+    }
   }
 
-  const handleView = (doc: Document) => {
-    setViewingDocument(doc)
-    setShowViewModal(true)
+  const handleView = async (doc: Document) => {
+    try {
+      // 获取完整文档详情（树状接口可能不包含 content）
+      const response = await documentsApi.apiDocumentGetDetailGet(doc.id)
+      const fullDoc = response.data.data as Document
+      setViewingDocument(fullDoc || doc)
+      setShowViewModal(true)
+    } catch (error) {
+      showToast('获取文档详情失败', 'error')
+      // 如果获取失败，仍然显示基本信息
+      setViewingDocument(doc)
+      setShowViewModal(true)
+    }
   }
 
   const handleDelete = (doc: Document) => {
@@ -669,11 +772,11 @@ export default function DocumentManagement() {
   const confirmMove = async () => {
     if (!movingDoc) return
     try {
-      await documentsApi.apiDocumentMovePost({
+      await documentsApi.apiDocumentMoveMovePost({
         id: movingDoc.id,
         newParentId: targetParentId || null,
         newSort: movingDoc.sort
-      })
+      } as any)
       showToast('移动成功', 'success')
       fetchDocuments()
       setShowMoveModal(false)
@@ -700,22 +803,48 @@ export default function DocumentManagement() {
     setShowModal(true)
   }
 
-  const toggleExpand = (docId: string) => {
+  // 切换展开/折叠状态，支持按需加载子节点
+  const [loadingChildren, setLoadingChildren] = useState<Set<string>>(new Set())
+  
+  const toggleExpand = async (docId: string, node?: Document) => {
     const newExpanded = new Set(expandedDocs)
+    
     if (newExpanded.has(docId)) {
+      // 折叠
       newExpanded.delete(docId)
+      setExpandedDocs(newExpanded)
     } else {
+      // 展开 - 检查是否需要按需加载子节点
       newExpanded.add(docId)
+      setExpandedDocs(newExpanded)
+      
+      // 如果节点有 hasChildren 标记但没有 children 数据，则按需加载
+      if (node && node.hasChildren && (!node.children || node.children.length === 0)) {
+        setLoadingChildren(prev => new Set(prev).add(docId))
+        await fetchChildren(docId)
+        setLoadingChildren(prev => {
+          const next = new Set(prev)
+          next.delete(docId)
+          return next
+        })
+      }
     }
-    setExpandedDocs(newExpanded)
   }
 
   const expandAll = () => {
-    const allIds = new Set(flattenDocuments(documents).map(d => d.id))
-    setExpandedDocs(allIds)
+    // 展开所有项目
+    const allProjectIds = new Set(projectDocTree.map(p => p.id))
+    setExpandedProjects(allProjectIds)
+    
+    // 按需加载模式下，只展开已加载的文档节点
+    const loadedDocIds = new Set(flattenDocuments(documents).map(d => d.id))
+    setExpandedDocs(loadedDocIds)
+    
+    showToast('已展开所有项目和当前加载的文档节点', 'info')
   }
 
   const collapseAll = () => {
+    setExpandedProjects(new Set())
     setExpandedDocs(new Set())
   }
 
@@ -729,11 +858,78 @@ export default function DocumentManagement() {
     return colors[index % colors.length]
   }
 
+  // 切换项目展开/折叠
+  const toggleProjectExpand = (projectId: string) => {
+    const newExpanded = new Set(expandedProjects)
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId)
+    } else {
+      newExpanded.add(projectId)
+    }
+    setExpandedProjects(newExpanded)
+  }
+
+  // 渲染项目文档树（项目作为主节点）
+  const renderProjectDocTree = () => {
+    return projectDocTree.map(project => {
+      const isProjectExpanded = expandedProjects.has(project.id)
+      const hasDocuments = project.documents && project.documents.length > 0
+      
+      return (
+        <div key={project.id} className="mb-2">
+          {/* 项目节点 */}
+          <div 
+            className="flex items-center gap-2 p-2 rounded-lg bg-surface-100 dark:bg-surface-800/50 hover:bg-surface-200 dark:hover:bg-surface-800 group"
+          >
+            {hasDocuments ? (
+              <button 
+                onClick={() => toggleProjectExpand(project.id)}
+                className="p-1 rounded hover:bg-surface-300 dark:hover:bg-surface-700 flex items-center justify-center w-6 h-6"
+              >
+                {isProjectExpanded ? (
+                  <ChevronDownIcon className="w-4 h-4 text-surface-600" />
+                ) : (
+                  <ChevronRightIcon className="w-4 h-4 text-surface-600" />
+                )}
+              </button>
+            ) : (
+              <span className="w-6" />
+            )}
+            
+            <FolderIcon className="w-5 h-5 text-primary-500 flex-shrink-0" />
+            
+            <span className="flex-1 font-semibold text-surface-900 dark:text-white truncate text-sm">
+              {project.name}
+            </span>
+            
+            {project.code && (
+              <Badge variant="secondary" size="sm" className="text-xs">{project.code}</Badge>
+            )}
+            
+            <span className="text-xs text-surface-500">
+              {project.documents?.length || 0} 个文档
+            </span>
+          </div>
+          
+          {/* 项目下的文档树 */}
+          {isProjectExpanded && hasDocuments && (
+            <div className="mt-1 ml-2">
+              {renderDocTree(project.documents, 0)}
+            </div>
+          )}
+        </div>
+      )
+    })
+  }
+
   // 渲染文档树
   const renderDocTree = (nodes: Document[], level = 0) => {
     return nodes.map(node => {
       const isExpanded = expandedDocs.has(node.id)
-      const hasChildren = node.children && node.children.length > 0
+      const isLoadingChildren = loadingChildren.has(node.id)
+      // 按需加载模式下，使用 hasChildren 标记来判断是否有子节点
+      const hasChildren = node.hasChildren || (node.children && node.children.length > 0)
+      const hasLoadedChildren = node.children && node.children.length > 0
       
       return (
         <div key={node.id} className={level > 0 ? 'ml-4 border-l-2 border-surface-200 dark:border-surface-700' : ''}>
@@ -745,10 +941,13 @@ export default function DocumentManagement() {
           >
             {hasChildren ? (
               <button 
-                onClick={() => toggleExpand(node.id)}
-                className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+                onClick={() => toggleExpand(node.id, node)}
+                className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 flex items-center justify-center w-6 h-6"
+                disabled={isLoadingChildren}
               >
-                {isExpanded ? (
+                {isLoadingChildren ? (
+                  <div className="w-3 h-3 border-2 border-surface-300 border-t-primary-500 rounded-full animate-spin" />
+                ) : isExpanded ? (
                   <ChevronDownIcon className="w-4 h-4 text-surface-500" />
                 ) : (
                   <ChevronRightIcon className="w-4 h-4 text-surface-500" />
@@ -764,41 +963,43 @@ export default function DocumentManagement() {
               {node.title}
             </span>
             
-            <Badge variant="primary" size="sm" className="text-xs">{getProjectName(node.projectId)}</Badge>
-            
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={() => handleView(node)}
-                className="p-1.5 rounded text-surface-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                title="查看"
-              >
-                <EyeIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleEdit(node)}
-                className="p-1.5 rounded text-surface-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20"
-                title="编辑"
-              >
-                <PencilIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleMove(node)}
-                className="p-1.5 rounded text-surface-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                title="移动"
-              >
-                <FolderArrowDownIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleDelete(node)}
-                className="p-1.5 rounded text-surface-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                title="删除"
-              >
-                <TrashIcon className="w-4 h-4" />
-              </button>
+              <Tooltip content="查看" placement="top">
+                <button
+                  onClick={() => handleView(node)}
+                  className="p-1.5 rounded text-surface-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                >
+                  <EyeIcon className="w-4 h-4" />
+                </button>
+              </Tooltip>
+              <Tooltip content="编辑" placement="top">
+                <button
+                  onClick={() => handleEdit(node)}
+                  className="p-1.5 rounded text-surface-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+                >
+                  <PencilIcon className="w-4 h-4" />
+                </button>
+              </Tooltip>
+              <Tooltip content="移动" placement="top">
+                <button
+                  onClick={() => handleMove(node)}
+                  className="p-1.5 rounded text-surface-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                >
+                  <FolderArrowDownIcon className="w-4 h-4" />
+                </button>
+              </Tooltip>
+              <Tooltip content="删除" placement="top">
+                <button
+                  onClick={() => handleDelete(node)}
+                  className="p-1.5 rounded text-surface-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              </Tooltip>
             </div>
           </div>
           
-          {hasChildren && isExpanded && (
+          {isExpanded && hasLoadedChildren && (
             <div className="mt-1">
               {renderDocTree(node.children!, level + 1)}
             </div>
@@ -852,35 +1053,39 @@ export default function DocumentManagement() {
                 </div>
               </div>
               <div className="flex items-center gap-1 mt-2 pt-2 border-t border-surface-100 dark:border-surface-800">
-                <button
-                  onClick={() => insertToEditor(attachment)}
-                  className="flex-1 px-2 py-1 text-xs rounded bg-primary-50 dark:bg-primary-900/20 text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-900/40"
-                  title="插入到编辑器"
-                >
-                  插入
-                </button>
-                <button
-                  onClick={() => copyMarkdownLink(attachment)}
-                  className="p-1 text-xs rounded hover:bg-surface-100 dark:hover:bg-surface-700"
-                  title="复制链接"
-                >
-                  {copiedLink === attachment.id ? <CheckIcon className="w-4 h-4 text-green-500" /> : <ClipboardIcon className="w-4 h-4" />}
-                </button>
-                <a
-                  href={`/api/documentattachment/download?id=${attachment.id}`}
-                  download
-                  className="p-1 text-xs rounded hover:bg-surface-100 dark:hover:bg-surface-700"
-                  title="下载"
-                >
-                  <DocumentArrowUpIcon className="w-4 h-4" />
-                </a>
-                <button
-                  onClick={() => handleDeleteAttachment(attachment.id)}
-                  className="p-1 text-xs rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"
-                  title="删除"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </button>
+                <Tooltip content="插入到编辑器" placement="top">
+                  <button
+                    onClick={() => insertToEditor(attachment)}
+                    className="flex-1 px-2 py-1 text-xs rounded bg-primary-50 dark:bg-primary-900/20 text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-900/40"
+                  >
+                    插入
+                  </button>
+                </Tooltip>
+                <Tooltip content="复制链接" placement="top">
+                  <button
+                    onClick={() => copyMarkdownLink(attachment)}
+                    className="p-1 text-xs rounded hover:bg-surface-100 dark:hover:bg-surface-700"
+                  >
+                    {copiedLink === attachment.id ? <CheckIcon className="w-4 h-4 text-green-500" /> : <ClipboardIcon className="w-4 h-4" />}
+                  </button>
+                </Tooltip>
+                <Tooltip content="下载" placement="top">
+                  <a
+                    href={`/api/documentattachment/download?id=${attachment.id}`}
+                    download
+                    className="p-1 text-xs rounded hover:bg-surface-100 dark:hover:bg-surface-700"
+                  >
+                    <DocumentArrowUpIcon className="w-4 h-4" />
+                  </a>
+                </Tooltip>
+                <Tooltip content="删除" placement="top">
+                  <button
+                    onClick={() => handleDeleteAttachment(attachment.id)}
+                    className="p-1 text-xs rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                </Tooltip>
               </div>
             </div>
           ))}
@@ -965,41 +1170,45 @@ export default function DocumentManagement() {
       align: 'right' as const,
       render: (doc: Document) => (
         <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => handleView(doc)}
-            className="p-2 rounded-lg text-surface-600 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-            title="查看"
-          >
-            <EyeIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleEdit(doc)}
-            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-            title="编辑"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleMove(doc)}
-            className="p-2 rounded-lg text-surface-600 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
-            title="移动"
-          >
-            <FolderArrowDownIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(doc)}
-            className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            title="删除"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          <Tooltip content="查看" placement="top">
+            <button
+              onClick={() => handleView(doc)}
+              className="p-2 rounded-lg text-surface-600 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            >
+              <EyeIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="编辑" placement="top">
+            <button
+              onClick={() => handleEdit(doc)}
+              className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+            >
+              <PencilIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="移动" placement="top">
+            <button
+              onClick={() => handleMove(doc)}
+              className="p-2 rounded-lg text-surface-600 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
+            >
+              <FolderArrowDownIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="删除" placement="top">
+            <button
+              onClick={() => handleDelete(doc)}
+              className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
       )
     },
   ]
 
   return (
-    <div className="container-main py-8 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -1015,7 +1224,7 @@ export default function DocumentManagement() {
 
       {/* Filters & View Toggle */}
       <Card className="mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
             <input
@@ -1023,42 +1232,38 @@ export default function DocumentManagement() {
               placeholder="搜索文档标题或内容..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+              className="w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
             />
           </div>
-          <div className="relative">
-            <select
+          <div className="flex gap-2 items-center">
+            <Select
               value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="appearance-none px-4 py-2.5 pr-10 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-            >
-              <option value="">所有项目</option>
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-            <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 pointer-events-none" />
-          </div>
-          <div className="flex gap-2">
-            <div className="flex bg-surface-100 dark:bg-surface-800 rounded-lg p-1">
-              <button 
-                onClick={() => setViewMode('list')} 
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${viewMode === 'list' ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm' : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'}`}
-                title="列表视图"
-              >
-                <Bars3Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">列表</span>
-              </button>
-              <button 
-                onClick={() => setViewMode('tree')} 
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${viewMode === 'tree' ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm' : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'}`}
-                title="树状视图"
-              >
-                <FolderIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">树状</span>
-              </button>
+              onChange={(value) => setSelectedProject(value)}
+              options={[{ value: '', label: '所有项目' }, ...projects.map(p => ({ value: p.id, label: p.name }))]}
+              size="md"
+              className="w-48"
+            />
+            <div className="flex bg-surface-100 dark:bg-surface-800 rounded-lg p-1 flex-shrink-0 min-h-[44px]">
+              <Tooltip content="列表视图" placement="top">
+                <button 
+                  onClick={() => setViewMode('list')} 
+                  className={`px-3 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${viewMode === 'list' ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm' : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'}`}
+                >
+                  <Bars3Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">列表</span>
+                </button>
+              </Tooltip>
+              <Tooltip content="树状视图" placement="top">
+                <button 
+                  onClick={() => setViewMode('tree')} 
+                  className={`px-3 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${viewMode === 'tree' ? 'bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm' : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'}`}
+                >
+                  <FolderIcon className="w-4 h-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">树状</span>
+                </button>
+              </Tooltip>
             </div>
-            <Button variant="secondary" leftIcon={<ArrowPathIcon className="w-4 h-4" />} onClick={fetchDocuments}>
+            <Button variant="secondary" leftIcon={<ArrowPathIcon className="w-4 h-4 flex-shrink-0" />} onClick={fetchDocuments} className="flex-shrink-0 whitespace-nowrap min-h-[44px]">
               刷新
             </Button>
           </div>
@@ -1066,7 +1271,7 @@ export default function DocumentManagement() {
       </Card>
 
       {/* Content */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : viewMode === 'list' ? (
@@ -1077,12 +1282,25 @@ export default function DocumentManagement() {
               action={!searchQuery ? { label: '新增文档', onClick: openCreateModal } : undefined}
             />
           ) : (
-            <Table columns={columns} dataSource={filteredDocuments} rowKey="id" />
+            <Table
+              columns={columns}
+              dataSource={filteredDocuments}
+              rowKey="id"
+              noBorder
+              pagination={{
+                current: pagination.current,
+                pageSize: pagination.pageSize,
+                total: pagination.total,
+                onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+              }}
+            />
           )
         ) : (
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-surface-500">共 {flattenDocuments(documents).length} 个文档</span>
+              <span className="text-sm text-surface-500">
+                共 {projectDocTree.length} 个项目，{flattenDocuments(documents).length} 个文档
+              </span>
               <div className="flex gap-2">
                 <button onClick={expandAll} className="text-xs px-2 py-1 rounded bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700">
                   展开全部
@@ -1092,14 +1310,14 @@ export default function DocumentManagement() {
                 </button>
               </div>
             </div>
-            {documents.length === 0 ? (
+            {projectDocTree.length === 0 ? (
               <EmptyState
-                title="暂无文档"
+                title="暂无项目或文档"
                 description="点击上方按钮添加第一个文档"
                 action={{ label: '新增文档', onClick: openCreateModal }}
               />
             ) : (
-              renderDocTree(documents)
+              renderProjectDocTree()
             )}
           </div>
         )}
@@ -1136,36 +1354,26 @@ export default function DocumentManagement() {
           {/* Form Header */}
           <div className="flex flex-col sm:flex-row gap-4 mb-4 flex-shrink-0">
             <div className="sm:w-1/3">
-              <label className="form-label">所属项目</label>
-              <select
+              <Select
+                label="所属项目"
                 value={formData.projectId}
-                onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-                className={`w-full px-4 py-2.5 rounded-xl border bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 ${formErrors.projectId ? 'border-red-500' : 'border-surface-300 dark:border-surface-600'}`}
-              >
-                <option value="">请选择项目</option>
-                {projects.map(project => (
-                  <option key={project.id} value={project.id}>{project.name}</option>
-                ))}
-              </select>
-              {formErrors.projectId && <p className="mt-1 text-sm text-red-600">{formErrors.projectId}</p>}
+                onChange={(value) => setFormData({ ...formData, projectId: value })}
+                options={[{ value: '', label: '请选择项目' }, ...projects.map(project => ({ value: project.id, label: project.name }))]}
+                error={formErrors.projectId}
+              />
             </div>
             <div className="flex-1">
               <Input label="文档标题" placeholder="请输入文档标题" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} error={formErrors.title} required />
             </div>
             <div className="sm:w-48">
-              <label className="form-label">父文档</label>
-              <select
+              <Select
+                label="父文档"
                 value={formData.parentId}
-                onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-              >
-                <option value="">-- 无父文档 --</option>
-                {flattenDocuments(documents)
+                onChange={(value) => setFormData({ ...formData, parentId: value })}
+                options={[{ value: '', label: '-- 无父文档 --' }, ...flattenDocuments(documents)
                   .filter(d => d.id !== editingDocument?.id)
-                  .map(doc => (
-                    <option key={doc.id} value={doc.id}>{doc.title}</option>
-                  ))}
-              </select>
+                  .map(doc => ({ value: doc.id, label: doc.title }))]}
+              />
             </div>
             <div className="sm:w-24">
               <Input label="排序" type="number" placeholder="排序" value={formData.sort.toString()} onChange={(e) => setFormData({ ...formData, sort: parseInt(e.target.value) || 0 })} />
@@ -1405,21 +1613,14 @@ export default function DocumentManagement() {
               <span className="font-medium">{movingDoc?.title}</span>
             </div>
           </div>
-          <div>
-            <label className="form-label">目标位置（留空设为根文档）</label>
-            <select
-              value={targetParentId}
-              onChange={(e) => setTargetParentId(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-            >
-              <option value="">-- 设为根文档 --</option>
-              {flattenDocuments(documents)
-                .filter(d => d.id !== movingDoc?.id)
-                .map(doc => (
-                  <option key={doc.id} value={doc.id}>{doc.title}</option>
-                ))}
-            </select>
-          </div>
+          <Select
+            label="目标位置（留空设为根文档）"
+            value={targetParentId}
+            onChange={(value) => setTargetParentId(value)}
+            options={[{ value: '', label: '-- 设为根文档 --' }, ...flattenDocuments(documents)
+              .filter(d => d.id !== movingDoc?.id)
+              .map(doc => ({ value: doc.id, label: doc.title }))]}
+          />
         </div>
       </Modal>
 

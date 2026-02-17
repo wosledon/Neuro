@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **parentId** | **string** |  | [optional] [default to undefined]
 **treePath** | **string** |  | [optional] [default to undefined]
 **sort** | [**AISupportUpsertRequestMaxTokens**](AISupportUpsertRequestMaxTokens.md) |  | [optional] [default to undefined]
+**isFolder** | **boolean** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -26,6 +27,7 @@ const instance: DocumentUpsertRequest = {
     parentId,
     treePath,
     sort,
+    isFolder,
 };
 ```
 

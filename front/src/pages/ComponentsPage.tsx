@@ -49,7 +49,7 @@ export default function ComponentsPage() {
   ]
 
   return (
-    <div className="container-main py-8 animate-fade-in">
+    <div className="animate-fade-in">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-surface-900 dark:text-white mb-2">
           组件库

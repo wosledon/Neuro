@@ -142,12 +142,12 @@ public class AuthController : ApiControllerBase
 
         return Success(new
         {
-            user.Id,
-            user.Account,
-            user.Name,
-            user.Email,
-            user.Phone,
-            user.IsSuper
+            id = user.Id,
+            account = user.Account,
+            name = user.Name,
+            email = user.Email,
+            phone = user.Phone,
+            isSuper = user.IsSuper
         });
     }
 

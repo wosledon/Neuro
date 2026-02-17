@@ -16,6 +16,12 @@ export default defineConfig({
       '/swagger': {
         target: 'http://localhost:5146',
         changeOrigin: true,
+      },
+      // Proxy SignalR requests to backend
+      '/hubs': {
+        target: 'http://localhost:5146',
+        changeOrigin: true,
+        ws: true, // Enable WebSocket proxy
       }
     }
   },

@@ -1,5 +1,8 @@
 namespace Neuro.Shared.Dtos;
 
+/// <summary>
+/// 文档创建/更新请求
+/// </summary>
 public class DocumentUpsertRequest
 {
     public Guid? Id { get; set; }
@@ -9,4 +12,9 @@ public class DocumentUpsertRequest
     public Guid? ParentId { get; set; }
     public string? TreePath { get; set; }
     public int? Sort { get; set; }
+    
+    /// <summary>
+    /// 是否是文件夹
+    /// </summary>
+    public bool? IsFolder { get; set; }
 }

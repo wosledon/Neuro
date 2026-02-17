@@ -20,6 +20,7 @@ export type TableProps<T> = {
   emptyText?: React.ReactNode
   onRowClick?: (record: T) => void
   className?: string
+  noBorder?: boolean
   pagination?: {
     current: number
     pageSize: number
@@ -36,6 +37,7 @@ export function Table<T extends Record<string, any>>({
   emptyText = '暂无数据',
   onRowClick,
   className,
+  noBorder = false,
   pagination,
 }: TableProps<T>) {
   const getRowKey = (record: T): string => {
@@ -62,7 +64,11 @@ export function Table<T extends Record<string, any>>({
   }
 
   return (
-    <div className={clsx('overflow-hidden rounded-2xl border border-surface-200 dark:border-surface-700 shadow-soft', className)}>
+    <div className={clsx(
+      'overflow-hidden rounded-2xl',
+      !noBorder && 'border border-surface-200 dark:border-surface-700 shadow-soft',
+      className
+    )}>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>

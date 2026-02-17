@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner } from '../../components'
+import { Button, Card, Input, Modal, Table, Badge, EmptyState, LoadingSpinner, Select, Tooltip } from '../../components'
 import { permissionsApi, menusApi } from '../../services/auth'
 import { useToast } from '../../components/ToastProvider'
 import { 
@@ -48,6 +48,13 @@ export default function PermissionManagement() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const { show: showToast } = useToast()
 
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  })
+
   const fetchPermissions = async () => {
     setLoading(true)
     try {
@@ -76,19 +83,26 @@ export default function PermissionManagement() {
     fetchMenus()
   }, [])
 
+  // Filter permissions based on search query and pagination
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredPermissions(permissions)
-      return
+    let filtered = permissions
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = permissions.filter(perm => 
+        perm.name.toLowerCase().includes(query) ||
+        perm.code.toLowerCase().includes(query) ||
+        perm.description?.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase()
-    const filtered = permissions.filter(perm => 
-      perm.name.toLowerCase().includes(query) ||
-      perm.code.toLowerCase().includes(query) ||
-      perm.description?.toLowerCase().includes(query)
-    )
-    setFilteredPermissions(filtered)
-  }, [searchQuery, permissions])
+    
+    setPagination(prev => ({ ...prev, total: filtered.length }))
+    
+    // 客户端分页
+    const start = (pagination.current - 1) * pagination.pageSize
+    const end = start + pagination.pageSize
+    setFilteredPermissions(filtered.slice(start, end))
+  }, [searchQuery, permissions, pagination.current, pagination.pageSize])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -224,20 +238,22 @@ export default function PermissionManagement() {
       align: 'right' as const,
       render: (perm: Permission) => (
         <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => handleEdit(perm)}
-            className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-            title="编辑"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(perm)}
-            className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            title="删除"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          <Tooltip content="编辑" placement="top">
+            <button
+              onClick={() => handleEdit(perm)}
+              className="p-2 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+            >
+              <PencilIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="删除" placement="top">
+            <button
+              onClick={() => handleDelete(perm)}
+              className="p-2 rounded-lg text-surface-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
       )
     },
@@ -282,7 +298,7 @@ export default function PermissionManagement() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card noPadding>
         {loading ? (
           <LoadingSpinner centered text="加载中..." />
         ) : filteredPermissions.length === 0 ? (
@@ -296,6 +312,13 @@ export default function PermissionManagement() {
             columns={columns}
             dataSource={filteredPermissions}
             rowKey="id"
+            noBorder
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page) => setPagination(prev => ({ ...prev, current: page }))
+            }}
           />
         )}
       </Card>
@@ -339,33 +362,24 @@ export default function PermissionManagement() {
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="form-label">关联菜单</label>
-              <select
-                value={formData.menuId}
-                onChange={(e) => setFormData({ ...formData, menuId: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-              >
-                <option value="">-- 选择菜单 --</option>
-                {menus.map(menu => (
-                  <option key={menu.id} value={menu.id}>{menu.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="form-label">HTTP 方法</label>
-              <select
-                value={formData.method}
-                onChange={(e) => setFormData({ ...formData, method: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
-              >
-                <option value="GET">GET</option>
-                <option value="POST">POST</option>
-                <option value="PUT">PUT</option>
-                <option value="DELETE">DELETE</option>
-                <option value="PATCH">PATCH</option>
-              </select>
-            </div>
+            <Select
+              label="关联菜单"
+              value={formData.menuId}
+              onChange={(value) => setFormData({ ...formData, menuId: value })}
+              options={[{ value: '', label: '-- 选择菜单 --' }, ...menus.map(menu => ({ value: menu.id, label: menu.name }))]}
+            />
+            <Select
+              label="HTTP 方法"
+              value={formData.method}
+              onChange={(value) => setFormData({ ...formData, method: value })}
+              options={[
+                { value: 'GET', label: 'GET' },
+                { value: 'POST', label: 'POST' },
+                { value: 'PUT', label: 'PUT' },
+                { value: 'DELETE', label: 'DELETE' },
+                { value: 'PATCH', label: 'PATCH' }
+              ]}
+            />
           </div>
 
           <Input
