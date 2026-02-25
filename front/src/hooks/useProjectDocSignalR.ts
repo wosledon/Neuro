@@ -21,6 +21,7 @@ export function useProjectDocSignalR(options: UseProjectDocSignalROptions = {}) 
   
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [progress, setProgress] = useState<DocGenProgress | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
@@ -51,6 +52,7 @@ export function useProjectDocSignalR(options: UseProjectDocSignalROptions = {}) 
     // 监听文档生成进度
     newConnection.on('DocGenProgress', (progress: DocGenProgress) => {
       console.log('📨 收到文档生成进度:', progress);
+      setProgress(progress);
       onProgress?.(progress);
     });
 
@@ -129,6 +131,7 @@ export function useProjectDocSignalR(options: UseProjectDocSignalROptions = {}) 
   }, [autoConnect]); // 只依赖 autoConnect，避免重复连接
 
   return {
+    progress,
     isConnected,
     error,
     connect,

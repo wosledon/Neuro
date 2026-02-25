@@ -3,15 +3,14 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Button, Badge, Tooltip } from '../components'
 import { useToast } from '../components/ToastProvider'
-import { 
-  PaperAirplaneIcon, 
+import {
+  PaperAirplaneIcon,
   SparklesIcon,
   TrashIcon,
   ChatBubbleLeftIcon,
   PlusIcon,
   Cog6ToothIcon,
   MagnifyingGlassIcon,
-  SignalIcon,
   StopIcon
 } from '@heroicons/react/24/solid'
 import { chatApi } from '../services/chat'

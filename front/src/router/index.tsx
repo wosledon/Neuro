@@ -1,29 +1,29 @@
 import React from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
-// 页面组件
-import Login from '../pages/Login'
-import Chat from '../pages/Chat'
-import Dashboard from '../pages/Dashboard'
-import LandingPage from '../pages/LandingPage'
-import Profile from '../pages/Profile'
-import UserManagement from '../pages/admin/UserManagement'
-import RoleManagement from '../pages/admin/RoleManagement'
-import PermissionManagement from '../pages/admin/PermissionManagement'
-import MenuManagement from '../pages/admin/MenuManagement'
-import TeamManagement from '../pages/admin/TeamManagement'
-import ProjectManagement from '../pages/admin/ProjectManagement'
-import DocumentManagement from '../pages/admin/DocumentManagement'
-import Notebook from '../pages/Notebook'
-import FileResourceManagement from '../pages/admin/FileResourceManagement'
-import TenantManagement from '../pages/admin/TenantManagement'
-import AISupportManagement from '../pages/admin/AISupportManagement'
-import GitCredentialManagement from '../pages/admin/GitCredentialManagement'
-import ComponentsPage from '../pages/ComponentsPage'
-import NotFound from '../pages/NotFound'
-import { LoadingSpinner } from '../components'
+// 页面组件 - 懒加载
+const Login = React.lazy(() => import('../pages/Login'))
+const Chat = React.lazy(() => import('../pages/Chat'))
+const Dashboard = React.lazy(() => import('../pages/Dashboard'))
+const LandingPage = React.lazy(() => import('../pages/LandingPage'))
+const Profile = React.lazy(() => import('../pages/Profile'))
+const UserManagement = React.lazy(() => import('../pages/admin/UserManagement'))
+const RoleManagement = React.lazy(() => import('../pages/admin/RoleManagement'))
+const PermissionManagement = React.lazy(() => import('../pages/admin/PermissionManagement'))
+const MenuManagement = React.lazy(() => import('../pages/admin/MenuManagement'))
+const TeamManagement = React.lazy(() => import('../pages/admin/TeamManagement'))
+const ProjectManagement = React.lazy(() => import('../pages/admin/ProjectManagement'))
+const DocumentManagement = React.lazy(() => import('../pages/admin/DocumentManagement'))
+const Notebook = React.lazy(() => import('../pages/Notebook'))
+const FileResourceManagement = React.lazy(() => import('../pages/admin/FileResourceManagement'))
+const TenantManagement = React.lazy(() => import('../pages/admin/TenantManagement'))
+const AISupportManagement = React.lazy(() => import('../pages/admin/AISupportManagement'))
+const GitCredentialManagement = React.lazy(() => import('../pages/admin/GitCredentialManagement'))
+const ComponentsPage = React.lazy(() => import('../pages/ComponentsPage'))
+const NotFound = React.lazy(() => import('../pages/NotFound'))
+const LoadingSpinner = React.lazy(() => import('../components/LoadingSpinner'))
 
-export type Route = 
+export type Route =
   | 'home'
   | 'login'
   | 'landing'
@@ -56,7 +56,7 @@ export function RouterProvider({ children }: { children: React.ReactNode }) {
     // 默认显示介绍页
     return (saved as Route) || 'landing'
   })
-  
+
   const navigate = React.useCallback((newRoute: Route) => {
     setRoute(newRoute)
     localStorage.setItem('current_route', newRoute)
@@ -139,111 +139,162 @@ function PublicRoute({ children, redirectTo = 'home' }: { children: React.ReactN
 export function RouteRenderer() {
   const { route, navigate } = useRouter()
 
+  // 加载状态组件
+  const LoadingFallback = (
+    <div className="flex items-center justify-center min-h-screen bg-surface-50 dark:bg-surface-950">
+      <LoadingSpinner size="lg" text="加载中..." />
+    </div>
+  )
+
   switch (route) {
     case 'home':
       return (
         <ProtectedRoute>
-          <Chat />
+          <React.Suspense fallback={LoadingFallback}>
+            <Chat />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'login':
       return (
         <PublicRoute>
-          <Login 
-            onBack={() => navigate('landing')} 
-            onLogin={() => navigate('home')} 
-          />
+          <React.Suspense fallback={LoadingFallback}>
+            <Login
+              onBack={() => navigate('landing')}
+              onLogin={() => navigate('home')}
+            />
+          </React.Suspense>
         </PublicRoute>
       )
     case 'landing':
-      return <LandingPage />
+      return (
+        <React.Suspense fallback={LoadingFallback}>
+          <LandingPage />
+        </React.Suspense>
+      )
     case 'dashboard':
       return (
         <ProtectedRoute>
-          <Dashboard />
+          <React.Suspense fallback={LoadingFallback}>
+            <Dashboard />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'profile':
       return (
         <ProtectedRoute>
-          <Profile />
+          <React.Suspense fallback={LoadingFallback}>
+            <Profile />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'users':
       return (
         <ProtectedRoute>
-          <UserManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <UserManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'roles':
       return (
         <ProtectedRoute>
-          <RoleManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <RoleManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'permissions':
       return (
         <ProtectedRoute>
-          <PermissionManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <PermissionManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'menus':
       return (
         <ProtectedRoute>
-          <MenuManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <MenuManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'teams':
       return (
         <ProtectedRoute>
-          <TeamManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <TeamManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'projects':
       return (
         <ProtectedRoute>
-          <ProjectManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <ProjectManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'documents':
       return (
         <ProtectedRoute>
-          <DocumentManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <DocumentManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'file-resources':
       return (
         <ProtectedRoute>
-          <FileResourceManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <FileResourceManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'tenants':
       return (
         <ProtectedRoute>
-          <TenantManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <TenantManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'ai-supports':
       return (
         <ProtectedRoute>
-          <AISupportManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <AISupportManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'git-credentials':
       return (
         <ProtectedRoute>
-          <GitCredentialManagement />
+          <React.Suspense fallback={LoadingFallback}>
+            <GitCredentialManagement />
+          </React.Suspense>
         </ProtectedRoute>
       )
     case 'components':
-      return <ComponentsPage />
+      return (
+        <React.Suspense fallback={LoadingFallback}>
+          <ComponentsPage />
+        </React.Suspense>
+      )
     case 'notebook':
       return (
         <ProtectedRoute>
-          <Notebook />
+          <React.Suspense fallback={LoadingFallback}>
+            <Notebook />
+          </React.Suspense>
         </ProtectedRoute>
       )
     default:
-      return <NotFound />
+      return (
+        <React.Suspense fallback={LoadingFallback}>
+          <NotFound />
+        </React.Suspense>
+      )
   }
 }

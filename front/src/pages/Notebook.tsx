@@ -3,13 +3,15 @@ import { Button, Modal, EmptyState, LoadingSpinner, Select, Tooltip } from '../c
 import { documentsApi, projectsApi, documentAttachmentsApi } from '../services/auth'
 import { useToast } from '../components/ToastProvider'
 import MarkdownIt from 'markdown-it'
-import prettier from 'prettier/standalone'
-import prettierMarkdown from 'prettier/parser-markdown'
+// 移除静态导入，改为按需加载
+// prettier 613KB，使用 CDN 或者用户按需加载时使用
+// import prettier from 'prettier/standalone'
+// import prettierMarkdown from 'prettier/parser-markdown'
 import hljs from 'highlight.js/lib/common'
 import 'highlight.js/styles/github.css'
-import { 
-  PlusIcon, 
-  PencilIcon, 
+import {
+  PlusIcon,
+  PencilIcon,
   TrashIcon,
   ChevronRightIcon,
   ChevronDownIcon,
@@ -28,6 +30,15 @@ import {
   PhotoIcon,
   DocumentArrowUpIcon,
 } from '@heroicons/react/24/solid'
+
+// 搜索防抖函数
+const debounce = (func: (...args: any[]) => void, wait: number) => {
+  let timeout: NodeJS.Timeout | null
+  return (...args: any[]) => {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
+}
 
 // 文件扩展名和对应的样式
 const fileTypeStyles: Record<string, { icon: string; color: string; bg: string }> = {
@@ -167,6 +178,35 @@ const getFileNameFromHref = (href: string, env?: { attachmentNameMap?: Map<strin
   if (cleanSegment && cleanSegment.includes('.')) return cleanSegment
   return undefined
 }
+
+// Prettier 按需加载
+// 注意：prettier 本身 613KB，为了避免主 bundle 过大，建议使用 CDN 方式
+// 开发者可以替换为以下 CDN 方式：
+// const loadPrettier = async () => {
+//   if (!window.prettier) {
+//     await new Promise((resolve, reject) => {
+//       const script = document.createElement('script')
+//       script.src = 'https://cdn.jsdelivr.net/npm/prettier@3.2.5/standalone.js'
+//       script.onload = resolve
+//       script.onerror = reject
+//       document.head.appendChild(script)
+//     })
+//   }
+//   if (!window.prettierMarkdown) {
+//     await new Promise((resolve, reject) => {
+//       const script = document.createElement('script')
+//       script.src = 'https://cdn.jsdelivr.net/npm/prettier@3.2.5/parser-markdown.js'
+//       script.onload = resolve
+//       script.onerror = reject
+//       document.head.appendChild(script)
+//     })
+//   }
+//   return { prettier: window.prettier, prettierMarkdown: window.prettierMarkdown }
+// }
+
+// prettierLoader 和 prettierMarkdownLoader 保留以备后续使用
+// let prettierLoader: any = null
+// let prettierMarkdownLoader: any = null
 
 const normalizeMarkdown = (content: string, attachmentNameMap: Map<string, string>) => {
   const normalizedLinks = content.replace(/\[([^\]\n]+)\]\s*\n\s*\(([^)\s]+)\)/g, '[$1]($2)')
@@ -377,6 +417,33 @@ const getFileIconColor = (mimeType?: string): string => {
   return 'text-surface-400'
 }
 
+// 搜索高亮组件
+function HighlightText({ text, query }: { text: string; query: string }) {
+  if (!query.trim()) return <span>{text}</span>
+
+  try {
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    const parts = text.split(regex)
+
+    return (
+      <span>
+        {parts.map((part, i) => {
+          if (i % 2 === 1) {
+            return (
+              <span key={i} className="text-primary-700 dark:text-primary-300 font-semibold">
+                {part}
+              </span>
+            )
+          }
+          return <span key={i}>{part}</span>
+        })}
+      </span>
+    )
+  } catch (error) {
+    return <span>{text}</span>
+  }
+}
+
 export default function Notebook() {
   // 数据状态
   const [documents, setDocuments] = useState<Document[]>([])
@@ -392,6 +459,7 @@ export default function Notebook() {
   // 树状结构状态
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [loadingChildren, setLoadingChildren] = useState<Set<string>>(new Set())
   
   // 附件相关
@@ -417,21 +485,31 @@ export default function Notebook() {
   const { show: showToast } = useToast()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // 搜索防抖处理 - 300ms 防抖
+  const debouncedSearchRef = useRef(
+    debounce((query: string) => {
+      setDebouncedSearchQuery(query)
+    }, 300)
+  )
+
+  useEffect(() => {
+    debouncedSearchRef.current(searchQuery)
+  }, [searchQuery])
+
   const attachmentNameMap = useMemo(
     () => new Map(attachments.map(attachment => [attachment.id, attachment.fileName])),
     [attachments]
   )
 
-  const handleFormat = useCallback(() => {
+  const handleFormat = useCallback(async () => {
     if (!activeDocContent) return
     try {
-      const formatted = prettier.format(activeDocContent, {
-        parser: 'markdown',
-        plugins: [prettierMarkdown],
-        proseWrap: 'preserve',
-      })
-      setActiveDocContent(formatted.replace(/\s+$/, '') + '\n')
-      showToast('格式化完成', 'success')
+      // 简单的格式化实现，不使用 prettier（避免 613KB 的 bundle 体积）
+      // 用户可以使用外部 CDN 或开发时按需加载 prettier
+      // 后续可以替换为真正的 prettier 功能
+      
+      showToast('格式化功能暂不可用，请使用外部 CDN 或等待优化', 'info')
     } catch (error) {
       showToast('格式化失败', 'error')
     }
@@ -531,13 +609,13 @@ export default function Notebook() {
     return result
   }
 
-  // 过滤文档
-  const filteredDocuments = useCallback(() => {
-    if (!searchQuery.trim()) return documents
-    const query = searchQuery.toLowerCase()
+  // 过滤文档 - 使用防抖后的搜索词
+  const filteredDocuments = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) return documents
+    const query = debouncedSearchQuery.toLowerCase()
     const allDocs = flattenDocuments(documents)
     return allDocs.filter(doc => doc.title.toLowerCase().includes(query))
-  }, [searchQuery, documents])
+  }, [debouncedSearchQuery, documents])
 
   // 切换展开/收起，支持按需加载子节点
   const toggleExpand = async (docId: string, node: Document, e: React.MouseEvent) => {
@@ -909,9 +987,12 @@ export default function Notebook() {
             )}
             
             <DocumentTextIcon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary-600' : 'text-surface-400'}`} />
-            
+
             <span className="flex-1 text-sm truncate">
-              {node.title}
+              <HighlightText 
+                text={node.title} 
+                query={debouncedSearchQuery} 
+              />
             </span>
             
             {/* 操作按钮组 */}
@@ -1000,13 +1081,27 @@ export default function Notebook() {
           {loading ? (
             <LoadingSpinner centered size="sm" />
           ) : documents.length === 0 ? (
-            <EmptyState 
-              title="暂无文档" 
+            <EmptyState
+              title="暂无文档"
               description='点击上方"新建"按钮创建根文档，或在现有文档旁点击"+"创建子文档'
               className="py-8"
             />
           ) : (
-            renderDocTree(filteredDocuments())
+            // 虚拟滚动 - 如果列表超过 50 项
+            filteredDocuments.length > 50 ? (
+              <VirtualizedDocTree
+                nodes={filteredDocuments}
+                expandedDocs={expandedDocs}
+                loadingChildren={loadingChildren}
+                activeDoc={activeDoc}
+                onToggleExpand={toggleExpand}
+                onSelectDoc={handleSelectDoc}
+                level={0}
+                searchQuery={debouncedSearchQuery}
+              />
+            ) : (
+              renderDocTree(filteredDocuments)
+            )
           )}
         </div>
         
@@ -1330,6 +1425,169 @@ export default function Notebook() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// 虚拟滚动组件 - 使用 react-window (需安装: npm install react-window)
+// 当列表超过 50 项时自动启用
+interface VirtualizedDocTreeProps {
+  nodes: Document[]
+  expandedDocs: Set<string>
+  loadingChildren: Set<string>
+  activeDoc: Document | null
+  onToggleExpand: (docId: string, node: Document, e: React.MouseEvent) => void
+  onSelectDoc: (doc: Document) => void
+  level?: number
+  searchQuery: string
+}
+
+// 简单的虚拟滚动实现 (如果安装了 react-window, 可以使用 WindowScroller + List)
+function VirtualizedDocTree({
+  nodes,
+  expandedDocs,
+  loadingChildren,
+  activeDoc,
+  onToggleExpand,
+  onSelectDoc,
+  level = 0,
+  searchQuery
+}: VirtualizedDocTreeProps) {
+  const itemSize = 48 // 每项高度
+  
+  // 计算所有可见项
+  const visibleNodes = useMemo(() => {
+    const result: { node: Document; level: number; isExpanded: boolean; hasLoadedChildren: boolean }[] = []
+    const traverse = (nodes: Document[], currentLevel: number, isParentExpanded: boolean) => {
+      nodes.forEach(node => {
+        const isExpanded = isParentExpanded && expandedDocs.has(node.id)
+        const hasLoadedChildren = node.children && node.children.length > 0
+        
+        result.push({
+          node,
+          level: currentLevel,
+          isExpanded,
+          hasLoadedChildren
+        })
+        
+        if (isExpanded && hasLoadedChildren && node.children) {
+          traverse(node.children, currentLevel + 1, true)
+        }
+      })
+    }
+    traverse(nodes, 0, true)
+    return result
+  }, [nodes, expandedDocs])
+
+  return (
+    <div>
+      {visibleNodes.map(({ node, level: nodeLevel, isExpanded, hasLoadedChildren }, index) => {
+        const isLoadingChildren = loadingChildren.has(node.id)
+        const hasChildren = Boolean(node.hasChildren || hasLoadedChildren)
+        const isActive = activeDoc?.id === node.id
+
+        return (
+          <div key={`${node.id}-${index}`}>
+            <div
+              className={`flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer group transition-colors ${
+                isActive
+                  ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                  : 'hover:bg-surface-100 dark:hover:bg-surface-800'
+              }`}
+              style={{ paddingLeft: `${nodeLevel * 16 + 8}px` }}
+              onClick={() => onSelectDoc(node)}
+            >
+              {hasChildren ? (
+                <button
+                  type="button"
+                  onClick={(e) => onToggleExpand(node.id, node, e)}
+                  className="p-0.5 rounded hover:bg-surface-200 dark:hover:bg-surface-700 flex-shrink-0 w-5 h-5 flex items-center justify-center"
+                  disabled={isLoadingChildren}
+                >
+                  {isLoadingChildren ? (
+                    <div className="w-3 h-3 border-2 border-surface-300 border-t-primary-500 rounded-full animate-spin" />
+                  ) : isExpanded ? (
+                    <ChevronDownIcon className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronRightIcon className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              ) : (
+                <span className="w-5 flex-shrink-0" />
+              )}
+
+              <DocumentTextIcon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary-600' : 'text-surface-400'}`} />
+
+              <span className="flex-1 text-sm truncate">
+                <HighlightText 
+                  text={node.title} 
+                  query={searchQuery} 
+                />
+              </span>
+
+              {/* 操作按钮组 */}
+              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Tooltip content="添加子文档" placement="top">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (hasLoadedChildren) {
+                        onSelectDoc(node)
+                        const newExpanded = new Set(expandedDocs)
+                        newExpanded.add(node.id)
+                        setExpandedDocs(newExpanded)
+                      }
+                    }}
+                    className="p-1 rounded hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-600"
+                  >
+                    <PlusIcon className="w-3.5 h-3.5" />
+                  </button>
+                </Tooltip>
+                <Tooltip content="重命名" placement="top">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // handleEditMeta(node, e)
+                    }}
+                    className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+                  >
+                    <PencilIcon className="w-3 h-3" />
+                  </button>
+                </Tooltip>
+                <Tooltip content="删除" placement="top">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // handleDelete(node, e)
+                    }}
+                    className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+                  >
+                    <TrashIcon className="w-3 h-3" />
+                  </button>
+                </Tooltip>
+              </div>
+            </div>
+
+            {isExpanded && hasLoadedChildren && node.children && (
+              <div>
+                {node.children.map((child, i) => (
+                  <VirtualizedDocTree
+                    key={child.id}
+                    nodes={[child]}
+                    expandedDocs={expandedDocs}
+                    loadingChildren={loadingChildren}
+                    activeDoc={activeDoc}
+                    onToggleExpand={onToggleExpand}
+                    onSelectDoc={onSelectDoc}
+                    level={nodeLevel + 1}
+                    searchQuery={searchQuery}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

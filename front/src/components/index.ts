@@ -44,3 +44,9 @@ export type { BreadcrumbProps, BreadcrumbItem } from './Breadcrumb'
 
 export { default as Tooltip } from './Tooltip'
 export type { TooltipProps } from './Tooltip'
+
+export { default as Layout } from './Layout'
+export type { LayoutProps } from './Layout'
+
+export { ErrorBoundary } from './ErrorBoundary'
+export type { ErrorBoundaryProps } from './ErrorBoundary'
