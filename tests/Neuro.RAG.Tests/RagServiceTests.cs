@@ -17,6 +17,8 @@ public class RagServiceTests
     private ServiceProvider BuildProvider()
     {
         var services = new ServiceCollection();
+        services.AddOptions();
+        services.Configure<RagOptions>(_ => { });
         services.AddNeuroRAG();
 
         // Add test doubles
@@ -35,10 +37,10 @@ public class RagServiceTests
         var search = sp.GetRequiredService<ISearchService>();
         var rag = sp.GetRequiredService<IRagService>();
 
-        var ids = await ingest.IndexTextAsync("hello world");
+        var ids = await ingest.IndexTextAsync("The quick brown fox jumps over the lazy dog and runs through the forest");
         Assert.NotEmpty(ids);
 
-        var results = (await search.QueryAsync("hello")).ToArray();
+        var results = (await search.QueryAsync("quick brown fox")).ToArray();
         Assert.NotEmpty(results);
 
         var answer = await rag.AnswerAsync("what is hello?", async prompt => "LLM-REPLY");
@@ -70,6 +72,8 @@ public class RagServiceTests
     private class TestVectorStore : IVectorStore
     {
         private readonly List<VectorRecord> _records = new();
+        public int Count => _records.Count;
+
         public Task DeleteAsync(System.Collections.Generic.IEnumerable<string> ids, CancellationToken cancellationToken = default)
         {
             _records.RemoveAll(r => ids.Contains(r.Id));

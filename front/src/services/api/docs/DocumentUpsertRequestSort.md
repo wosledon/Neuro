@@ -1,0 +1,18 @@
+# DocumentUpsertRequestSort
+
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+
+## Example
+
+```typescript
+import { DocumentUpsertRequestSort } from './api';
+
+const instance: DocumentUpsertRequestSort = {
+};
+```
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

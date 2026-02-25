@@ -64,8 +64,19 @@ public class UnitOfWork<TDbContext> : IUnitOfWork where TDbContext : NeuroDbCont
     public async Task RemoveByIdAsync<T>(Guid id) where T : class, IEntity, new()
     {
         var entity = new T() { Id = id };
-        _db.Set<T>().Attach(entity);
-        _db.Set<T>().Remove(entity);
+        // If the entity supports soft delete, mark IsDeleted = true instead of physical delete
+        if (entity is ISoftDeleteEntity soft)
+        {
+            soft.IsDeleted = true;
+            _db.Set<T>().Attach(entity);
+            var entry = _db.Entry(entity);
+            entry.Property(nameof(ISoftDeleteEntity.IsDeleted)).IsModified = true;
+        }
+        else
+        {
+            _db.Set<T>().Attach(entity);
+            _db.Set<T>().Remove(entity);
+        }
 
         await Task.CompletedTask;
     }
@@ -75,9 +86,20 @@ public class UnitOfWork<TDbContext> : IUnitOfWork where TDbContext : NeuroDbCont
         foreach (var id in ids)
         {
             var entity = new T() { Id = id };
-            _db.Set<T>().Attach(entity);
-            _db.Set<T>().Remove(entity);
+            if (entity is ISoftDeleteEntity soft)
+            {
+                soft.IsDeleted = true;
+                _db.Set<T>().Attach(entity);
+                var entry = _db.Entry(entity);
+                entry.Property(nameof(ISoftDeleteEntity.IsDeleted)).IsModified = true;
+            }
+            else
+            {
+                _db.Set<T>().Attach(entity);
+                _db.Set<T>().Remove(entity);
+            }
         }
+
         return Task.CompletedTask;
     }
 

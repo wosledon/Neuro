@@ -1,0 +1,1 @@
+module.exports = {\n  stories: ['../src/**/*.stories.@(ts|tsx|mdx)'],\n  addons: ['@storybook/addon-essentials'],\n  framework: '@storybook/react',\n}\n

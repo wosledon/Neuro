@@ -11,6 +11,8 @@ public class DIRegistrationTests
 {
     private class DummyStore : IVectorStore
     {
+        public int Count => 0;
+
         public Task UpsertAsync(IEnumerable<VectorRecord> records, System.Threading.CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<IEnumerable<VectorRecord>> GetAsync(IEnumerable<string> ids, System.Threading.CancellationToken cancellationToken = default) => Task.FromResult((IEnumerable<VectorRecord>)new List<VectorRecord>());
         public Task DeleteAsync(IEnumerable<string> ids, System.Threading.CancellationToken cancellationToken = default) => Task.CompletedTask;

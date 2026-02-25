@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -21,6 +21,9 @@ public class NeuroDbContext : DbContext
 
     // 当前租户 ID，供全局查询过滤器使用
     public Guid? CurrentTenantId => _currentUser?.TenantId;
+    
+    // 是否是超级管理员，供全局查询过滤器使用
+    public bool IsSuperUser => _currentUser?.IsSuper ?? false;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

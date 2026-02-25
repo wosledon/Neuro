@@ -15,9 +15,9 @@ public static class EntityFrameworkCoreExtensions
         public void AddSqlite<TDbContext>(string connectionString, Action<SqliteDbContextOptionsBuilder>? sqliteOptionsAction = null)
         where TDbContext : NeuroDbContext
         {
-            ArgumentNullException.ThrowIfNullOrWhiteSpace(connectionString);
+            ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
 
-            builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork<>));
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork<TDbContext>>();
 
             builder.Services.AddDbContext<TDbContext>(options =>
             {

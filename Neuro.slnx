@@ -6,6 +6,7 @@
     <Project Path="src/Neuro.EntityFrameworkCore.NpgSql/Neuro.EntityFrameworkCore.NpgSql.csproj" />
     <Project Path="src/Neuro.EntityFrameworkCore.Sqlite/Neuro.EntityFrameworkCore.Sqlite.csproj" />
     <Project Path="src/Neuro.EntityFrameworkCore/Neuro.EntityFrameworkCore.csproj" />
+    <Project Path="src/Neuro.LLM/Neuro.LLM.csproj" />
     <Project Path="src/Neuro.RAG/Neuro.RAG.csproj" />
     <Project Path="src/Neuro.Storage/Neuro.Storage.csproj" />
     <Project Path="src/Neuro.Shared/Neuro.Shared.csproj" />
@@ -15,6 +16,7 @@
     <Project Path="src/Neuro.Vectorizer/Neuro.Vectorizer.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Neuro.Api.Tests/Neuro.Api.Tests.csproj" />
     <Project Path="tests/Neuro.Document.Tests/Neuro.Document.Tests.csproj" />
     <Project Path="tests/Neuro.RAG.Tests/Neuro.RAG.Tests.csproj" />
     <Project Path="tests/Neuro.Tokenizer.Tests/Neuro.Tokenizer.Tests.csproj" />

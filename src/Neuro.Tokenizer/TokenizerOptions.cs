@@ -13,6 +13,11 @@ public class TokenizerOptions
     public string? EncodingFilePath { get; set; }
 
     /// <summary>
+    /// BERT vocab.txt 文件路径。如果提供了有效路径，BertWordPieceTokenizer 将使用完整词汇表。
+    /// </summary>
+    public string? VocabPath { get; set; }
+
+    /// <summary>
     /// 是否启用标准化（normalization），默认 true。
     /// </summary>
     public bool UseNormalization { get; set; } = true;
