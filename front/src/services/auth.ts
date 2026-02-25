@@ -110,6 +110,18 @@ export interface LoginResult {
   refreshToken: string
 }
 
+// 当前用户类型
+export interface CurrentUser {
+  id: string
+  account: string
+  name: string
+  email?: string
+  isSuper: boolean
+  roles?: string[]
+  permissions?: string[]
+  menus?: any[]
+}
+
 // 登录
 export async function login(account: string, password: string): Promise<LoginResult> {
   try {
@@ -154,7 +166,7 @@ export async function logout(refreshToken: string) {
 }
 
 // 获取当前用户信息
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<CurrentUser> {
   const response = await authApi.apiAuthMeGet()
   return response.data.data
 }
