@@ -86,4 +86,14 @@ public class RagOptions
     /// 混合内容重叠比例（相对于 ChunkOverlap）
     /// </summary>
     public float MixedChunkOverlapRatio { get; set; } = 0.8f;
+
+    /// <summary>
+    /// 是否启用重排序（Rerank）功能，对初步检索结果进行精细化排序
+    /// </summary>
+    public bool EnableRerank { get; set; } = true;
+
+    /// <summary>
+    /// 重排序时考虑的候选数量
+    /// </summary>
+    public int RerankCandidateCount { get; set; } = 20;
 }
